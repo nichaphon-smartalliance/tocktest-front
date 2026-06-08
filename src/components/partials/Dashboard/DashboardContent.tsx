@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Input, Spin, Empty, Row, Col, message, Tooltip } from "antd";
+import { Button, Input, Spin, Empty, Row, Col, Tooltip } from "antd";
+import { message } from "@/lib/antd-static";
 import { PlusOutlined, ReloadOutlined, GithubOutlined, SearchOutlined } from "@ant-design/icons";
 import { useRepositoryList } from "@/hooks/repository";
 import { useGithubTokens } from "@/hooks/repository";

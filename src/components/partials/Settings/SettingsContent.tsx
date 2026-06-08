@@ -11,10 +11,10 @@ import {
   Table,
   Tag,
   Popconfirm,
-  message,
   Divider,
   Typography,
 } from "antd";
+import { message } from "@/lib/antd-static";
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import { useGithubTokens } from "@/hooks/repository";
 import { useRepoSettings } from "@/hooks/settings";

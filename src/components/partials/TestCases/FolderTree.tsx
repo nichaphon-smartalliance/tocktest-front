@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Tree, Button, Dropdown, Input, Modal, message, Spin } from "antd";
+import { Tree, Button, Dropdown, Input, Modal, Spin } from "antd";
+import { message } from "@/lib/antd-static";
 import type { TreeDataNode } from "antd";
 import { FolderOutlined, FolderOpenOutlined, PlusOutlined, EllipsisOutlined } from "@ant-design/icons";
 import type { TestCaseFolder } from "@/types/app/testCase";

@@ -10,9 +10,9 @@ import {
   Timeline,
   Typography,
   Tooltip,
-  message,
   Popconfirm,
 } from "antd";
+import { message } from "@/lib/antd-static";
 import { EditOutlined, SaveOutlined, CloseOutlined, RobotOutlined, HistoryOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import "dayjs/locale/th";

@@ -1,8 +1,9 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { ConfigProvider, theme as antdTheme } from "antd";
+import { App as AntdApp, ConfigProvider, theme as antdTheme } from "antd";
 import thTH from "antd/locale/th_TH";
+import { AntdBridge } from "@/lib/antd-static";
 
 type ThemeMode = "light" | "dark";
 
@@ -49,7 +50,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
           },
         }}
       >
-        {children}
+        {/* antd App provides context for message/modal/notification APIs */}
+        <AntdApp>
+          <AntdBridge />
+          {children}
+        </AntdApp>
       </ConfigProvider>
     </ThemeContext.Provider>
   );

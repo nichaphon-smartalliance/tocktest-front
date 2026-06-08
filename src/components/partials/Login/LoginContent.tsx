@@ -52,7 +52,7 @@ export default function LoginContent() {
 
         {error && (
           <Alert
-            message={error}
+            title={error}
             type="error"
             showIcon
             style={{ marginBottom: 20, borderRadius: 8 }}

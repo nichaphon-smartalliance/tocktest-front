@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Modal, Form, Input, Button, Table, Tag, Popconfirm, message, Space } from "antd";
+import { Modal, Form, Input, Button, Table, Tag, Popconfirm, Space } from "antd";
+import { message } from "@/lib/antd-static";
 import { DeleteOutlined, CheckCircleOutlined } from "@ant-design/icons";
 import { useGithubTokens } from "@/hooks/repository";
 import type { GithubToken } from "@/types/app/repository";

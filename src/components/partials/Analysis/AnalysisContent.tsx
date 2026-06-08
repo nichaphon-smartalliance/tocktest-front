@@ -12,8 +12,8 @@ import {
   Spin,
   Card,
   Collapse,
-  message,
 } from "antd";
+import { message } from "@/lib/antd-static";
 import { RobotOutlined, ThunderboltOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
@@ -81,7 +81,7 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
       key: "changes",
       width: 140,
       render: (_, r) => (
-        <Space direction="vertical" size={2}>
+        <Space orientation="vertical" size={2}>
           <Text style={{ fontSize: 12 }}>📁 {r.filesChanged} ไฟล์</Text>
           <Space size={4}>
             <Text style={{ fontSize: 11, color: "#16a34a" }}>+{r.additions}</Text>
@@ -162,7 +162,7 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
           <Alert
             style={{ marginTop: 12 }}
             type="info"
-            message={
+            title={
               <div>
                 <div style={{ fontWeight: 600, marginBottom: 8 }}>คำแนะนำจาก AI</div>
                 <ul style={{ margin: 0, paddingLeft: 20 }}>

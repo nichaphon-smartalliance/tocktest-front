@@ -7,9 +7,9 @@ import {
   Input,
   Select,
   Button,
-  message,
   Space,
 } from "antd";
+import { message } from "@/lib/antd-static";
 import type { TestCase, TestCaseFormValues, ModalMode } from "@/types/app/testCase";
 
 const { TextArea } = Input;

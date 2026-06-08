@@ -7,7 +7,6 @@ import {
   DatePicker,
   Button,
   Space,
-  message,
   Spin,
   Card,
   Tag,
@@ -16,6 +15,7 @@ import {
   Typography,
   Divider,
 } from "antd";
+import { message } from "@/lib/antd-static";
 import { RobotOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useAiGenerateTestCases } from "@/hooks/testCase";
@@ -112,7 +112,7 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
       {previews.length === 0 ? (
         <Form form={form} layout="vertical" requiredMark={false}>
           <Alert
-            message="AI จะวิเคราะห์ code changes และสร้าง test case ให้อัตโนมัติ"
+            title="AI จะวิเคราะห์ code changes และสร้าง test case ให้อัตโนมัติ"
             type="info"
             showIcon
             style={{ marginBottom: 20 }}
