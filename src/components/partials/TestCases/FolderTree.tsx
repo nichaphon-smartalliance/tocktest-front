@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Tree, Button, Dropdown, Input, Modal, message, Spin } from "antd";
+import type { TreeDataNode } from "antd";
 import { FolderOutlined, FolderOpenOutlined, PlusOutlined, EllipsisOutlined } from "@ant-design/icons";
 import type { TestCaseFolder } from "@/types/app/testCase";
 import { useTestCaseFolders } from "@/hooks/testCase";
@@ -12,7 +13,7 @@ interface FolderTreeProps {
   onSelectFolder: (folderId: string | null) => void;
 }
 
-function foldersToTreeData(folders: TestCaseFolder[]): ReturnType<typeof Tree>["props"]["treeData"] {
+function foldersToTreeData(folders: TestCaseFolder[]): TreeDataNode[] {
   return folders.map((f) => ({
     key: f.id,
     title: f.name,

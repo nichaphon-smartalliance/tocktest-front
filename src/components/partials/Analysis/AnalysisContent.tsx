@@ -182,14 +182,13 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
       <Table
         columns={columns}
         dataSource={commits}
-        rowKey="id"
+        rowKey="commitSha"
         loading={isLoading}
         rowSelection={{
           selectedRowKeys: selectedShas,
           onChange: (keys) => setSelectedShas(keys as string[]),
           getCheckboxProps: (record) => ({ value: record.commitSha }),
         }}
-        getRowKey={(r) => r.commitSha}
         size="middle"
         pagination={{ total, showTotal: (t) => `${t} commits` }}
       />
