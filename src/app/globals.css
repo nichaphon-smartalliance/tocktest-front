@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-layout: #f0f2f5;
+  --bg-sider: #ffffff;
+}
+
+[data-theme="dark"] {
+  --bg-layout: #0f172a;
+  --bg-sider: #1e293b;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+/* Ant Design Sider override */
+.ant-layout-sider {
+  background: var(--bg-sider) !important;
+}
+.ant-layout {
+  background: var(--bg-layout) !important;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: #374151;
+}
