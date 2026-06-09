@@ -42,14 +42,18 @@ export default function Sidebar({ collapsed, session }: SidebarProps) {
           alignItems: "center",
           justifyContent: collapsed ? "center" : "flex-start",
           padding: collapsed ? 0 : "0 20px",
-          borderBottom: "1px solid #e5e7eb",
+          background: "#6366f1",
+          borderBottom: "1px solid rgba(255,255,255,0.12)",
           cursor: "pointer",
         }}
         onClick={() => router.push("/dashboard")}
       >
-        <span style={{ fontSize: 20 }}>🧪</span>
-        {!collapsed && (
-          <span style={{ marginLeft: 10, fontWeight: 700, fontSize: 16, color: "#6366f1" }}>
+        {collapsed ? (
+          <span style={{ fontWeight: 700, fontSize: 17, color: "#ffffff", letterSpacing: "-0.02em" }}>
+            T
+          </span>
+        ) : (
+          <span style={{ fontWeight: 700, fontSize: 16, color: "#ffffff", letterSpacing: "-0.01em" }}>
             TockTest
           </span>
         )}
