@@ -155,6 +155,7 @@ export default function TestCasesContent({ repoId }: TestCasesContentProps) {
           onPageChange={(p, s) => { setPage(p); setPageSize(s); }}
           onEdit={openEdit}
           onDelete={handleDelete}
+          onStatusChange={(id, status) => handleUpdate(id, { status })}
         />
       </div>
 

@@ -1,16 +1,89 @@
 "use client";
 
-import { Table, Tag, Button, Popconfirm, Tooltip, Badge, Space } from "antd";
+import { useState } from "react";
+import { Table, Tag, Button, Popconfirm, Tooltip, Badge, Space, Dropdown } from "antd";
+import { message } from "@/lib/antd-static";
 import { EditOutlined, DeleteOutlined, RobotOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/th";
-import type { TestCase } from "@/types/app/testCase";
+import type { TestCase, TestStatus } from "@/types/app/testCase";
 import { STATUS_CONFIG, TYPE_CONFIG, PRIORITY_CONFIG } from "./TestCases.config";
 
 dayjs.extend(relativeTime);
 dayjs.locale("th");
+
+function StatusCell({
+  status,
+  record,
+  onStatusChange,
+}: {
+  status: TestStatus;
+  record: TestCase;
+  onStatusChange: (id: string, status: TestStatus) => Promise<void>;
+}) {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const cfg = STATUS_CONFIG[status];
+
+  const handleSelect = async (s: TestStatus) => {
+    if (s === status) { setOpen(false); return; }
+    setLoading(true);
+    setOpen(false);
+    try {
+      await onStatusChange(record.id, s);
+    } catch {
+      message.error("อัปเดตสถานะไม่สำเร็จ");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dropdown
+      open={open}
+      onOpenChange={(v) => { if (!loading) setOpen(v); }}
+      trigger={["click"]}
+      popupRender={() => (
+        <div
+          style={{
+            background: "#fff",
+            border: "1px solid #e5e7eb",
+            borderRadius: 8,
+            boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+            padding: 4,
+            minWidth: 120,
+          }}
+        >
+          {(Object.keys(STATUS_CONFIG) as TestStatus[]).map((s) => (
+            <div
+              key={s}
+              onClick={() => handleSelect(s as TestStatus)}
+              style={{
+                padding: "5px 10px",
+                borderRadius: 5,
+                cursor: "pointer",
+                background: s === status ? "#f3f4f6" : "transparent",
+              }}
+            >
+              <Tag color={STATUS_CONFIG[s].color} style={{ margin: 0 }}>
+                {STATUS_CONFIG[s].label}
+              </Tag>
+            </div>
+          ))}
+        </div>
+      )}
+    >
+      <Tag
+        color={cfg.color}
+        style={{ cursor: loading ? "wait" : "pointer", userSelect: "none", opacity: loading ? 0.6 : 1 }}
+      >
+        {cfg.label}
+      </Tag>
+    </Dropdown>
+  );
+}
 
 interface TestCaseTableProps {
   repoId: string;
@@ -22,6 +95,7 @@ interface TestCaseTableProps {
   onPageChange: (page: number, size: number) => void;
   onEdit: (tc: TestCase) => void;
   onDelete: (id: string) => void;
+  onStatusChange: (id: string, status: TestStatus) => Promise<void>;
 }
 
 export default function TestCaseTable({
@@ -33,6 +107,7 @@ export default function TestCaseTable({
   onPageChange,
   onEdit,
   onDelete,
+  onStatusChange,
 }: TestCaseTableProps) {
   const columns: ColumnsType<TestCase> = [
     {
@@ -54,11 +129,10 @@ export default function TestCaseTable({
       title: "สถานะ",
       dataIndex: "status",
       key: "status",
-      width: 120,
-      render: (status: keyof typeof STATUS_CONFIG) => {
-        const cfg = STATUS_CONFIG[status];
-        return <Tag color={cfg.color}>{cfg.label}</Tag>;
-      },
+      width: 130,
+      render: (status: TestStatus, record: TestCase) => (
+        <StatusCell status={status} record={record} onStatusChange={onStatusChange} />
+      ),
     },
     {
       title: "ความสำคัญ",
