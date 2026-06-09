@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Modal,
   Form,
   Input,
-  Select,
+  Segmented,
   Button,
   Space,
 } from "antd";
@@ -13,6 +13,91 @@ import { message } from "@/lib/antd-static";
 import type { TestCase, TestCaseFormValues, ModalMode } from "@/types/app/testCase";
 
 const { TextArea } = Input;
+
+function TagInput({
+  value = [],
+  onChange,
+  disabled,
+}: {
+  value?: string[];
+  onChange?: (v: string[]) => void;
+  disabled?: boolean;
+}) {
+  const [input, setInput] = useState("");
+
+  const addTag = () => {
+    const tag = input.trim();
+    if (tag && !value.includes(tag)) onChange?.([...value, tag]);
+    setInput("");
+  };
+
+  return (
+    <div
+      style={{
+        border: "1px solid #d9d9d9",
+        borderRadius: 6,
+        padding: "4px 8px",
+        display: "flex",
+        flexWrap: "wrap",
+        gap: 4,
+        minHeight: 36,
+        background: disabled ? "#f5f5f5" : "#fff",
+      }}
+    >
+      {value.map((tag) => (
+        <span
+          key={tag}
+          style={{
+            background: "#f3f4f6",
+            border: "1px solid #e5e7eb",
+            borderRadius: 4,
+            padding: "1px 8px",
+            fontSize: 13,
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            color: "#374151",
+          }}
+        >
+          {tag}
+          {!disabled && (
+            <span
+              onClick={() => onChange?.(value.filter((t) => t !== tag))}
+              style={{ cursor: "pointer", color: "#9ca3af", fontSize: 12, lineHeight: 1 }}
+            >
+              ×
+            </span>
+          )}
+        </span>
+      ))}
+      {!disabled && (
+        <input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === ",") {
+              e.preventDefault();
+              addTag();
+            } else if (e.key === "Backspace" && !input && value.length > 0) {
+              onChange?.(value.slice(0, -1));
+            }
+          }}
+          onBlur={addTag}
+          placeholder={value.length === 0 ? "พิมพ์แล้วกด Enter เพื่อเพิ่มแท็ก" : ""}
+          style={{
+            border: "none",
+            outline: "none",
+            flex: 1,
+            minWidth: 120,
+            fontSize: 14,
+            background: "transparent",
+            padding: "1px 0",
+          }}
+        />
+      )}
+    </div>
+  );
+}
 
 interface TestCaseModalProps {
   open: boolean;
@@ -108,38 +193,44 @@ export default function TestCaseModal({
           <TextArea rows={3} placeholder="ระบบควรแสดง..." />
         </Form.Item>
 
-        <Space style={{ width: "100%" }} styles={{ item: { flex: 1 } }}>
-          <Form.Item name="testType" label="ประเภท" rules={[{ required: true }]} style={{ flex: 1 }}>
-            <Select options={[
+        <Form.Item name="testType" label="ประเภท" rules={[{ required: true }]}>
+          <Segmented
+            options={[
               { value: "manual", label: "Manual" },
               { value: "automated", label: "Automated" },
               { value: "ui", label: "UI" },
               { value: "api", label: "API" },
               { value: "integration", label: "Integration" },
-            ]} />
-          </Form.Item>
+            ]}
+          />
+        </Form.Item>
 
+        <div style={{ display: "flex", gap: 24 }}>
           <Form.Item name="status" label="สถานะ" rules={[{ required: true }]} style={{ flex: 1 }}>
-            <Select options={[
-              { value: "not_tested", label: "ยังไม่ทดสอบ" },
-              { value: "pass", label: "ผ่าน" },
-              { value: "fail", label: "ไม่ผ่าน" },
-              { value: "blocked", label: "ติดขัด" },
-            ]} />
+            <Segmented
+              options={[
+                { value: "not_tested", label: "ยังไม่ทดสอบ" },
+                { value: "pass", label: "ผ่าน" },
+                { value: "fail", label: "ไม่ผ่าน" },
+                { value: "blocked", label: "ติดขัด" },
+              ]}
+            />
           </Form.Item>
 
           <Form.Item name="priority" label="ความสำคัญ" rules={[{ required: true }]} style={{ flex: 1 }}>
-            <Select options={[
-              { value: "low", label: "ต่ำ" },
-              { value: "medium", label: "กลาง" },
-              { value: "high", label: "สูง" },
-              { value: "critical", label: "วิกฤต" },
-            ]} />
+            <Segmented
+              options={[
+                { value: "low", label: "ต่ำ" },
+                { value: "medium", label: "กลาง" },
+                { value: "high", label: "สูง" },
+                { value: "critical", label: "วิกฤต" },
+              ]}
+            />
           </Form.Item>
-        </Space>
+        </div>
 
         <Form.Item name="tags" label="แท็ก">
-          <Select mode="tags" placeholder="พิมพ์แล้วกด Enter เพื่อเพิ่มแท็ก" style={{ width: "100%" }} />
+          <TagInput />
         </Form.Item>
       </Form>
     </Modal>

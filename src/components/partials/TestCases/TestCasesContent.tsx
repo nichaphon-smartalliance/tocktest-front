@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Space, Select, Input } from "antd";
+import { Button, Segmented, Input } from "antd";
 import { PlusOutlined, RobotOutlined, SearchOutlined } from "@ant-design/icons";
 import FolderTree from "./FolderTree";
 import TestCaseTable from "./TestCaseTable";
@@ -87,53 +87,61 @@ export default function TestCasesContent({ repoId }: TestCasesContentProps) {
       {/* Main content */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, minWidth: 0 }}>
         {/* Toolbar */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-          <Input
-            placeholder="ค้นหา..."
-            prefix={<SearchOutlined />}
-            value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            style={{ width: 200 }}
-            allowClear
-          />
-          <Select
-            placeholder="สถานะ"
-            allowClear
-            style={{ width: 130 }}
-            value={statusFilter}
-            onChange={setStatusFilter}
-            options={[
-              { value: "not_tested", label: "ยังไม่ทดสอบ" },
-              { value: "pass", label: "ผ่าน" },
-              { value: "fail", label: "ไม่ผ่าน" },
-              { value: "blocked", label: "ติดขัด" },
-            ]}
-          />
-          <Select
-            placeholder="ประเภท"
-            allowClear
-            style={{ width: 130 }}
-            value={typeFilter}
-            onChange={setTypeFilter}
-            options={[
-              { value: "manual", label: "Manual" },
-              { value: "automated", label: "Automated" },
-              { value: "ui", label: "UI" },
-              { value: "api", label: "API" },
-              { value: "integration", label: "Integration" },
-            ]}
-          />
-          <div style={{ flex: 1 }} />
-          <Button
-            icon={<RobotOutlined />}
-            onClick={() => setAiModalOpen(true)}
-            style={{ borderColor: "#6366f1", color: "#6366f1" }}
-          >
-            สร้างด้วย AI
-          </Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
-            Test Case ใหม่
-          </Button>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Input
+              placeholder="ค้นหา..."
+              prefix={<SearchOutlined />}
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+              style={{ width: 200 }}
+              allowClear
+            />
+            <div style={{ flex: 1 }} />
+            <Button
+              icon={<RobotOutlined />}
+              onClick={() => setAiModalOpen(true)}
+              style={{ borderColor: "#6366f1", color: "#6366f1" }}
+            >
+              สร้างด้วย AI
+            </Button>
+            <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
+              Test Case ใหม่
+            </Button>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 13, color: "#6b7280", flexShrink: 0 }}>สถานะ</span>
+              <Segmented
+                size="small"
+                value={statusFilter ?? "all"}
+                onChange={(v) => { setStatusFilter(v === "all" ? undefined : v as TestStatus); setPage(1); }}
+                options={[
+                  { value: "all", label: "ทั้งหมด" },
+                  { value: "not_tested", label: "ยังไม่ทดสอบ" },
+                  { value: "pass", label: "ผ่าน" },
+                  { value: "fail", label: "ไม่ผ่าน" },
+                  { value: "blocked", label: "ติดขัด" },
+                ]}
+              />
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 13, color: "#6b7280", flexShrink: 0 }}>ประเภท</span>
+              <Segmented
+                size="small"
+                value={typeFilter ?? "all"}
+                onChange={(v) => { setTypeFilter(v === "all" ? undefined : v as TestType); setPage(1); }}
+                options={[
+                  { value: "all", label: "ทั้งหมด" },
+                  { value: "manual", label: "Manual" },
+                  { value: "automated", label: "Auto" },
+                  { value: "ui", label: "UI" },
+                  { value: "api", label: "API" },
+                  { value: "integration", label: "Integration" },
+                ]}
+              />
+            </div>
+          </div>
         </div>
 
         {/* Table */}
