@@ -1,13 +1,116 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Segmented, Input } from "antd";
+import { Button, Input } from "antd";
 import { PlusOutlined, RobotOutlined, SearchOutlined } from "@ant-design/icons";
 import FolderTree from "./FolderTree";
 import TestCaseTable from "./TestCaseTable";
 import { TestCaseModal, AiGenerateModal } from "./Modal";
 import { useTestCaseList } from "@/hooks/testCase";
+import { STATUS_CONFIG, TYPE_CONFIG } from "./TestCases.config";
 import type { TestCase, ModalMode, TestCaseFormValues, TestStatus, TestType, PriorityLevel } from "@/types/app/testCase";
+
+// Maps Ant Design tag color names → chip palette
+const CHIP_COLORS: Record<string, { bg: string; border: string; text: string }> = {
+  green:    { bg: "#f6ffed", border: "#b7eb8f", text: "#389e0d" },
+  red:      { bg: "#fff2f0", border: "#ffccc7", text: "#cf1322" },
+  orange:   { bg: "#fff7e6", border: "#ffd591", text: "#d46b08" },
+  default:  { bg: "#f5f5f5", border: "#d9d9d9", text: "#595959" },
+  blue:     { bg: "#e6f4ff", border: "#91caff", text: "#0958d9" },
+  purple:   { bg: "#f9f0ff", border: "#d3adf7", text: "#531dab" },
+  cyan:     { bg: "#e6fffb", border: "#87e8de", text: "#08979c" },
+  geekblue: { bg: "#f0f5ff", border: "#adc6ff", text: "#1d39c4" },
+  magenta:  { bg: "#fff0f6", border: "#ffadd2", text: "#c41d7f" },
+};
+
+function Chip({
+  label,
+  active,
+  color,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  color?: string;
+  onClick: () => void;
+}) {
+  const [hovered, setHovered] = useState(false);
+  const palette = color ? CHIP_COLORS[color] : undefined;
+
+  const style = (() => {
+    if (active && palette)  return { bg: palette.bg,  border: palette.border,  text: palette.text,  weight: 600 };
+    if (active)             return { bg: "#111827",   border: "#111827",        text: "#ffffff",     weight: 600 };
+    if (hovered)            return { bg: "#f3f4f6",   border: "#d1d5db",        text: "#374151",     weight: 400 };
+    return                         { bg: "transparent", border: "#e5e7eb",      text: "#6b7280",     weight: 400 };
+  })();
+
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        padding: "3px 11px",
+        borderRadius: 20,
+        border: `1px solid ${style.border}`,
+        background: style.bg,
+        color: style.text,
+        fontSize: 12,
+        fontWeight: style.weight,
+        lineHeight: "18px",
+        cursor: "pointer",
+        whiteSpace: "nowrap",
+        outline: "none",
+        userSelect: "none",
+        transition: "background 0.12s, border-color 0.12s, color 0.12s",
+      }}
+    >
+      {label}
+    </button>
+  );
+}
+
+function FilterRow({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  options: { value: string; label: string; color?: string }[];
+  value: string | undefined;
+  onChange: (v: string | undefined) => void;
+}) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+      <span style={{
+        fontSize: 11,
+        fontWeight: 600,
+        color: "#9ca3af",
+        textTransform: "uppercase",
+        letterSpacing: "0.06em",
+        minWidth: 44,
+        flexShrink: 0,
+      }}>
+        {label}
+      </span>
+      <Chip
+        label="ทั้งหมด"
+        active={value === undefined}
+        onClick={() => onChange(undefined)}
+      />
+      {options.map((opt) => (
+        <Chip
+          key={opt.value}
+          label={opt.label}
+          active={value === opt.value}
+          color={opt.color}
+          onClick={() => onChange(opt.value)}
+        />
+      ))}
+    </div>
+  );
+}
 
 interface TestCasesContentProps {
   repoId: string;
@@ -61,6 +164,18 @@ export default function TestCasesContent({ repoId }: TestCasesContentProps) {
     await remove(id);
   };
 
+  const statusOptions = Object.entries(STATUS_CONFIG).map(([value, cfg]) => ({
+    value,
+    label: cfg.label,
+    color: cfg.color,
+  }));
+
+  const typeOptions = Object.entries(TYPE_CONFIG).map(([value, cfg]) => ({
+    value,
+    label: cfg.label,
+    color: cfg.color,
+  }));
+
   return (
     <div style={{ display: "flex", gap: 16, height: "calc(100vh - 200px)" }}>
       {/* Folder sidebar */}
@@ -87,7 +202,8 @@ export default function TestCasesContent({ repoId }: TestCasesContentProps) {
       {/* Main content */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, minWidth: 0 }}>
         {/* Toolbar */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {/* Action row */}
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <Input
               placeholder="ค้นหา..."
@@ -109,38 +225,32 @@ export default function TestCasesContent({ repoId }: TestCasesContentProps) {
               Test Case ใหม่
             </Button>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 13, color: "#6b7280", flexShrink: 0 }}>สถานะ</span>
-              <Segmented
-                size="small"
-                value={statusFilter ?? "all"}
-                onChange={(v) => { setStatusFilter(v === "all" ? undefined : v as TestStatus); setPage(1); }}
-                options={[
-                  { value: "all", label: "ทั้งหมด" },
-                  { value: "not_tested", label: "ยังไม่ทดสอบ" },
-                  { value: "pass", label: "ผ่าน" },
-                  { value: "fail", label: "ไม่ผ่าน" },
-                  { value: "blocked", label: "ติดขัด" },
-                ]}
-              />
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 13, color: "#6b7280", flexShrink: 0 }}>ประเภท</span>
-              <Segmented
-                size="small"
-                value={typeFilter ?? "all"}
-                onChange={(v) => { setTypeFilter(v === "all" ? undefined : v as TestType); setPage(1); }}
-                options={[
-                  { value: "all", label: "ทั้งหมด" },
-                  { value: "manual", label: "Manual" },
-                  { value: "automated", label: "Auto" },
-                  { value: "ui", label: "UI" },
-                  { value: "api", label: "API" },
-                  { value: "integration", label: "Integration" },
-                ]}
-              />
-            </div>
+
+          {/* Filter rows */}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 6,
+              padding: "8px 10px",
+              background: "#fafafa",
+              border: "1px solid #f0f0f0",
+              borderRadius: 8,
+            }}
+          >
+            <FilterRow
+              label="สถานะ"
+              options={statusOptions}
+              value={statusFilter}
+              onChange={(v) => { setStatusFilter(v as TestStatus | undefined); setPage(1); }}
+            />
+            <div style={{ height: 1, background: "#f0f0f0" }} />
+            <FilterRow
+              label="ประเภท"
+              options={typeOptions}
+              value={typeFilter}
+              onChange={(v) => { setTypeFilter(v as TestType | undefined); setPage(1); }}
+            />
           </div>
         </div>
 
