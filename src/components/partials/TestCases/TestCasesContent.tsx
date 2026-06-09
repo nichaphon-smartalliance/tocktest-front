@@ -169,6 +169,8 @@ export default function TestCasesContent({ repoId }: TestCasesContentProps) {
           onEdit={openEdit}
           onDelete={handleDelete}
           onStatusChange={(id, status) => handleUpdate(id, { status })}
+          onPriorityChange={(id, priority) => handleUpdate(id, { priority })}
+          onTypeChange={(id, testType) => handleUpdate(id, { testType })}
         />
       </div>
 

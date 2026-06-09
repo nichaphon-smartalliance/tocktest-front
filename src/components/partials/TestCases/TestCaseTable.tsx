@@ -8,33 +8,37 @@ import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/th";
-import type { TestCase, TestStatus } from "@/types/app/testCase";
+import type { TestCase, TestStatus, TestType, PriorityLevel } from "@/types/app/testCase";
 import { STATUS_CONFIG, TYPE_CONFIG, PRIORITY_CONFIG } from "./TestCases.config";
 
 dayjs.extend(relativeTime);
 dayjs.locale("th");
 
-function StatusCell({
-  status,
+function InlineTagCell<T extends string>({
+  value,
+  config,
   record,
-  onStatusChange,
+  errorMsg,
+  onChange,
 }: {
-  status: TestStatus;
+  value: T;
+  config: Record<string, { label: string; color: string }>;
   record: TestCase;
-  onStatusChange: (id: string, status: TestStatus) => Promise<void>;
+  errorMsg: string;
+  onChange: (id: string, value: T) => Promise<void>;
 }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const cfg = STATUS_CONFIG[status];
+  const cfg = config[value];
 
-  const handleSelect = async (s: TestStatus) => {
-    if (s === status) { setOpen(false); return; }
+  const handleSelect = async (v: T) => {
+    if (v === value) { setOpen(false); return; }
     setLoading(true);
     setOpen(false);
     try {
-      await onStatusChange(record.id, s);
+      await onChange(record.id, v);
     } catch {
-      message.error("อัปเดตสถานะไม่สำเร็จ");
+      message.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -56,19 +60,19 @@ function StatusCell({
             minWidth: 120,
           }}
         >
-          {(Object.keys(STATUS_CONFIG) as TestStatus[]).map((s) => (
+          {(Object.keys(config) as T[]).map((k) => (
             <div
-              key={s}
-              onClick={() => handleSelect(s as TestStatus)}
+              key={k}
+              onClick={() => handleSelect(k)}
               style={{
                 padding: "5px 10px",
                 borderRadius: 5,
                 cursor: "pointer",
-                background: s === status ? "#f3f4f6" : "transparent",
+                background: k === value ? "#f3f4f6" : "transparent",
               }}
             >
-              <Tag color={STATUS_CONFIG[s].color} style={{ margin: 0 }}>
-                {STATUS_CONFIG[s].label}
+              <Tag color={config[k].color} style={{ margin: 0 }}>
+                {config[k].label}
               </Tag>
             </div>
           ))}
@@ -96,6 +100,8 @@ interface TestCaseTableProps {
   onEdit: (tc: TestCase) => void;
   onDelete: (id: string) => void;
   onStatusChange: (id: string, status: TestStatus) => Promise<void>;
+  onPriorityChange: (id: string, priority: PriorityLevel) => Promise<void>;
+  onTypeChange: (id: string, testType: TestType) => Promise<void>;
 }
 
 export default function TestCaseTable({
@@ -108,6 +114,8 @@ export default function TestCaseTable({
   onEdit,
   onDelete,
   onStatusChange,
+  onPriorityChange,
+  onTypeChange,
 }: TestCaseTableProps) {
   const columns: ColumnsType<TestCase> = [
     {
@@ -131,32 +139,44 @@ export default function TestCaseTable({
       key: "status",
       width: 130,
       render: (status: TestStatus, record: TestCase) => (
-        <StatusCell status={status} record={record} onStatusChange={onStatusChange} />
+        <InlineTagCell
+          value={status}
+          config={STATUS_CONFIG}
+          record={record}
+          errorMsg="อัปเดตสถานะไม่สำเร็จ"
+          onChange={onStatusChange}
+        />
       ),
     },
     {
       title: "ความสำคัญ",
       dataIndex: "priority",
       key: "priority",
-      width: 100,
-      render: (p: keyof typeof PRIORITY_CONFIG) => {
-        const cfg = PRIORITY_CONFIG[p];
-        return <Tag color={cfg.color}>{cfg.label}</Tag>;
-      },
+      width: 120,
+      render: (priority: PriorityLevel, record: TestCase) => (
+        <InlineTagCell
+          value={priority}
+          config={PRIORITY_CONFIG}
+          record={record}
+          errorMsg="อัปเดตความสำคัญไม่สำเร็จ"
+          onChange={onPriorityChange}
+        />
+      ),
     },
     {
       title: "ประเภท",
       dataIndex: "testType",
       key: "testType",
-      width: 110,
-      render: (t: keyof typeof TYPE_CONFIG) => {
-        const cfg = TYPE_CONFIG[t];
-        return (
-          <Tag color={cfg.color} style={{ fontSize: 11 }}>
-            {cfg.label}
-          </Tag>
-        );
-      },
+      width: 120,
+      render: (testType: TestType, record: TestCase) => (
+        <InlineTagCell
+          value={testType}
+          config={TYPE_CONFIG}
+          record={record}
+          errorMsg="อัปเดตประเภทไม่สำเร็จ"
+          onChange={onTypeChange}
+        />
+      ),
     },
     {
       title: "อัปเดต",
