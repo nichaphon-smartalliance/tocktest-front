@@ -90,3 +90,6 @@ export const getDocVersionsApi = (repoId: string) =>
 
 export const autoUpdateDocApi = (repoId: string) =>
   mainClient.post<ApiResponse<ProjectDocResponse>>(`/api/v1/repositories/${repoId}/docs/auto-update`);
+
+export const deleteProjectDocApi = (repoId: string) =>
+  mainClient.delete<ApiResponse<void>>(`/api/v1/repositories/${repoId}/docs`);

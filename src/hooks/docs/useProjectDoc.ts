@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getProjectDoc, updateProjectDoc, autoUpdateDoc, getDocVersions } from "@/services/docs.service";
+import { getProjectDoc, updateProjectDoc, autoUpdateDoc, getDocVersions, deleteProjectDoc } from "@/services/docs.service";
 
 export const PROJECT_DOC_QUERY_KEY = ["projectDoc"] as const;
 
@@ -31,6 +31,11 @@ export const useProjectDoc = (repoId: string) => {
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteProjectDoc(repoId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+  });
+
   return {
     doc: data,
     isLoading,
@@ -40,5 +45,7 @@ export const useProjectDoc = (repoId: string) => {
     isUpdating: updateMutation.isPending,
     autoUpdate: autoUpdateMutation.mutateAsync,
     isAutoUpdating: autoUpdateMutation.isPending,
+    deleteDoc: deleteMutation.mutateAsync,
+    isDeleting: deleteMutation.isPending,
   };
 };

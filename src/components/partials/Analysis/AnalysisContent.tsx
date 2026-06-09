@@ -9,9 +9,7 @@ import {
   Space,
   Typography,
   Tooltip,
-  Spin,
   Card,
-  Collapse,
 } from "antd";
 import { message } from "@/lib/antd-static";
 import { RobotOutlined, ThunderboltOutlined } from "@ant-design/icons";
@@ -40,15 +38,24 @@ const { Paragraph, Text } = Typography;
 
 export default function AnalysisContent({ repoId }: AnalysisContentProps) {
   const [selectedShas, setSelectedShas] = useState<string[]>([]);
-  const { commits, total, isLoading, analyze, isAnalyzing, getWhatToTest, whatToTestResult, isLoadingWhatToTest } =
+  const [analyzingIds, setAnalyzingIds] = useState<Set<string>>(new Set());
+
+  const { commits, total, isLoading, analyze, getWhatToTest, whatToTestResult, isLoadingWhatToTest } =
     useCommitList(repoId, { pageSize: 30 });
 
   const handleAnalyze = async (commitSha: string) => {
+    setAnalyzingIds((prev) => new Set(prev).add(commitSha));
     try {
       await analyze(commitSha);
       message.success("วิเคราะห์ commit สำเร็จ");
     } catch {
-      message.error("วิเคราะห์ไม่สำเร็จ");
+      message.error("วิเคราะห์ไม่สำเร็จ กรุณาตรวจสอบ GitHub Token");
+    } finally {
+      setAnalyzingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(commitSha);
+        return next;
+      });
     }
   };
 
@@ -81,8 +88,8 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
       key: "changes",
       width: 140,
       render: (_, r) => (
-        <Space orientation="vertical" size={2}>
-          <Text style={{ fontSize: 12 }}>📁 {r.filesChanged} ไฟล์</Text>
+        <Space direction="vertical" size={2}>
+          <Text style={{ fontSize: 12 }}>{r.filesChanged} ไฟล์</Text>
           <Space size={4}>
             <Text style={{ fontSize: 11, color: "#16a34a" }}>+{r.additions}</Text>
             <Text style={{ fontSize: 11, color: "#dc2626" }}>-{r.deletions}</Text>
@@ -124,14 +131,14 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
           <Button
             size="small"
             icon={<RobotOutlined />}
-            loading={isAnalyzing}
+            loading={analyzingIds.has(record.commitSha)}
             onClick={() => handleAnalyze(record.commitSha)}
           >
             วิเคราะห์
           </Button>
         ) : (
           <Tooltip title={`วิเคราะห์เมื่อ ${dayjs(record.analyzedAt).fromNow()}`}>
-            <Tag color="green" style={{ cursor: "default" }}>✓ วิเคราะห์แล้ว</Tag>
+            <Tag color="green" style={{ cursor: "default" }}>วิเคราะห์แล้ว</Tag>
           </Tooltip>
         ),
     },
@@ -162,7 +169,7 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
           <Alert
             style={{ marginTop: 12 }}
             type="info"
-            title={
+            message={
               <div>
                 <div style={{ fontWeight: 600, marginBottom: 8 }}>คำแนะนำจาก AI</div>
                 <ul style={{ margin: 0, paddingLeft: 20 }}>
@@ -187,7 +194,6 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
         rowSelection={{
           selectedRowKeys: selectedShas,
           onChange: (keys) => setSelectedShas(keys as string[]),
-          getCheckboxProps: (record) => ({ value: record.commitSha }),
         }}
         size="middle"
         pagination={{ total, showTotal: (t) => `${t} commits` }}

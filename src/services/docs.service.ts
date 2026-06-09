@@ -1,5 +1,5 @@
 import type { ProjectDoc, DocVersion } from "@/types/app/docs";
-import { getProjectDocApi, updateProjectDocApi, getDocVersionsApi, autoUpdateDocApi } from "@/lib/api/api-main";
+import { getProjectDocApi, updateProjectDocApi, getDocVersionsApi, autoUpdateDocApi, deleteProjectDocApi } from "@/lib/api/api-main";
 
 export const getProjectDoc = async (repoId: string): Promise<ProjectDoc | null> => {
   const res = await getProjectDocApi(repoId);
@@ -19,4 +19,8 @@ export const getDocVersions = async (repoId: string): Promise<DocVersion[]> => {
 export const autoUpdateDoc = async (repoId: string): Promise<ProjectDoc> => {
   const res = await autoUpdateDocApi(repoId);
   return res.data.data;
+};
+
+export const deleteProjectDoc = async (repoId: string): Promise<void> => {
+  await deleteProjectDocApi(repoId);
 };

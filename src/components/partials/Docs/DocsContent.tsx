@@ -9,11 +9,19 @@ import {
   Empty,
   Timeline,
   Typography,
-  Tooltip,
   Popconfirm,
 } from "antd";
 import { message } from "@/lib/antd-static";
-import { EditOutlined, SaveOutlined, CloseOutlined, RobotOutlined, HistoryOutlined } from "@ant-design/icons";
+import {
+  EditOutlined,
+  SaveOutlined,
+  CloseOutlined,
+  RobotOutlined,
+  HistoryOutlined,
+  DeleteOutlined,
+  ArrowLeftOutlined,
+} from "@ant-design/icons";
+import { useRouter } from "next/navigation";
 import dayjs from "dayjs";
 import "dayjs/locale/th";
 import { useProjectDoc } from "@/hooks/docs";
@@ -27,11 +35,12 @@ interface DocsContentProps {
 }
 
 export default function DocsContent({ repoId }: DocsContentProps) {
+  const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState("");
   const [showHistory, setShowHistory] = useState(false);
 
-  const { doc, isLoading, versions, update, isUpdating, autoUpdate, isAutoUpdating } =
+  const { doc, isLoading, versions, update, isUpdating, autoUpdate, isAutoUpdating, deleteDoc, isDeleting } =
     useProjectDoc(repoId);
 
   const startEdit = () => {
@@ -54,7 +63,18 @@ export default function DocsContent({ repoId }: DocsContentProps) {
       await autoUpdate();
       message.success("AI อัปเดต Docs สำเร็จ");
     } catch {
-      message.error("AI อัปเดตไม่สำเร็จ");
+      message.error("AI อัปเดตไม่สำเร็จ กรุณาตรวจสอบการตั้งค่า AI");
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await deleteDoc();
+      message.success("ลบ Docs สำเร็จ");
+      setIsEditing(false);
+      setShowHistory(false);
+    } catch {
+      message.error("ลบไม่สำเร็จ");
     }
   };
 
@@ -64,6 +84,14 @@ export default function DocsContent({ repoId }: DocsContentProps) {
       <div style={{ flex: 1, minWidth: 0 }}>
         {/* Toolbar */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+          <Button
+            icon={<ArrowLeftOutlined />}
+            type="text"
+            onClick={() => router.back()}
+            style={{ padding: "0 8px" }}
+          >
+            กลับ
+          </Button>
           {doc && (
             <Tag>v{doc.version}</Tag>
           )}
@@ -87,6 +115,19 @@ export default function DocsContent({ repoId }: DocsContentProps) {
               <Button icon={<HistoryOutlined />} onClick={() => setShowHistory((v) => !v)}>
                 ประวัติ
               </Button>
+              {doc && (
+                <Popconfirm
+                  title="ลบ Docs ทั้งหมดหรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้"
+                  onConfirm={handleDelete}
+                  okText="ลบ"
+                  okButtonProps={{ danger: true }}
+                  cancelText="ยกเลิก"
+                >
+                  <Button danger icon={<DeleteOutlined />} loading={isDeleting}>
+                    ลบ
+                  </Button>
+                </Popconfirm>
+              )}
               <Button type="primary" icon={<EditOutlined />} onClick={startEdit}>
                 แก้ไข
               </Button>

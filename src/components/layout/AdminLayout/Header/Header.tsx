@@ -64,7 +64,7 @@ export default function Header({ collapsed, onToggle, session }: HeaderProps) {
         <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
           <div style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
             <Avatar size={32} icon={<UserOutlined />} style={{ backgroundColor: "#6366f1" }} />
-            <span style={{ fontSize: 14, fontWeight: 500 }}>{session.user.name}</span>
+            <span style={{ fontSize: 14, fontWeight: 500, color: "#ffffff" }}>{session.user.name}</span>
           </div>
         </Dropdown>
       </div>

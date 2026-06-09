@@ -194,8 +194,39 @@ export default function TestCaseModal({
                   
         </Form.Item>
 
-        <div style={{ display: "flex", gap: 24 }}>
+        <Form.Item name="testType" label="ประเภท">
+          <Segmented
+            options={[
+              { label: "Manual", value: "manual" },
+              { label: "Automated", value: "automated" },
+              { label: "UI", value: "ui" },
+              { label: "API", value: "api" },
+              { label: "Integration", value: "integration" },
+            ]}
+          />
+        </Form.Item>
 
+        <div style={{ display: "flex", gap: 24 }}>
+          <Form.Item name="status" label="สถานะ" style={{ flex: 1 }}>
+            <Segmented
+              options={[
+                { label: "ยังไม่ทดสอบ", value: "not_tested" },
+                { label: "ผ่าน", value: "pass" },
+                { label: "ไม่ผ่าน", value: "fail" },
+                { label: "ติดขัด", value: "blocked" },
+              ]}
+            />
+          </Form.Item>
+          <Form.Item name="priority" label="ความสำคัญ" style={{ flex: 1 }}>
+            <Segmented
+              options={[
+                { label: "ต่ำ", value: "low" },
+                { label: "กลาง", value: "medium" },
+                { label: "สูง", value: "high" },
+                { label: "วิกฤต", value: "critical" },
+              ]}
+            />
+          </Form.Item>
         </div>
 
         <Form.Item name="tags" label="แท็ก">
