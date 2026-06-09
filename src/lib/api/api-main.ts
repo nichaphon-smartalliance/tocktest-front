@@ -17,6 +17,9 @@ export const getRepositoriesApi = (params?: Record<string, unknown>) =>
 export const getRepositoryApi = (id: string) =>
   mainClient.get<ApiResponse<RepositoryResponse>>(`/api/v1/repositories/${id}`);
 
+export const getRepositoryBranchesApi = (id: string) =>
+  mainClient.get<ApiResponse<{ name: string; commitSha: string }[]>>(`/api/v1/repositories/${id}/branches`);
+
 export const syncRepositoriesApi = () =>
   mainClient.post<ApiResponse<SyncRepositoriesResponse>>("/api/v1/repositories/sync");
 

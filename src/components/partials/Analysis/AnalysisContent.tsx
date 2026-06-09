@@ -10,9 +10,10 @@ import {
   Typography,
   Tooltip,
   Card,
+  Select,
 } from "antd";
 import { message } from "@/lib/antd-static";
-import { RobotOutlined, ThunderboltOutlined } from "@ant-design/icons";
+import { RobotOutlined, ThunderboltOutlined, BranchesOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -39,9 +40,10 @@ const { Paragraph, Text } = Typography;
 export default function AnalysisContent({ repoId }: AnalysisContentProps) {
   const [selectedShas, setSelectedShas] = useState<string[]>([]);
   const [analyzingIds, setAnalyzingIds] = useState<Set<string>>(new Set());
+  const [selectedBranch, setSelectedBranch] = useState<string | undefined>();
 
-  const { commits, total, isLoading, analyze, getWhatToTest, whatToTestResult, isLoadingWhatToTest } =
-    useCommitList(repoId, { pageSize: 30 });
+  const { commits, total, isLoading, branches, branchesLoading, analyze, getWhatToTest, whatToTestResult, isLoadingWhatToTest } =
+    useCommitList(repoId, { pageSize: 30, branch: selectedBranch });
 
   const handleAnalyze = async (commitSha: string) => {
     setAnalyzingIds((prev) => new Set(prev).add(commitSha));
@@ -149,6 +151,29 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
 
   return (
     <div>
+      {/* Branch selector */}
+      <Card style={{ marginBottom: 16, borderRadius: 8 }} styles={{ body: { padding: 16 } }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <BranchesOutlined style={{ color: "#0ea5e9", fontSize: 20 }} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 600 }}>เลือก Branch</div>
+            <div style={{ fontSize: 12, opacity: 0.6 }}>ระบบจะดึง commits จากไปนี้</div>
+          </div>
+          <Select
+            style={{ minWidth: 200 }}
+            placeholder="เลือก branch..."
+            loading={branchesLoading}
+            value={selectedBranch}
+            onChange={setSelectedBranch}
+            allowClear
+            options={branches.map((b) => ({
+              label: b.name,
+              value: b.name,
+            }))}
+          />
+        </div>
+      </Card>
+
       {/* What to test assistant */}
       <Card style={{ marginBottom: 16, borderRadius: 8 }} styles={{ body: { padding: 16 } }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>

@@ -19,6 +19,7 @@ export interface AnalysisFilterParams {
   fromDate?: string;
   toDate?: string;
   riskLevel?: RiskLevel;
+  branch?: string;
   page?: number;
   pageSize?: number;
 }
