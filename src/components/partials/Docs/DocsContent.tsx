@@ -36,6 +36,7 @@ interface DocsContentProps {
 
 export default function DocsContent({ repoId }: DocsContentProps) {
   const router = useRouter();
+  console.log("Current repoId being used is:", repoId);
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState("");
   const [showHistory, setShowHistory] = useState(false);
@@ -48,16 +49,21 @@ export default function DocsContent({ repoId }: DocsContentProps) {
     setIsEditing(true);
   };
 
-  const handleSave = async () => {
+const handleSave = async () => {
     try {
       await update(editContent);
       message.success("บันทึก Docs สำเร็จ");
       setIsEditing(false);
-    } catch {
-      message.error("บันทึกไม่สำเร็จ");
+    } catch (error) {
+      console.error("Save Docs Error:", error); // Logs the full error to F12
+      
+      // Try to extract the real error message from the backend
+      const err = error as any;
+      const backendMessage = err?.response?.data?.message || err?.message || "บันทึกไม่สำเร็จ";
+      
+      message.error(`บันทึกไม่สำเร็จ: ${backendMessage}`);
     }
   };
-
   const handleAutoUpdate = async () => {
     try {
       await autoUpdate();
@@ -144,15 +150,9 @@ export default function DocsContent({ repoId }: DocsContentProps) {
           )}
         </div>
 
-        <Spin spinning={isLoading}>
-          {!isLoading && !doc ? (
-            <Empty
-              description="ยังไม่มี Project Docs"
-              style={{ padding: "60px 0" }}
-            >
-              <Button type="primary" onClick={startEdit}>สร้าง Docs</Button>
-            </Empty>
-          ) : isEditing ? (
+       <Spin spinning={isLoading}>
+          {isEditing ? (
+            // 1. Check editing state FIRST
             <textarea
               value={editContent}
               onChange={(e) => setEditContent(e.target.value)}
@@ -170,7 +170,16 @@ export default function DocsContent({ repoId }: DocsContentProps) {
               }}
               placeholder="เขียน Docs ในรูปแบบ Markdown..."
             />
+          ) : !isLoading && !doc ? (
+            // 2. Then check if it's empty
+            <Empty
+              description="ยังไม่มี Project Docs"
+              style={{ padding: "60px 0" }}
+            >
+              <Button type="primary" onClick={startEdit}>สร้าง Docs</Button>
+            </Empty>
           ) : (
+            // 3. Otherwise, show the document
             <div
               style={{
                 padding: 24,

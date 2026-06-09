@@ -42,10 +42,8 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
   const [analyzingIds, setAnalyzingIds] = useState<Set<string>>(new Set());
   const [selectedBranch, setSelectedBranch] = useState<string | undefined>();
   
-  // Professional Fix: Optimistically tracks commits analyzed during this session
   const [localAnalyzedShas, setLocalAnalyzedShas] = useState<Set<string>>(new Set());
 
-  // Capture the full hook context object to check for mutation features
   const commitHookContext = useCommitList(repoId, { pageSize: 30, branch: selectedBranch });
 
   const { 
@@ -60,13 +58,11 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
     isLoadingWhatToTest 
   } = commitHookContext;
 
-  // Clear selected commits when switching branches to prevent sending stale data to the API
   useEffect(() => {
     setSelectedShas([]);
   }, [selectedBranch]);
 
   const handleAnalyze = async (commitSha: string) => {
-    // Set loading state for this specific row button
     setAnalyzingIds((prev) => {
       const next = new Set(prev);
       next.add(commitSha);
@@ -76,7 +72,6 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
     try {
       await analyze(commitSha);
       
-      // Update local state so the UI instantly changes without waiting for server response cycles
       setLocalAnalyzedShas((prev) => {
         const next = new Set(prev);
         next.add(commitSha);
@@ -85,18 +80,17 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
 
       message.success("วิเคราะห์ commit สำเร็จ");
 
-      // Defensive Programming: Try executing background refetch methods if provided by the hook
       const contextAny = commitHookContext as any;
       if (typeof contextAny.mutate === "function") contextAny.mutate();
       if (typeof contextAny.refresh === "function") contextAny.refresh();
       if (typeof contextAny.reload === "function") contextAny.reload();
 
-    } catch (error: any) {
+    } catch (error) {
       console.error("Analyze error:", error);
-      const backendMessage = error.response?.data?.message || "วิเคราะห์ไม่สำเร็จ กรุณาตรวจสอบ GitHub Token";
+      const err = error as any;
+      const backendMessage = err.response?.data?.message || "วิเคราะห์ไม่สำเร็จ กรุณาตรวจสอบ GitHub Token";
       message.error(backendMessage);
     } finally {
-      // Remove loading state safely
       setAnalyzingIds((prev) => {
         const next = new Set(prev);
         next.delete(commitSha);
@@ -113,9 +107,10 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
     try {
       await getWhatToTest(selectedShas);
       message.success("ได้คำแนะนำจาก AI สำเร็จ");
-    } catch (error: any) {
+    } catch (error) {
       console.error("What to test error:", error);
-      const backendMessage = error.response?.data?.message || "เกิดข้อผิดพลาดในการเชื่อมต่อ AI service";
+      const err = error as any;
+      const backendMessage = err.response?.data?.message || "เกิดข้อผิดพลาดในการเชื่อมต่อ AI service";
       message.error(backendMessage);
     }
   };
@@ -176,7 +171,6 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
       key: "action",
       width: 110,
       render: (_, record) => {
-        // Evaluates against both the DB timestamp and the immediate runtime transaction log
         const isAnalyzed = !!record.analyzedAt || localAnalyzedShas.has(record.commitSha);
 
         return !isAnalyzed ? (
@@ -199,7 +193,6 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
 
   return (
     <div>
-      {/* Branch selector */}
       <Card style={{ marginBottom: 16, borderRadius: 8 }} styles={{ body: { padding: 16 } }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
           <BranchesOutlined style={{ color: "#0ea5e9", fontSize: 20 }} />
@@ -222,7 +215,6 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
         </div>
       </Card>
 
-      {/* What to test assistant */}
       <Card style={{ marginBottom: 16, borderRadius: 8 }} styles={{ body: { padding: 16 } }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
           <ThunderboltOutlined style={{ color: "#6366f1", fontSize: 20 }} />
@@ -241,7 +233,6 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
           </Button>
         </div>
 
-        {/* Clean and safe recommendations layout */}
         {whatToTestResult && (
           <Alert
             style={{ marginTop: 12 }}
