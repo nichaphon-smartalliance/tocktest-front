@@ -88,7 +88,7 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
       key: "changes",
       width: 140,
       render: (_, r) => (
-        <Space direction="vertical" size={2}>
+        <Space orientation="vertical" size={2}>
           <Text style={{ fontSize: 12 }}>{r.filesChanged} ไฟล์</Text>
           <Space size={4}>
             <Text style={{ fontSize: 11, color: "#16a34a" }}>+{r.additions}</Text>
