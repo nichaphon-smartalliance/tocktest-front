@@ -8,6 +8,12 @@ import {
   deleteGithubTokenApi,
   testGithubTokenApi,
 } from "@/lib/api/api-main";
+import type { GithubTokenResponse } from "@/types/api/main/repository";
+
+const mapGithubToken = (token: GithubTokenResponse): GithubToken => ({
+  ...token,
+  expiresAt: null,
+});
 
 export const getRepositories = async (params?: Record<string, unknown>): Promise<Repository[]> => {
   const res = await getRepositoriesApi(params);
@@ -26,12 +32,12 @@ export const syncRepositories = async (): Promise<{ synced: number; total: numbe
 
 export const getGithubTokens = async (): Promise<GithubToken[]> => {
   const res = await getGithubTokensApi();
-  return res.data?.data ?? [];
+  return (res.data?.data ?? []).map(mapGithubToken);
 };
 
 export const createGithubToken = async (label: string, token: string): Promise<GithubToken> => {
   const res = await createGithubTokenApi({ label, token });
-  return res.data.data;
+  return mapGithubToken(res.data.data);
 };
 
 export const deleteGithubToken = async (id: string): Promise<void> => {
