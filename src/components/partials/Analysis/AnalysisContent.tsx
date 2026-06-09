@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Table,
   Tag,
@@ -42,17 +42,32 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
   const [analyzingIds, setAnalyzingIds] = useState<Set<string>>(new Set());
   const [selectedBranch, setSelectedBranch] = useState<string | undefined>();
 
-  const { commits, total, isLoading, branches, branchesLoading, analyze, getWhatToTest, whatToTestResult, isLoadingWhatToTest } =
-    useCommitList(repoId, { pageSize: 30, branch: selectedBranch });
+  const { 
+    commits, 
+    total, 
+    isLoading, 
+    branches, 
+    branchesLoading, 
+    analyze, 
+    getWhatToTest, 
+    whatToTestResult, 
+    isLoadingWhatToTest 
+  } = useCommitList(repoId, { pageSize: 30, branch: selectedBranch });
+
+  // Clear selected commits when switching branches to prevent sending stale data to the API
+  useEffect(() => {
+    setSelectedShas([]);
+  }, [selectedBranch]);
 
   const handleAnalyze = async (commitSha: string) => {
     setAnalyzingIds((prev) => new Set(prev).add(commitSha));
     try {
       await analyze(commitSha);
       message.success("วิเคราะห์ commit สำเร็จ");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Analyze error:", error);
-      message.error("วิเคราะห์ไม่สำเร็จ กรุณาตรวจสอบ GitHub Token");
+      const backendMessage = error.response?.data?.message || "วิเคราะห์ไม่สำเร็จ กรุณาตรวจสอบ GitHub Token";
+      message.error(backendMessage);
     } finally {
       setAnalyzingIds((prev) => {
         const next = new Set(prev);
@@ -70,9 +85,10 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
     try {
       await getWhatToTest(selectedShas);
       message.success("ได้คำแนะนำจาก AI สำเร็จ");
-    } catch (error) {
+    } catch (error: any) {
       console.error("What to test error:", error);
-      message.error("เกิดข้อผิดพลาด กรุณาลองใหม่");
+      const backendMessage = error.response?.data?.message || "เกิดข้อผิดพลาดในการเชื่อมต่อ AI service";
+      message.error(backendMessage);
     }
   };
 
@@ -93,7 +109,7 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
       key: "changes",
       width: 140,
       render: (_, r) => (
-        <Space orientation="vertical" size={2}>
+        <Space direction="vertical" size={2}>
           <Text style={{ fontSize: 12 }}>{r.filesChanged} ไฟล์</Text>
           <Space size={4}>
             <Text style={{ fontSize: 11, color: "#16a34a" }}>+{r.additions}</Text>
@@ -108,7 +124,7 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
       key: "riskLevel",
       width: 90,
       render: (v: RiskLevel | null) =>
-        v ? (
+        v && RISK_CONFIG[v] ? (
           <Tag color={RISK_CONFIG[v].color}>{RISK_CONFIG[v].label}</Tag>
         ) : (
           <Tag>ยังไม่วิเคราะห์</Tag>
@@ -166,10 +182,10 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
             value={selectedBranch}
             onChange={setSelectedBranch}
             allowClear
-            options={branches.map((b) => ({
+            options={branches?.map((b) => ({
               label: b.name,
               value: b.name,
-            }))}
+            })) || []}
           />
         </div>
       </Card>
@@ -193,6 +209,7 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
           </Button>
         </div>
 
+        {/* Clean and safe recommendations layout */}
         {whatToTestResult && (
           <Alert
             style={{ marginTop: 12 }}
@@ -200,13 +217,19 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
             message={
               <div>
                 <div style={{ fontWeight: 600, marginBottom: 8 }}>คำแนะนำจาก AI</div>
-                <ul style={{ margin: 0, paddingLeft: 20 }}>
-                  {whatToTestResult.recommendations.map((r, i) => (
-                    <li key={i} style={{ marginBottom: 4, fontSize: 13 }}>{r}</li>
-                  ))}
-                </ul>
+                {whatToTestResult.recommendations?.length > 0 ? (
+                  <ul style={{ margin: 0, paddingLeft: 20 }}>
+                    {whatToTestResult.recommendations.map((r, i) => (
+                      <li key={i} style={{ marginBottom: 4, fontSize: 13 }}>{r}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div style={{ fontSize: 13, opacity: 0.6 }}>ไม่มีคำแนะนำที่ระบุแน่ชัด</div>
+                )}
                 {whatToTestResult.reasoning && (
-                  <div style={{ marginTop: 8, fontSize: 12, opacity: 0.7 }}>{whatToTestResult.reasoning}</div>
+                  <div style={{ marginTop: 8, fontSize: 12, opacity: 0.7 }}>
+                    <strong>เหตุผล:</strong> {whatToTestResult.reasoning}
+                  </div>
                 )}
               </div>
             }
