@@ -191,42 +191,11 @@ export default function TestCaseModal({
 
         <Form.Item name="expectedResult" label="ผลลัพธ์ที่คาดหวัง">
           <TextArea rows={3} placeholder="ระบบควรแสดง..." />
-        </Form.Item>
-
-        <Form.Item name="testType" label="ประเภท" rules={[{ required: true }]}>
-          <Segmented
-            options={[
-              { value: "manual", label: "Manual" },
-              { value: "automated", label: "Automated" },
-              { value: "ui", label: "UI" },
-              { value: "api", label: "API" },
-              { value: "integration", label: "Integration" },
-            ]}
-          />
+                  
         </Form.Item>
 
         <div style={{ display: "flex", gap: 24 }}>
-          <Form.Item name="status" label="สถานะ" rules={[{ required: true }]} style={{ flex: 1 }}>
-            <Segmented
-              options={[
-                { value: "not_tested", label: "ยังไม่ทดสอบ" },
-                { value: "pass", label: "ผ่าน" },
-                { value: "fail", label: "ไม่ผ่าน" },
-                { value: "blocked", label: "ติดขัด" },
-              ]}
-            />
-          </Form.Item>
 
-          <Form.Item name="priority" label="ความสำคัญ" rules={[{ required: true }]} style={{ flex: 1 }}>
-            <Segmented
-              options={[
-                { value: "low", label: "ต่ำ" },
-                { value: "medium", label: "กลาง" },
-                { value: "high", label: "สูง" },
-                { value: "critical", label: "วิกฤต" },
-              ]}
-            />
-          </Form.Item>
         </div>
 
         <Form.Item name="tags" label="แท็ก">
