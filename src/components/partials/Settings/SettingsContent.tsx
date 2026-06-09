@@ -59,6 +59,20 @@ export default function SettingsContent({ repoId }: SettingsContentProps) {
       render: (v: string) => dayjs(v).format("DD/MM/YYYY"),
     },
     {
+      title: "วันหมดอายุ",
+      dataIndex: "expiresAt",
+      key: "expiresAt",
+      render: (v: string | null) => {
+        if (!v) return <span style={{ opacity: 0.5 }}>ไม่มีกำหนด</span>;
+        const isExpired = dayjs(v).isBefore(dayjs());
+        return (
+          <Tag color={isExpired ? "red" : "blue"}>
+            {dayjs(v).format("DD/MM/YYYY")} {isExpired && <span>(หมดอายุแล้ว)</span>}
+          </Tag>
+        );
+      },
+    },
+    {
       title: "",
       key: "action",
       render: (_: unknown, record: GithubToken) => (
