@@ -41,6 +41,12 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
   const [selectedShas, setSelectedShas] = useState<string[]>([]);
   const [analyzingIds, setAnalyzingIds] = useState<Set<string>>(new Set());
   const [selectedBranch, setSelectedBranch] = useState<string | undefined>();
+  
+  // Professional Fix: Optimistically tracks commits analyzed during this session
+  const [localAnalyzedShas, setLocalAnalyzedShas] = useState<Set<string>>(new Set());
+
+  // Capture the full hook context object to check for mutation features
+  const commitHookContext = useCommitList(repoId, { pageSize: 30, branch: selectedBranch });
 
   const { 
     commits, 
@@ -52,7 +58,7 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
     getWhatToTest, 
     whatToTestResult, 
     isLoadingWhatToTest 
-  } = useCommitList(repoId, { pageSize: 30, branch: selectedBranch });
+  } = commitHookContext;
 
   // Clear selected commits when switching branches to prevent sending stale data to the API
   useEffect(() => {
@@ -60,15 +66,37 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
   }, [selectedBranch]);
 
   const handleAnalyze = async (commitSha: string) => {
-    setAnalyzingIds((prev) => new Set(prev).add(commitSha));
+    // Set loading state for this specific row button
+    setAnalyzingIds((prev) => {
+      const next = new Set(prev);
+      next.add(commitSha);
+      return next;
+    });
+
     try {
       await analyze(commitSha);
+      
+      // Update local state so the UI instantly changes without waiting for server response cycles
+      setLocalAnalyzedShas((prev) => {
+        const next = new Set(prev);
+        next.add(commitSha);
+        return next;
+      });
+
       message.success("วิเคราะห์ commit สำเร็จ");
+
+      // Defensive Programming: Try executing background refetch methods if provided by the hook
+      const contextAny = commitHookContext as any;
+      if (typeof contextAny.mutate === "function") contextAny.mutate();
+      if (typeof contextAny.refresh === "function") contextAny.refresh();
+      if (typeof contextAny.reload === "function") contextAny.reload();
+
     } catch (error: any) {
       console.error("Analyze error:", error);
       const backendMessage = error.response?.data?.message || "วิเคราะห์ไม่สำเร็จ กรุณาตรวจสอบ GitHub Token";
       message.error(backendMessage);
     } finally {
+      // Remove loading state safely
       setAnalyzingIds((prev) => {
         const next = new Set(prev);
         next.delete(commitSha);
@@ -147,8 +175,11 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
       title: "",
       key: "action",
       width: 110,
-      render: (_, record) =>
-        !record.analyzedAt ? (
+      render: (_, record) => {
+        // Evaluates against both the DB timestamp and the immediate runtime transaction log
+        const isAnalyzed = !!record.analyzedAt || localAnalyzedShas.has(record.commitSha);
+
+        return !isAnalyzed ? (
           <Button
             size="small"
             icon={<RobotOutlined />}
@@ -158,10 +189,11 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
             วิเคราะห์
           </Button>
         ) : (
-          <Tooltip title={`วิเคราะห์เมื่อ ${dayjs(record.analyzedAt).fromNow()}`}>
+          <Tooltip title={record.analyzedAt ? `วิเคราะห์เมื่อ ${dayjs(record.analyzedAt).fromNow()}` : "วิเคราะห์สำเร็จแล้ว"}>
             <Tag color="green" style={{ cursor: "default" }}>วิเคราะห์แล้ว</Tag>
           </Tooltip>
-        ),
+        );
+      },
     },
   ];
 
