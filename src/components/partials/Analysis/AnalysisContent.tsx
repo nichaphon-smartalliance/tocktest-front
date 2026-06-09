@@ -48,7 +48,8 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
     try {
       await analyze(commitSha);
       message.success("วิเคราะห์ commit สำเร็จ");
-    } catch {
+    } catch (error) {
+      console.error("Analyze error:", error);
       message.error("วิเคราะห์ไม่สำเร็จ กรุณาตรวจสอบ GitHub Token");
     } finally {
       setAnalyzingIds((prev) => {
@@ -66,7 +67,9 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
     }
     try {
       await getWhatToTest(selectedShas);
-    } catch {
+      message.success("ได้คำแนะนำจาก AI สำเร็จ");
+    } catch (error) {
+      console.error("What to test error:", error);
       message.error("เกิดข้อผิดพลาด กรุณาลองใหม่");
     }
   };
