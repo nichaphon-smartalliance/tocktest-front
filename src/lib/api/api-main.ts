@@ -8,6 +8,7 @@ import type {
 } from "@/types/api/main/testCase";
 import type { CommitResponse, AiAnalysisResponse, WhatToTestResponse } from "@/types/api/main/analysis";
 import type { ProjectDocResponse, DocVersionResponse } from "@/types/api/main/docs";
+import type { RepoSettingsResponse } from "@/types/api/main/settings";
 import { mainClient } from "./client";
 
 // ── Repositories ──────────────────────────────────────────────────────────
@@ -96,3 +97,10 @@ export const autoUpdateDocApi = (repoId: string) =>
 
 export const deleteProjectDocApi = (repoId: string) =>
   mainClient.delete<ApiResponse<void>>(`/api/v1/repositories/${repoId}/docs`);
+
+// ── Repo Settings ─────────────────────────────────────────────────────────
+export const getRepoSettingsApi = (repoId: string) =>
+  mainClient.get<ApiResponse<RepoSettingsResponse>>(`/api/v1/repositories/${repoId}/settings`);
+
+export const updateRepoSettingsApi = (repoId: string, body: Partial<RepoSettingsResponse>) =>
+  mainClient.put<ApiResponse<RepoSettingsResponse>>(`/api/v1/repositories/${repoId}/settings`, body);

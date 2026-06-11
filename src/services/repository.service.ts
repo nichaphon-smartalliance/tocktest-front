@@ -12,7 +12,7 @@ import type { GithubTokenResponse } from "@/types/api/main/repository";
 
 const mapGithubToken = (token: GithubTokenResponse): GithubToken => ({
   ...token,
-  expiresAt: null,
+  expiresAt: token.expiresAt ?? null,
 });
 
 export const getRepositories = async (params?: Record<string, unknown>): Promise<Repository[]> => {

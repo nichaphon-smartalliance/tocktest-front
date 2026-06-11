@@ -267,9 +267,10 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
                         </Table.Cell>
                         <Table.Cell>
                           <div className="font-mono text-xs text-muted">{record.commitSha.slice(0, 7)}</div>
-                          <div className="font-medium text-sm">{record.commitMessage}</div>
+                          <div className="font-medium text-sm">{record.commitMessage ?? "(no message)"}</div>
                           <div className="text-xs text-muted">
-                            {record.authorName} · {dayjs(record.committedAt).fromNow()}
+                            {record.authorName ?? "unknown"}
+                            {record.committedAt ? ` · ${dayjs(record.committedAt).fromNow()}` : ""}
                           </div>
                         </Table.Cell>
                         <Table.Cell>

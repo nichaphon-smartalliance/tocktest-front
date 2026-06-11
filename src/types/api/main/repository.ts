@@ -19,6 +19,7 @@ export interface GithubTokenResponse {
   scopes: string[];
   isActive: boolean;
   lastTestedAt: string | null;
+  expiresAt: string | null;
   createdAt: string;
 }
 

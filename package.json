@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "copy-heroui-css": "node scripts/copy-heroui-css.mjs",
+    "postinstall": "node scripts/copy-heroui-css.mjs",
+    "predev": "node scripts/copy-heroui-css.mjs",
+    "prebuild": "node scripts/copy-heroui-css.mjs",
     "dev": "next dev -p 4003",
     "build": "next build",
     "start": "next start -p 4003",

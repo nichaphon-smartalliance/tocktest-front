@@ -4,9 +4,9 @@ export type { RiskLevel };
 export interface CommitItem {
   id: string;
   commitSha: string;
-  commitMessage: string;
-  authorName: string;
-  committedAt: string;
+  commitMessage: string | null;
+  authorName: string | null;
+  committedAt: string | null;
   aiSummary: string | null;
   riskLevel: RiskLevel | null;
   filesChanged: number;

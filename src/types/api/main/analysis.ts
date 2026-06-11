@@ -4,10 +4,10 @@ export interface CommitResponse {
   id: string;
   repoId: string;
   commitSha: string;
-  commitMessage: string;
-  authorName: string;
-  authorEmail: string;
-  committedAt: string;
+  commitMessage: string | null;
+  authorName: string | null;
+  authorEmail: string | null;
+  committedAt: string | null;
   aiSummary: string | null;
   riskLevel: RiskLevel | null;
   filesChanged: number;
