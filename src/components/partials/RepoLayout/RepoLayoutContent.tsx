@@ -1,6 +1,6 @@
 "use client";
 
-import { Tabs, Skeleton, Breadcrumbs, Chip } from "@heroui/react";
+import { Tabs, Breadcrumbs, Chip } from "@heroui/react";
 import { useRouter, usePathname } from "next/navigation";
 import { Lock, Globe } from "lucide-react";
 import { BugPlay, GitCommitHorizontal, BookOpen, Settings } from "lucide-react";
@@ -43,7 +43,7 @@ export default function RepoLayoutContent({ repoId, children }: RepoLayoutConten
         </Breadcrumbs.Item>
         <Breadcrumbs.Item>
           {isLoading ? (
-            <Skeleton className="h-4 w-28 rounded" />
+            <span className="inline-block h-4 w-28 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
           ) : (
             <span className="flex items-center gap-1.5">
               {repository?.fullName}

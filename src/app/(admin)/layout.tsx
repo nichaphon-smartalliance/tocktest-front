@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { AdminLayoutShell } from "@/components/layout/AdminLayout";
-import { toClientSession } from "@/types/app/session";
 import { getSafeSession } from "@/lib/get-session";
 
 export default async function AdminLayout({
@@ -9,7 +8,7 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   const session = await getSafeSession();
-  if (!session?.user?.id) redirect("/login");
+  if (!session) redirect("/login");
 
-  return <AdminLayoutShell session={toClientSession(session)}>{children}</AdminLayoutShell>;
+  return <AdminLayoutShell session={session}>{children}</AdminLayoutShell>;
 }
