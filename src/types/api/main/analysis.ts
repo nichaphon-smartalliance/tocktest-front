@@ -32,3 +32,19 @@ export interface WhatToTestResponse {
   reasoning: string;
   source?: AiResponseSource;
 }
+
+export interface PullRequestReviewFinding {
+  file: string | null;
+  severity: RiskLevel;
+  title: string;
+  comment: string;
+  suggestion: string;
+}
+
+export interface PullRequestReviewResponse {
+  summary: string;
+  riskLevel: RiskLevel;
+  findings: PullRequestReviewFinding[];
+  mergeRecommendation: "approve" | "comment" | "request_changes";
+  source?: AiResponseSource;
+}

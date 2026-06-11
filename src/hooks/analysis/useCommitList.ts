@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getCommits, analyzeCommit, getWhatToTest, getBranches } from "@/services/analysis.service";
+import { getCommits, analyzeCommit, getWhatToTest, getBranches, reviewPullRequest } from "@/services/analysis.service";
 import type { CommitItem, AnalysisFilterParams } from "@/types/app/analysis";
 import type { AiAnalysisResponse } from "@/types/api/main/analysis";
 
@@ -63,6 +63,10 @@ export const useCommitList = (repoId: string, params?: AnalysisFilterParams) => 
     mutationFn: (commitShas: string[]) => getWhatToTest(repoId, commitShas),
   });
 
+  const pullRequestReviewMutation = useMutation({
+    mutationFn: (pullRequestNumber: number) => reviewPullRequest(repoId, pullRequestNumber),
+  });
+
   return {
     commits: data?.items ?? [],
     total: data?.total ?? 0,
@@ -75,5 +79,8 @@ export const useCommitList = (repoId: string, params?: AnalysisFilterParams) => 
     getWhatToTest: whatToTestMutation.mutateAsync,
     whatToTestResult: whatToTestMutation.data,
     isLoadingWhatToTest: whatToTestMutation.isPending,
+    reviewPullRequest: pullRequestReviewMutation.mutateAsync,
+    pullRequestReviewResult: pullRequestReviewMutation.data,
+    isReviewingPullRequest: pullRequestReviewMutation.isPending,
   };
 };

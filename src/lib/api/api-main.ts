@@ -6,7 +6,7 @@ import type {
   AiGenerateRequest,
   AiGenerateResponse,
 } from "@/types/api/main/testCase";
-import type { CommitResponse, AiAnalysisResponse, WhatToTestResponse } from "@/types/api/main/analysis";
+import type { CommitResponse, AiAnalysisResponse, PullRequestReviewResponse, WhatToTestResponse } from "@/types/api/main/analysis";
 import type { ProjectDocResponse, DocVersionResponse } from "@/types/api/main/docs";
 import type { RepoSettingsResponse } from "@/types/api/main/settings";
 import type { UserProfileResponse, UserSettingsResponse, UpdateUserSettingsRequest } from "@/types/api/main/user";
@@ -88,6 +88,9 @@ export const analyzeCommitApi = (repoId: string, commitSha: string) =>
 
 export const getWhatToTestApi = (repoId: string, commitShas: string[]) =>
   mainClient.post<ApiResponse<WhatToTestResponse>>(`/api/v1/repositories/${repoId}/what-to-test`, { commitShas });
+
+export const reviewPullRequestApi = (repoId: string, pullRequestNumber: number) =>
+  mainClient.post<ApiResponse<PullRequestReviewResponse>>(`/api/v1/repositories/${repoId}/pull-requests/${pullRequestNumber}/review`);
 
 // ── Project Docs ──────────────────────────────────────────────────────────
 export const getProjectDocApi = (repoId: string) =>

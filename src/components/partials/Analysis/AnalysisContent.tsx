@@ -9,8 +9,9 @@ import {
   Select,
   ListBox,
   Spinner,
+  Input,
 } from "@heroui/react";
-import { Bot, GitBranch, Zap } from "lucide-react";
+import { Bot, GitBranch, Zap, GitPullRequest } from "lucide-react";
 import { message } from "@/lib/toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import dayjs from "dayjs";
@@ -37,6 +38,7 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [analyzingIds, setAnalyzingIds] = useState<Set<string>>(new Set());
   const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
+  const [pullRequestNumber, setPullRequestNumber] = useState("");
 
   const {
     commits,
@@ -48,6 +50,9 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
     getWhatToTest,
     whatToTestResult,
     isLoadingWhatToTest,
+    reviewPullRequest,
+    pullRequestReviewResult,
+    isReviewingPullRequest,
   } = useCommitList(repoId, { pageSize: 30, branch: selectedBranch ?? undefined });
 
   useEffect(() => {
@@ -111,6 +116,25 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
       );
     } catch (error) {
       message.error(getApiErrorMessage(error, "เกิดข้อผิดพลาดในการเชื่อมต่อ AI service"));
+    }
+  };
+
+  const handlePullRequestReview = async () => {
+    const prNumber = Number(pullRequestNumber);
+    if (!Number.isInteger(prNumber) || prNumber <= 0) {
+      message.warning("Please enter a valid pull request number");
+      return;
+    }
+
+    try {
+      const result = await reviewPullRequest(prNumber);
+      message.success(
+        result?.source === "heuristic"
+          ? "PR review completed with fallback response"
+          : "PR review completed"
+      );
+    } catch (error) {
+      message.error(getApiErrorMessage(error, "PR review failed. Please check the GitHub token and PR number."));
     }
   };
 
@@ -208,6 +232,64 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
 
       <Card>
         <Card.Content className="p-4">
+          <div className="mb-4 flex flex-wrap items-center gap-3">
+            <GitPullRequest className="size-5 text-emerald-500 shrink-0" />
+            <div className="flex-1 min-w-[220px]">
+              <p className="font-semibold text-sm">Review a pull request</p>
+              <p className="text-xs text-muted">Fetch PR changes from GitHub and ask AI to return review findings.</p>
+            </div>
+            <Input
+              aria-label="Pull request number"
+              value={pullRequestNumber}
+              onChange={(e) => setPullRequestNumber(e.target.value)}
+              placeholder="PR #"
+              className="w-[120px]"
+            />
+            <button
+              type="button"
+              disabled={isReviewingPullRequest}
+              onClick={handlePullRequestReview}
+              className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white cursor-pointer hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isReviewingPullRequest ? <Spinner size="sm" color="current" /> : <Bot size={16} />}
+              Review PR
+            </button>
+          </div>
+
+          {pullRequestReviewResult && (
+            <Alert status="success" className="mb-3">
+              <Alert.Indicator />
+              <Alert.Content>
+                <Alert.Title>
+                  PR review summary
+                  {" "}
+                  <Chip color={RISK_CONFIG[pullRequestReviewResult.riskLevel].color} size="sm" variant="soft">
+                    <Chip.Label>{RISK_CONFIG[pullRequestReviewResult.riskLevel].label}</Chip.Label>
+                  </Chip>
+                </Alert.Title>
+                <Alert.Description>
+                  <p className="mb-2 text-sm">{pullRequestReviewResult.summary}</p>
+                  <p className="mb-2 text-xs text-muted">
+                    Recommendation: <strong>{pullRequestReviewResult.mergeRecommendation}</strong>
+                  </p>
+                  {pullRequestReviewResult.findings?.length > 0 ? (
+                    <ul className="mt-1 list-disc pl-5 text-sm">
+                      {pullRequestReviewResult.findings.map((finding, index) => (
+                        <li key={`${finding.file ?? "file"}-${index}`} className="mb-2">
+                          <strong>{finding.title}</strong>
+                          {finding.file ? ` (${finding.file})` : ""}
+                          {`: ${finding.comment}`}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <span className="text-sm text-muted">No concrete findings were returned.</span>
+                  )}
+                </Alert.Description>
+              </Alert.Content>
+            </Alert>
+          )}
+
           <div className="flex flex-wrap items-center gap-3">
             <Zap className="size-5 text-indigo-500 shrink-0" />
             <div className="flex-1 min-w-[200px]">
