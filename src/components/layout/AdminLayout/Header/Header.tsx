@@ -17,12 +17,12 @@ export default function Header({ collapsed, onToggle, session }: HeaderProps) {
 
   return (
     <header className="sticky top-0 z-100 flex h-16 items-center justify-between border-b border-gray-200 bg-[var(--bg-sider)] px-4 dark:border-gray-700">
-      <Button variant="ghost" isIconOnly onPress={onToggle} aria-label="Toggle sidebar">
+      <Button variant="ghost" isIconOnly onPress={onToggle} aria-label="Toggle sidebar" className="text-[var(--text-primary)]">
         {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
       </Button>
 
       <div className="flex items-center gap-2">
-        <Button variant="ghost" isIconOnly onPress={toggle} aria-label="Toggle theme">
+        <Button variant="ghost" isIconOnly onPress={toggle} aria-label="Toggle theme" className="text-[var(--text-primary)]">
           {mode === "dark" ? <Sun size={18} /> : <Moon size={18} />}
         </Button>
 
@@ -35,7 +35,7 @@ export default function Header({ collapsed, onToggle, session }: HeaderProps) {
               <Avatar size="sm" color="accent">
                 <Avatar.Fallback>{session.user.name?.charAt(0)?.toUpperCase() ?? "U"}</Avatar.Fallback>
               </Avatar>
-              <span className="text-sm font-medium hidden sm:inline">{session.user.name}</span>
+              <span className="text-sm font-medium text-[var(--text-primary)] hidden sm:inline">{session.user.name}</span>
             </button>
           </Dropdown.Trigger>
           <Dropdown.Popover placement="bottom end">

@@ -61,7 +61,7 @@ export default function Sidebar({ collapsed, session }: SidebarProps) {
       </nav>
 
       {!collapsed && (
-        <div className="mt-auto px-4 pb-4 text-xs opacity-60">
+        <div className="mt-auto px-4 pb-4 text-xs text-[var(--text-muted)]">
           <div className="font-semibold mb-0.5">{session.user.name}</div>
           <div>{session.user.email}</div>
         </div>
