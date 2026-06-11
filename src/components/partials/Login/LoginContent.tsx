@@ -1,24 +1,40 @@
 "use client";
 
 import { useState } from "react";
-import { Form, Input, Button, Card, Typography, Alert } from "antd";
-import { MailOutlined, LockOutlined } from "@ant-design/icons";
+import {
+  Card,
+  Button,
+  Alert,
+  TextField,
+  Label,
+  InputGroup,
+} from "@heroui/react";
+import { FlaskConical, Mail, Lock } from "lucide-react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
-const { Title, Text } = Typography;
-
 export default function LoginContent() {
   const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const onFinish = async (values: { email: string; password: string }) => {
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) {
+      setError("กรุณากรอกอีเมล");
+      return;
+    }
+    if (!password) {
+      setError("กรุณากรอกรหัสผ่าน");
+      return;
+    }
     setLoading(true);
     setError(null);
     const result = await signIn("credentials", {
-      email: values.email,
-      password: values.password,
+      email: email.trim(),
+      password,
       redirect: false,
     });
     setLoading(false);
@@ -30,75 +46,60 @@ export default function LoginContent() {
   };
 
   return (
-    <div style={{ width: "100%", maxWidth: 420, padding: "0 16px" }}>
-      {/* Logo */}
-      <div style={{ textAlign: "center", marginBottom: 32 }}>
-        <div style={{ fontSize: 48, marginBottom: 8 }}>🧪</div>
-        <Title level={2} style={{ margin: 0, color: "#6366f1" }}>
-          TockTest
-        </Title>
-        <Text type="secondary" style={{ fontSize: 14 }}>
-          AI-First QA Platform
-        </Text>
+    <div className="w-full max-w-[420px] px-4">
+      <div className="text-center mb-8">
+        <div className="flex justify-center mb-2">
+          <FlaskConical size={48} className="text-indigo-500" />
+        </div>
+        <h1 className="text-2xl font-bold text-indigo-500 m-0">TockTest</h1>
+        <p className="text-sm text-muted mt-1">AI-First QA Platform</p>
       </div>
 
-      <Card
-        style={{ borderRadius: 16, boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }}
-        styles={{ body: { padding: 32 } }}
-      >
-        <Title level={4} style={{ marginBottom: 24, textAlign: "center" }}>
-          เข้าสู่ระบบ
-        </Title>
+      <Card className="rounded-2xl shadow-lg">
+        <Card.Content className="p-8">
+          <h2 className="text-lg font-semibold text-center mb-6">เข้าสู่ระบบ</h2>
 
-        {error && (
-          <Alert
-            title={error}
-            type="error"
-            showIcon
-            style={{ marginBottom: 20, borderRadius: 8 }}
-            closable
-            onClose={() => setError(null)}
-          />
-        )}
+          {error && (
+            <Alert status="danger" className="mb-5">
+              <Alert.Indicator />
+              <Alert.Content>
+                <Alert.Description>{error}</Alert.Description>
+              </Alert.Content>
+            </Alert>
+          )}
 
-        <Form
-          name="login"
-          layout="vertical"
-          onFinish={onFinish}
-          requiredMark={false}
-          size="large"
-        >
-          <Form.Item
-            name="email"
-            label="อีเมล"
-            rules={[
-              { required: true, message: "กรุณากรอกอีเมล" },
-              { type: "email", message: "รูปแบบอีเมลไม่ถูกต้อง" },
-            ]}
-          >
-            <Input prefix={<MailOutlined style={{ opacity: 0.4 }} />} placeholder="admin@tocktest.com" />
-          </Form.Item>
+          <form onSubmit={onSubmit} className="flex flex-col gap-4">
+            <TextField value={email} onChange={setEmail} isRequired>
+              <Label>อีเมล</Label>
+              <InputGroup>
+                <InputGroup.Prefix>
+                  <Mail size={16} className="opacity-40" />
+                </InputGroup.Prefix>
+                <InputGroup.Input type="email" placeholder="admin@tocktest.com" />
+              </InputGroup>
+            </TextField>
 
-          <Form.Item
-            name="password"
-            label="รหัสผ่าน"
-            rules={[{ required: true, message: "กรุณากรอกรหัสผ่าน" }]}
-          >
-            <Input.Password prefix={<LockOutlined style={{ opacity: 0.4 }} />} placeholder="••••••••" />
-          </Form.Item>
+            <TextField value={password} onChange={setPassword} isRequired>
+              <Label>รหัสผ่าน</Label>
+              <InputGroup>
+                <InputGroup.Prefix>
+                  <Lock size={16} className="opacity-40" />
+                </InputGroup.Prefix>
+                <InputGroup.Input type="password" placeholder="••••••••" />
+              </InputGroup>
+            </TextField>
 
-          <Form.Item style={{ marginBottom: 0, marginTop: 8 }}>
             <Button
-              type="primary"
-              htmlType="submit"
-              loading={loading}
-              block
-              style={{ height: 44, fontWeight: 600, fontSize: 15 }}
+              type="submit"
+              variant="primary"
+              fullWidth
+              isDisabled={loading}
+              className="h-11 font-semibold mt-2"
             >
-              เข้าสู่ระบบ
+              {loading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
             </Button>
-          </Form.Item>
-        </Form>
+          </form>
+        </Card.Content>
       </Card>
     </div>
   );

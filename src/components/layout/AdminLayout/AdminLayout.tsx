@@ -1,15 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Layout } from "antd";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
 import type { Session } from "next-auth";
 import { setupInterceptors } from "@/lib/api/interceptor";
 
 setupInterceptors();
-
-const { Content } = Layout;
 
 interface AdminLayoutShellProps {
   children: React.ReactNode;
@@ -20,18 +17,16 @@ export default function AdminLayoutShell({ children, session }: AdminLayoutShell
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <Layout style={{ minHeight: "100vh" }}>
+    <div className="flex min-h-screen bg-[var(--bg-layout)]">
       <Sidebar collapsed={collapsed} session={session} />
-      <Layout>
+      <div className="flex min-h-screen flex-1 flex-col min-w-0">
         <Header
           collapsed={collapsed}
           onToggle={() => setCollapsed((c) => !c)}
           session={session}
         />
-        <Content style={{ padding: 24, minHeight: "calc(100vh - 64px)" }}>
-          {children}
-        </Content>
-      </Layout>
-    </Layout>
+        <main className="flex-1 p-6 min-h-[calc(100vh-64px)]">{children}</main>
+      </div>
+    </div>
   );
 }

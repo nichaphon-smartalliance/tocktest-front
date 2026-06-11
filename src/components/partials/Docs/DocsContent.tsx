@@ -3,24 +3,23 @@
 import { useState } from "react";
 import {
   Button,
-  Space,
-  Tag,
-  Spin,
-  Empty,
-  Timeline,
-  Typography,
-  Popconfirm,
-} from "antd";
-import { message } from "@/lib/antd-static";
+  Chip,
+  Spinner,
+  Alert,
+  AlertDialog,
+  TextArea,
+} from "@heroui/react";
+import { message } from "@/lib/toast";
 import {
-  EditOutlined,
-  SaveOutlined,
-  CloseOutlined,
-  RobotOutlined,
-  HistoryOutlined,
-  DeleteOutlined,
-  ArrowLeftOutlined,
-} from "@ant-design/icons";
+  ArrowLeft,
+  Bot,
+  History,
+  Trash2,
+  Pencil,
+  Save,
+  X,
+  FileText,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import dayjs from "dayjs";
 import "dayjs/locale/th";
@@ -28,15 +27,12 @@ import { useProjectDoc } from "@/hooks/docs";
 
 dayjs.locale("th");
 
-const { Text } = Typography;
-
 interface DocsContentProps {
   repoId: string;
 }
 
 export default function DocsContent({ repoId }: DocsContentProps) {
   const router = useRouter();
-  console.log("Current repoId being used is:", repoId);
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState("");
   const [showHistory, setShowHistory] = useState(false);
@@ -49,21 +45,19 @@ export default function DocsContent({ repoId }: DocsContentProps) {
     setIsEditing(true);
   };
 
-const handleSave = async () => {
+  const handleSave = async () => {
     try {
       await update(editContent);
       message.success("บันทึก Docs สำเร็จ");
       setIsEditing(false);
     } catch (error) {
-      console.error("Save Docs Error:", error); // Logs the full error to F12
-      
-      // Try to extract the real error message from the backend
-      const err = error as any;
+      console.error("Save Docs Error:", error);
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
       const backendMessage = err?.response?.data?.message || err?.message || "บันทึกไม่สำเร็จ";
-      
       message.error(`บันทึกไม่สำเร็จ: ${backendMessage}`);
     }
   };
+
   const handleAutoUpdate = async () => {
     try {
       await autoUpdate();
@@ -85,136 +79,158 @@ const handleSave = async () => {
   };
 
   return (
-    <div style={{ display: "flex", gap: 16 }}>
-      {/* Doc content */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        {/* Toolbar */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-          <Button
-            icon={<ArrowLeftOutlined />}
-            type="text"
-            onClick={() => router.back()}
-            style={{ padding: "0 8px" }}
-          >
+    <div className="flex gap-4">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-4 flex-wrap">
+          <Button variant="ghost" size="sm" onPress={() => router.back()}>
+            <ArrowLeft size={16} />
             กลับ
           </Button>
           {doc && (
-            <Tag>v{doc.version}</Tag>
+            <Chip size="sm" variant="soft">
+              <Chip.Label>v{doc.version}</Chip.Label>
+            </Chip>
           )}
-          <Text type="secondary" style={{ fontSize: 12 }}>
+          <span className="text-xs text-muted">
             {doc ? `อัปเดตเมื่อ ${dayjs(doc.updatedAt).format("DD MMM YYYY HH:mm")}` : ""}
-          </Text>
-          <div style={{ flex: 1 }} />
+          </span>
+          <div className="flex-1" />
 
           {!isEditing ? (
-            <Space>
-              <Popconfirm
-                title="AI จะวิเคราะห์ code และอัปเดต Docs อัตโนมัติ ดำเนินการหรือไม่?"
-                onConfirm={handleAutoUpdate}
-                okText="ดำเนินการ"
-                cancelText="ยกเลิก"
-              >
-                <Button icon={<RobotOutlined />} loading={isAutoUpdating}>
-                  AI Auto Update
-                </Button>
-              </Popconfirm>
-              <Button icon={<HistoryOutlined />} onClick={() => setShowHistory((v) => !v)}>
+            <div className="flex items-center gap-2 flex-wrap">
+              <AlertDialog>
+                <AlertDialog.Trigger>
+                  <Button variant="secondary" size="sm" isDisabled={isAutoUpdating}>
+                    <Bot size={14} />
+                    AI Auto Update
+                  </Button>
+                </AlertDialog.Trigger>
+                <AlertDialog.Backdrop>
+                  <AlertDialog.Container>
+                    <AlertDialog.Dialog>
+                      <AlertDialog.Header>
+                        <AlertDialog.Icon status="accent" />
+                        <AlertDialog.Heading>AI Auto Update</AlertDialog.Heading>
+                      </AlertDialog.Header>
+                      <AlertDialog.Body>
+                        AI จะวิเคราะห์ code และอัปเดต Docs อัตโนมัติ ดำเนินการหรือไม่?
+                      </AlertDialog.Body>
+                      <AlertDialog.Footer>
+                        <Button slot="close" variant="secondary">
+                          ยกเลิก
+                        </Button>
+                        <Button variant="primary" onPress={handleAutoUpdate}>
+                          ดำเนินการ
+                        </Button>
+                      </AlertDialog.Footer>
+                    </AlertDialog.Dialog>
+                  </AlertDialog.Container>
+                </AlertDialog.Backdrop>
+              </AlertDialog>
+
+              <Button variant="secondary" size="sm" onPress={() => setShowHistory((v) => !v)}>
+                <History size={14} />
                 ประวัติ
               </Button>
+
               {doc && (
-                <Popconfirm
-                  title="ลบ Docs ทั้งหมดหรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้"
-                  onConfirm={handleDelete}
-                  okText="ลบ"
-                  okButtonProps={{ danger: true }}
-                  cancelText="ยกเลิก"
-                >
-                  <Button danger icon={<DeleteOutlined />} loading={isDeleting}>
-                    ลบ
-                  </Button>
-                </Popconfirm>
+                <AlertDialog>
+                  <AlertDialog.Trigger>
+                    <Button variant="danger" size="sm" isDisabled={isDeleting}>
+                      <Trash2 size={14} />
+                      ลบ
+                    </Button>
+                  </AlertDialog.Trigger>
+                  <AlertDialog.Backdrop>
+                    <AlertDialog.Container>
+                      <AlertDialog.Dialog>
+                        <AlertDialog.Header>
+                          <AlertDialog.Icon status="danger" />
+                          <AlertDialog.Heading>ลบ Docs</AlertDialog.Heading>
+                        </AlertDialog.Header>
+                        <AlertDialog.Body>
+                          ลบ Docs ทั้งหมดหรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้
+                        </AlertDialog.Body>
+                        <AlertDialog.Footer>
+                          <Button slot="close" variant="secondary">
+                            ยกเลิก
+                          </Button>
+                          <Button variant="danger" onPress={handleDelete}>
+                            ลบ
+                          </Button>
+                        </AlertDialog.Footer>
+                      </AlertDialog.Dialog>
+                    </AlertDialog.Container>
+                  </AlertDialog.Backdrop>
+                </AlertDialog>
               )}
-              <Button type="primary" icon={<EditOutlined />} onClick={startEdit}>
+
+              <Button variant="primary" size="sm" onPress={startEdit}>
+                <Pencil size={14} />
                 แก้ไข
               </Button>
-            </Space>
+            </div>
           ) : (
-            <Space>
-              <Button icon={<CloseOutlined />} onClick={() => setIsEditing(false)}>
+            <div className="flex items-center gap-2">
+              <Button variant="secondary" size="sm" onPress={() => setIsEditing(false)}>
+                <X size={14} />
                 ยกเลิก
               </Button>
-              <Button type="primary" icon={<SaveOutlined />} loading={isUpdating} onClick={handleSave}>
-                บันทึก
+              <Button variant="primary" size="sm" isDisabled={isUpdating} onPress={handleSave}>
+                <Save size={14} />
+                {isUpdating ? "กำลังบันทึก..." : "บันทึก"}
               </Button>
-            </Space>
+            </div>
           )}
         </div>
 
-       <Spin spinning={isLoading}>
-          {isEditing ? (
-            // 1. Check editing state FIRST
-            <textarea
-              value={editContent}
-              onChange={(e) => setEditContent(e.target.value)}
-              style={{
-                width: "100%",
-                minHeight: 500,
-                padding: 16,
-                fontFamily: "'Fira Code', monospace",
-                fontSize: 14,
-                lineHeight: 1.6,
-                border: "1px solid #d1d5db",
-                borderRadius: 8,
-                resize: "vertical",
-                outline: "none",
-              }}
-              placeholder="เขียน Docs ในรูปแบบ Markdown..."
-            />
-          ) : !isLoading && !doc ? (
-            // 2. Then check if it's empty
-            <Empty
-              description="ยังไม่มี Project Docs"
-              style={{ padding: "60px 0" }}
-            >
-              <Button type="primary" onClick={startEdit}>สร้าง Docs</Button>
-            </Empty>
-          ) : (
-            // 3. Otherwise, show the document
-            <div
-              style={{
-                padding: 24,
-                border: "1px solid #e5e7eb",
-                borderRadius: 8,
-                minHeight: 400,
-                whiteSpace: "pre-wrap",
-                fontFamily: "inherit",
-                lineHeight: 1.8,
-                fontSize: 14,
-              }}
-            >
-              {doc?.content || "ยังไม่มีเนื้อหา"}
-            </div>
-          )}
-        </Spin>
+        {isLoading ? (
+          <div className="flex justify-center py-20">
+            <Spinner size="lg" />
+          </div>
+        ) : isEditing ? (
+          <TextArea
+            value={editContent}
+            onChange={(e) => setEditContent(e.target.value)}
+            className="min-h-[500px] font-mono text-sm"
+            placeholder="เขียน Docs ในรูปแบบ Markdown..."
+          />
+        ) : !doc ? (
+          <div className="flex flex-col items-center py-16 text-center">
+            <FileText size={48} className="opacity-20 mb-4" />
+            <p className="text-muted mb-4">ยังไม่มี Project Docs</p>
+            <Button variant="primary" onPress={startEdit}>
+              สร้าง Docs
+            </Button>
+          </div>
+        ) : (
+          <div className="p-6 border border-gray-200 dark:border-gray-700 rounded-lg min-h-[400px] whitespace-pre-wrap text-sm leading-relaxed">
+            {doc.content || "ยังไม่มีเนื้อหา"}
+          </div>
+        )}
       </div>
 
-      {/* Version history */}
       {showHistory && (
-        <div style={{ width: 240, flexShrink: 0 }}>
-          <div style={{ fontWeight: 600, marginBottom: 12, fontSize: 13 }}>ประวัติเวอร์ชัน</div>
-          <Timeline
-            items={versions.map((v) => ({
-              children: (
-                <div>
-                  <div style={{ fontWeight: 500 }}>v{v.version}</div>
-                  <div style={{ fontSize: 11, opacity: 0.6 }}>
-                    {dayjs(v.updatedAt).format("DD/MM/YYYY HH:mm")}
-                  </div>
+        <div className="w-60 shrink-0">
+          <div className="font-semibold mb-3 text-sm">ประวัติเวอร์ชัน</div>
+          <div className="flex flex-col gap-3 border-l-2 border-gray-200 dark:border-gray-700 pl-4">
+            {versions.map((v) => (
+              <div
+                key={v.version}
+                className={`relative ${v.version === doc?.version ? "text-indigo-600 dark:text-indigo-400" : "text-muted"}`}
+              >
+                <div
+                  className={`absolute -left-[21px] top-1.5 size-2.5 rounded-full ${
+                    v.version === doc?.version ? "bg-indigo-500" : "bg-gray-300 dark:bg-gray-600"
+                  }`}
+                />
+                <div className="font-medium text-sm">v{v.version}</div>
+                <div className="text-[11px] opacity-60">
+                  {dayjs(v.updatedAt).format("DD/MM/YYYY HH:mm")}
                 </div>
-              ),
-              color: v.version === doc?.version ? "blue" : "gray",
-            }))}
-          />
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

@@ -15,7 +15,7 @@ import {
   Tooltip,
 } from "@heroui/react";
 import { Bot, GitBranch, Zap } from "lucide-react";
-import { message } from "@/lib/antd-static";
+import { message } from "@/lib/toast";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/th";

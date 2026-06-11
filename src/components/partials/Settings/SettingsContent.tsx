@@ -1,134 +1,186 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Card,
-  Form,
-  Input,
-  Switch,
   Button,
-  Space,
   Table,
-  Tag,
-  Popconfirm,
-  Divider,
-  Typography,
-} from "antd";
-import { message } from "@/lib/antd-static";
-import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
+  Chip,
+  AlertDialog,
+  TextField,
+  Label,
+  InputGroup,
+  Switch,
+  Spinner,
+} from "@heroui/react";
+import { message } from "@/lib/toast";
+import { Trash2, Plus } from "lucide-react";
 import { useGithubTokens } from "@/hooks/repository";
 import { useRepoSettings } from "@/hooks/settings";
 import type { GithubToken } from "@/types/app/repository";
 import { AddTokenModal } from "@/components/partials/Dashboard/Modal";
 import dayjs from "dayjs";
 
-const { Title } = Typography;
-
 interface SettingsContentProps {
   repoId: string;
+}
+
+function DeleteTokenButton({ onConfirm }: { onConfirm: () => void }) {
+  return (
+    <AlertDialog>
+      <AlertDialog.Trigger>
+        <Button variant="ghost" isIconOnly size="sm" aria-label="ลบ Token">
+          <Trash2 size={14} className="text-red-500" />
+        </Button>
+      </AlertDialog.Trigger>
+      <AlertDialog.Backdrop>
+        <AlertDialog.Container>
+          <AlertDialog.Dialog>
+            <AlertDialog.Header>
+              <AlertDialog.Icon status="danger" />
+              <AlertDialog.Heading>ลบ Token นี้?</AlertDialog.Heading>
+            </AlertDialog.Header>
+            <AlertDialog.Footer>
+              <Button slot="close" variant="secondary">
+                ยกเลิก
+              </Button>
+              <Button variant="danger" onPress={onConfirm}>
+                ลบ
+              </Button>
+            </AlertDialog.Footer>
+          </AlertDialog.Dialog>
+        </AlertDialog.Container>
+      </AlertDialog.Backdrop>
+    </AlertDialog>
+  );
 }
 
 export default function SettingsContent({ repoId }: SettingsContentProps) {
   const [addTokenOpen, setAddTokenOpen] = useState(false);
   const { tokens, isLoading: isLoadingTokens, deleteToken } = useGithubTokens();
   const { settings, isLoading, update, isUpdating } = useRepoSettings(repoId);
-  const [form] = Form.useForm();
+
+  const [defaultBranch, setDefaultBranch] = useState("");
+  const [autoAnalyzeOnPush, setAutoAnalyzeOnPush] = useState(false);
+
+  useEffect(() => {
+    if (settings) {
+      setDefaultBranch(settings.defaultBranch ?? "");
+      setAutoAnalyzeOnPush(settings.autoAnalyzeOnPush ?? false);
+    }
+  }, [settings]);
 
   const handleSaveSettings = async () => {
-    const values = await form.validateFields();
     try {
-      await update(values);
+      await update({ defaultBranch, autoAnalyzeOnPush });
       message.success("บันทึกการตั้งค่าสำเร็จ");
     } catch {
       message.error("บันทึกไม่สำเร็จ");
     }
   };
 
-  const tokenColumns = [
-    { title: "ชื่อ", dataIndex: "label", key: "label", render: (v: string) => <b>{v}</b> },
-    {
-      title: "สถานะ",
-      dataIndex: "isActive",
-      key: "isActive",
-      render: (v: boolean) => <Tag color={v ? "green" : "red"}>{v ? "ใช้งานได้" : "ไม่ได้ใช้งาน"}</Tag>,
-    },
-    {
-      title: "เพิ่มเมื่อ",
-      dataIndex: "createdAt",
-      key: "createdAt",
-      render: (v: string) => dayjs(v).format("DD/MM/YYYY"),
-    },
-    {
-      title: "วันหมดอายุ",
-      dataIndex: "expiresAt",
-      key: "expiresAt",
-      render: (v: string | null) => {
-        if (!v) return <span style={{ opacity: 0.5 }}>ไม่มีกำหนด</span>;
-        const isExpired = dayjs(v).isBefore(dayjs());
-        return (
-          <Tag color={isExpired ? "red" : "blue"}>
-            {dayjs(v).format("DD/MM/YYYY")} {isExpired && <span>(หมดอายุแล้ว)</span>}
-          </Tag>
-        );
-      },
-    },
-    {
-      title: "",
-      key: "action",
-      render: (_: unknown, record: GithubToken) => (
-        <Popconfirm title="ลบ Token นี้?" onConfirm={() => deleteToken(record.id)} okText="ลบ" cancelText="ยกเลิก">
-          <Button type="text" danger size="small" icon={<DeleteOutlined />} />
-        </Popconfirm>
-      ),
-    },
-  ];
-
   return (
-    <div style={{ maxWidth: 700 }}>
-      {/* GitHub Tokens */}
-      <Card
-        title={<Title level={5} style={{ margin: 0 }}>GitHub Tokens</Title>}
-        extra={
-          <Button size="small" icon={<PlusOutlined />} onClick={() => setAddTokenOpen(true)}>
+    <div className="max-w-[700px]">
+      <Card className="mb-4 rounded-lg">
+        <Card.Header className="flex items-center justify-between px-4 py-3">
+          <Card.Title className="text-base font-semibold m-0">GitHub Tokens</Card.Title>
+          <Button size="sm" variant="secondary" onPress={() => setAddTokenOpen(true)}>
+            <Plus size={14} />
             เพิ่ม Token
           </Button>
-        }
-        style={{ marginBottom: 16, borderRadius: 8 }}
-      >
-        <Table
-          dataSource={tokens}
-          columns={tokenColumns}
-          rowKey="id"
-          loading={isLoadingTokens}
-          pagination={false}
-          size="small"
-          locale={{ emptyText: "ยังไม่มี GitHub Token" }}
-        />
+        </Card.Header>
+        <Card.Content className="p-0">
+          {isLoadingTokens ? (
+            <div className="flex justify-center py-8">
+              <Spinner />
+            </div>
+          ) : tokens.length === 0 ? (
+            <p className="text-center text-muted py-8 text-sm">ยังไม่มี GitHub Token</p>
+          ) : (
+            <Table>
+              <Table.ScrollContainer>
+                <Table.Content aria-label="GitHub tokens">
+                  <Table.Header>
+                    <Table.Column isRowHeader>ชื่อ</Table.Column>
+                    <Table.Column>สถานะ</Table.Column>
+                    <Table.Column>เพิ่มเมื่อ</Table.Column>
+                    <Table.Column>วันหมดอายุ</Table.Column>
+                    <Table.Column className="w-12" />
+                  </Table.Header>
+                  <Table.Body>
+                    {tokens.map((record: GithubToken) => (
+                      <Table.Row key={record.id} id={record.id}>
+                        <Table.Cell>
+                          <span className="font-semibold">{record.label}</span>
+                        </Table.Cell>
+                        <Table.Cell>
+                          <Chip
+                            size="sm"
+                            variant="soft"
+                            color={record.isActive ? "success" : "danger"}
+                          >
+                            <Chip.Label>{record.isActive ? "ใช้งานได้" : "ไม่ได้ใช้งาน"}</Chip.Label>
+                          </Chip>
+                        </Table.Cell>
+                        <Table.Cell>{dayjs(record.createdAt).format("DD/MM/YYYY")}</Table.Cell>
+                        <Table.Cell>
+                          {!record.expiresAt ? (
+                            <span className="text-muted">ไม่มีกำหนด</span>
+                          ) : (
+                            <Chip
+                              size="sm"
+                              variant="soft"
+                              color={dayjs(record.expiresAt).isBefore(dayjs()) ? "danger" : "accent"}
+                            >
+                              <Chip.Label>
+                                {dayjs(record.expiresAt).format("DD/MM/YYYY")}
+                                {dayjs(record.expiresAt).isBefore(dayjs()) && " (หมดอายุแล้ว)"}
+                              </Chip.Label>
+                            </Chip>
+                          )}
+                        </Table.Cell>
+                        <Table.Cell>
+                          <DeleteTokenButton onConfirm={() => deleteToken(record.id)} />
+                        </Table.Cell>
+                      </Table.Row>
+                    ))}
+                  </Table.Body>
+                </Table.Content>
+              </Table.ScrollContainer>
+            </Table>
+          )}
+        </Card.Content>
       </Card>
 
-      {/* Repo Settings */}
-      <Card
-        title={<Title level={5} style={{ margin: 0 }}>ตั้งค่า Repository</Title>}
-        style={{ borderRadius: 8 }}
-      >
-        <Form
-          form={form}
-          layout="vertical"
-          initialValues={settings ?? {}}
-          requiredMark={false}
-        >
-          <Form.Item name="defaultBranch" label="Default Branch">
-            <Input placeholder="main" />
-          </Form.Item>
-          <Form.Item name="autoAnalyzeOnPush" label="วิเคราะห์ commit อัตโนมัติเมื่อมี push" valuePropName="checked">
-            <Switch />
-          </Form.Item>
-          <Form.Item style={{ marginBottom: 0 }}>
-            <Button type="primary" loading={isUpdating} onClick={handleSaveSettings}>
-              บันทึกการตั้งค่า
-            </Button>
-          </Form.Item>
-        </Form>
+      <Card className="rounded-lg">
+        <Card.Header className="px-4 py-3">
+          <Card.Title className="text-base font-semibold m-0">ตั้งค่า Repository</Card.Title>
+        </Card.Header>
+        <Card.Content className="px-4 pb-4 flex flex-col gap-4">
+          {isLoading ? (
+            <Spinner />
+          ) : (
+            <>
+              <TextField value={defaultBranch} onChange={setDefaultBranch}>
+                <Label>Default Branch</Label>
+                <InputGroup>
+                  <InputGroup.Input placeholder="main" />
+                </InputGroup>
+              </TextField>
+
+              <Switch isSelected={autoAnalyzeOnPush} onChange={setAutoAnalyzeOnPush}>
+                <Switch.Control>
+                  <Switch.Thumb />
+                </Switch.Control>
+                <Switch.Content>วิเคราะห์ commit อัตโนมัติเมื่อมี push</Switch.Content>
+              </Switch>
+
+              <Button variant="primary" isDisabled={isUpdating} onPress={handleSaveSettings}>
+                {isUpdating ? "กำลังบันทึก..." : "บันทึกการตั้งค่า"}
+              </Button>
+            </>
+          )}
+        </Card.Content>
       </Card>
 
       <AddTokenModal open={addTokenOpen} onClose={() => setAddTokenOpen(false)} />

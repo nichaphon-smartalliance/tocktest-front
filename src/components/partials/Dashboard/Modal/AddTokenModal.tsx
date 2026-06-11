@@ -1,9 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { Modal, Form, Input, Button, Table, Tag, Popconfirm, Space } from "antd";
-import { message } from "@/lib/antd-static";
-import { DeleteOutlined, CheckCircleOutlined } from "@ant-design/icons";
+import {
+  Modal,
+  Button,
+  Table,
+  Chip,
+  AlertDialog,
+  TextField,
+  Label,
+  InputGroup,
+  Spinner,
+  useOverlayState,
+} from "@heroui/react";
+import { message } from "@/lib/toast";
+import { Trash2, CheckCircle } from "lucide-react";
 import { useGithubTokens } from "@/hooks/repository";
 import type { GithubToken } from "@/types/app/repository";
 import dayjs from "dayjs";
@@ -13,16 +24,57 @@ interface AddTokenModalProps {
   onClose: () => void;
 }
 
+function DeleteTokenButton({ onConfirm }: { onConfirm: () => void }) {
+  return (
+    <AlertDialog>
+      <AlertDialog.Trigger>
+        <Button variant="ghost" isIconOnly size="sm" aria-label="ลบ Token">
+          <Trash2 size={14} className="text-red-500" />
+        </Button>
+      </AlertDialog.Trigger>
+      <AlertDialog.Backdrop>
+        <AlertDialog.Container>
+          <AlertDialog.Dialog>
+            <AlertDialog.Header>
+              <AlertDialog.Icon status="danger" />
+              <AlertDialog.Heading>ลบ Token นี้?</AlertDialog.Heading>
+            </AlertDialog.Header>
+            <AlertDialog.Footer>
+              <Button slot="close" variant="secondary">
+                ยกเลิก
+              </Button>
+              <Button variant="danger" onPress={onConfirm}>
+                ลบ
+              </Button>
+            </AlertDialog.Footer>
+          </AlertDialog.Dialog>
+        </AlertDialog.Container>
+      </AlertDialog.Backdrop>
+    </AlertDialog>
+  );
+}
+
 export default function AddTokenModal({ open, onClose }: AddTokenModalProps) {
-  const [form] = Form.useForm();
+  const modalState = useOverlayState({
+    isOpen: open,
+    onOpenChange: (isOpen) => {
+      if (!isOpen) onClose();
+    },
+  });
+
   const [tab, setTab] = useState<"list" | "add">("list");
+  const [label, setLabel] = useState("");
+  const [token, setToken] = useState("");
   const { tokens, isLoading, createToken, isCreating, deleteToken } = useGithubTokens();
 
-  const handleAdd = async (values: { label: string; token: string }) => {
+  const handleAdd = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!label.trim() || !token.trim()) return;
     try {
-      await createToken(values);
+      await createToken({ label: label.trim(), token: token.trim() });
       message.success("เพิ่ม GitHub Token สำเร็จ");
-      form.resetFields();
+      setLabel("");
+      setToken("");
       setTab("list");
     } catch {
       message.error("เพิ่ม Token ไม่สำเร็จ กรุณาตรวจสอบข้อมูล");
@@ -38,87 +90,104 @@ export default function AddTokenModal({ open, onClose }: AddTokenModalProps) {
     }
   };
 
-  const columns = [
-    { title: "ชื่อ", dataIndex: "label", key: "label", render: (v: string) => <b>{v}</b> },
-    {
-      title: "สถานะ",
-      dataIndex: "isActive",
-      key: "isActive",
-      render: (v: boolean) => (
-        <Tag color={v ? "green" : "red"} icon={<CheckCircleOutlined />}>
-          {v ? "ใช้งานได้" : "ไม่ได้ใช้งาน"}
-        </Tag>
-      ),
-    },
-    {
-      title: "วันที่เพิ่ม",
-      dataIndex: "createdAt",
-      key: "createdAt",
-      render: (v: string) => dayjs(v).format("DD/MM/YYYY"),
-    },
-    {
-      title: "",
-      key: "action",
-      render: (_: unknown, record: GithubToken) => (
-        <Popconfirm title="ลบ Token นี้?" onConfirm={() => handleDelete(record.id)} okText="ลบ" cancelText="ยกเลิก">
-          <Button type="text" danger icon={<DeleteOutlined />} size="small" />
-        </Popconfirm>
-      ),
-    },
-  ];
-
   return (
-    <Modal
-      open={open}
-      onCancel={onClose}
-      footer={null}
-      title="จัดการ GitHub Token"
-      width={600}
-      styles={{ body: { padding: "16px 0 0" } }}
-    >
-      <Space style={{ marginBottom: 16 }}>
-        <Button type={tab === "list" ? "primary" : "default"} onClick={() => setTab("list")}>
-          รายการ Token
-        </Button>
-        <Button type={tab === "add" ? "primary" : "default"} onClick={() => setTab("add")}>
-          + เพิ่ม Token
-        </Button>
-      </Space>
+    <Modal state={modalState}>
+      <Modal.Backdrop>
+        <Modal.Container size="lg">
+          <Modal.Dialog>
+            <Modal.Header>
+              <Modal.Heading>จัดการ GitHub Token</Modal.Heading>
+            </Modal.Header>
+            <Modal.Body>
+              <div className="flex gap-2 mb-4">
+                <Button
+                  variant={tab === "list" ? "primary" : "secondary"}
+                  size="sm"
+                  onPress={() => setTab("list")}
+                >
+                  รายการ Token
+                </Button>
+                <Button
+                  variant={tab === "add" ? "primary" : "secondary"}
+                  size="sm"
+                  onPress={() => setTab("add")}
+                >
+                  + เพิ่ม Token
+                </Button>
+              </div>
 
-      {tab === "list" ? (
-        <Table
-          dataSource={tokens}
-          columns={columns}
-          rowKey="id"
-          loading={isLoading}
-          pagination={false}
-          size="small"
-          locale={{ emptyText: "ยังไม่มี Token" }}
-        />
-      ) : (
-        <Form form={form} layout="vertical" onFinish={handleAdd} requiredMark={false}>
-          <Form.Item
-            name="label"
-            label="ชื่อ Token"
-            rules={[{ required: true, message: "กรุณากรอกชื่อ" }]}
-          >
-            <Input placeholder="เช่น Personal / Work" />
-          </Form.Item>
-          <Form.Item
-            name="token"
-            label="GitHub Personal Access Token"
-            rules={[{ required: true, message: "กรุณากรอก Token" }]}
-            extra="สร้าง token ที่ GitHub → Settings → Developer settings → Personal access tokens"
-          >
-            <Input.Password placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" />
-          </Form.Item>
-          <Form.Item style={{ marginBottom: 0 }}>
-            <Button type="primary" htmlType="submit" loading={isCreating} block>
-              บันทึก Token
-            </Button>
-          </Form.Item>
-        </Form>
-      )}
+              {tab === "list" ? (
+                isLoading ? (
+                  <div className="flex justify-center py-8">
+                    <Spinner />
+                  </div>
+                ) : tokens.length === 0 ? (
+                  <p className="text-center text-muted py-8 text-sm">ยังไม่มี Token</p>
+                ) : (
+                  <Table>
+                    <Table.ScrollContainer>
+                      <Table.Content aria-label="GitHub tokens">
+                        <Table.Header>
+                          <Table.Column isRowHeader>ชื่อ</Table.Column>
+                          <Table.Column>สถานะ</Table.Column>
+                          <Table.Column>วันที่เพิ่ม</Table.Column>
+                          <Table.Column className="w-12" />
+                        </Table.Header>
+                        <Table.Body>
+                          {tokens.map((record: GithubToken) => (
+                            <Table.Row key={record.id} id={record.id}>
+                              <Table.Cell>
+                                <span className="font-semibold">{record.label}</span>
+                              </Table.Cell>
+                              <Table.Cell>
+                                <Chip
+                                  size="sm"
+                                  variant="soft"
+                                  color={record.isActive ? "success" : "danger"}
+                                >
+                                  <Chip.Label className="flex items-center gap-1">
+                                    <CheckCircle size={10} />
+                                    {record.isActive ? "ใช้งานได้" : "ไม่ได้ใช้งาน"}
+                                  </Chip.Label>
+                                </Chip>
+                              </Table.Cell>
+                              <Table.Cell>{dayjs(record.createdAt).format("DD/MM/YYYY")}</Table.Cell>
+                              <Table.Cell>
+                                <DeleteTokenButton onConfirm={() => handleDelete(record.id)} />
+                              </Table.Cell>
+                            </Table.Row>
+                          ))}
+                        </Table.Body>
+                      </Table.Content>
+                    </Table.ScrollContainer>
+                  </Table>
+                )
+              ) : (
+                <form onSubmit={handleAdd} className="flex flex-col gap-4">
+                  <TextField value={label} onChange={setLabel} isRequired>
+                    <Label>ชื่อ Token</Label>
+                    <InputGroup>
+                      <InputGroup.Input placeholder="เช่น Personal / Work" />
+                    </InputGroup>
+                  </TextField>
+                  <TextField value={token} onChange={setToken} isRequired>
+                    <Label>GitHub Personal Access Token</Label>
+                    <InputGroup>
+                      <InputGroup.Input type="password" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" />
+                    </InputGroup>
+                    <p className="text-xs text-muted mt-1">
+                      สร้าง token ที่ GitHub → Settings → Developer settings → Personal access tokens
+                    </p>
+                  </TextField>
+                  <Button type="submit" variant="primary" fullWidth isDisabled={isCreating}>
+                    {isCreating ? "กำลังบันทึก..." : "บันทึก Token"}
+                  </Button>
+                </form>
+              )}
+            </Modal.Body>
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
     </Modal>
   );
 }

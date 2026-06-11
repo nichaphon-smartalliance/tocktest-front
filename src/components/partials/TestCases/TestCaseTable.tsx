@@ -1,10 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { Table, Tag, Button, Popconfirm, Tooltip, Badge, Space, Dropdown } from "antd";
-import { message } from "@/lib/antd-static";
-import { EditOutlined, DeleteOutlined, RobotOutlined } from "@ant-design/icons";
-import type { ColumnsType } from "antd/es/table";
+import {
+  Table,
+  Chip,
+  Button,
+  AlertDialog,
+  Tooltip,
+  Dropdown,
+  Spinner,
+  Pagination,
+} from "@heroui/react";
+import { message } from "@/lib/toast";
+import { Pencil, Trash2, Bot } from "lucide-react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/th";
@@ -14,7 +22,9 @@ import { STATUS_CONFIG, TYPE_CONFIG, PRIORITY_CONFIG } from "./TestCases.config"
 dayjs.extend(relativeTime);
 dayjs.locale("th");
 
-function InlineTagCell<T extends string>({
+type ConfigRecord = Record<string, { label: string; color: "success" | "warning" | "danger" | "accent" | undefined }>;
+
+function InlineChipCell<T extends string>({
   value,
   config,
   record,
@@ -22,19 +32,17 @@ function InlineTagCell<T extends string>({
   onChange,
 }: {
   value: T;
-  config: Record<string, { label: string; color: string }>;
+  config: ConfigRecord;
   record: TestCase;
   errorMsg: string;
   onChange: (id: string, value: T) => Promise<void>;
 }) {
-  const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const cfg = config[value];
 
   const handleSelect = async (v: T) => {
-    if (v === value) { setOpen(false); return; }
+    if (v === value) return;
     setLoading(true);
-    setOpen(false);
     try {
       await onChange(record.id, v);
     } catch {
@@ -45,47 +53,63 @@ function InlineTagCell<T extends string>({
   };
 
   return (
-    <Dropdown
-      open={open}
-      onOpenChange={(v) => { if (!loading) setOpen(v); }}
-      trigger={["click"]}
-      popupRender={() => (
-        <div
-          style={{
-            background: "#fff",
-            border: "1px solid #e5e7eb",
-            borderRadius: 8,
-            boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-            padding: 4,
-            minWidth: 120,
-          }}
+    <Dropdown>
+      <Dropdown.Trigger>
+        <button
+          type="button"
+          disabled={loading}
+          className="cursor-pointer disabled:opacity-60 disabled:cursor-wait"
+        >
+          <Chip size="sm" variant="soft" color={cfg.color}>
+            <Chip.Label>{cfg.label}</Chip.Label>
+          </Chip>
+        </button>
+      </Dropdown.Trigger>
+      <Dropdown.Popover>
+        <Dropdown.Menu
+          onAction={(key) => handleSelect(String(key) as T)}
+          aria-label="Change value"
         >
           {(Object.keys(config) as T[]).map((k) => (
-            <div
-              key={k}
-              onClick={() => handleSelect(k)}
-              style={{
-                padding: "5px 10px",
-                borderRadius: 5,
-                cursor: "pointer",
-                background: k === value ? "#f3f4f6" : "transparent",
-              }}
-            >
-              <Tag color={config[k].color} style={{ margin: 0 }}>
-                {config[k].label}
-              </Tag>
-            </div>
+            <Dropdown.Item key={k} id={k} textValue={config[k].label}>
+              <Chip size="sm" variant="soft" color={config[k].color}>
+                <Chip.Label>{config[k].label}</Chip.Label>
+              </Chip>
+            </Dropdown.Item>
           ))}
-        </div>
-      )}
-    >
-      <Tag
-        color={cfg.color}
-        style={{ cursor: loading ? "wait" : "pointer", userSelect: "none", opacity: loading ? 0.6 : 1 }}
-      >
-        {cfg.label}
-      </Tag>
+        </Dropdown.Menu>
+      </Dropdown.Popover>
     </Dropdown>
+  );
+}
+
+function DeleteTestCaseButton({ onConfirm }: { onConfirm: () => void }) {
+  return (
+    <AlertDialog>
+      <AlertDialog.Trigger>
+        <Button variant="ghost" isIconOnly size="sm" aria-label="ลบ test case">
+          <Trash2 size={14} className="text-red-500" />
+        </Button>
+      </AlertDialog.Trigger>
+      <AlertDialog.Backdrop>
+        <AlertDialog.Container>
+          <AlertDialog.Dialog>
+            <AlertDialog.Header>
+              <AlertDialog.Icon status="danger" />
+              <AlertDialog.Heading>ลบ test case นี้?</AlertDialog.Heading>
+            </AlertDialog.Header>
+            <AlertDialog.Footer>
+              <Button slot="close" variant="secondary">
+                ยกเลิก
+              </Button>
+              <Button variant="danger" onPress={onConfirm}>
+                ลบ
+              </Button>
+            </AlertDialog.Footer>
+          </AlertDialog.Dialog>
+        </AlertDialog.Container>
+      </AlertDialog.Backdrop>
+    </AlertDialog>
   );
 }
 
@@ -117,119 +141,144 @@ export default function TestCaseTable({
   onPriorityChange,
   onTypeChange,
 }: TestCaseTableProps) {
-  const columns: ColumnsType<TestCase> = [
-    {
-      title: "ชื่อ Test Case",
-      dataIndex: "title",
-      key: "title",
-      render: (text: string, record: TestCase) => (
-        <Space>
-          {record.isAiGenerated && (
-            <Tooltip title="สร้างด้วย AI">
-              <RobotOutlined style={{ color: "#6366f1", fontSize: 12 }} />
-            </Tooltip>
-          )}
-          <span style={{ fontWeight: 500 }}>{text}</span>
-        </Space>
-      ),
-    },
-    {
-      title: "สถานะ",
-      dataIndex: "status",
-      key: "status",
-      width: 130,
-      render: (status: TestStatus, record: TestCase) => (
-        <InlineTagCell
-          value={status}
-          config={STATUS_CONFIG}
-          record={record}
-          errorMsg="อัปเดตสถานะไม่สำเร็จ"
-          onChange={onStatusChange}
-        />
-      ),
-    },
-    {
-      title: "ความสำคัญ",
-      dataIndex: "priority",
-      key: "priority",
-      width: 120,
-      render: (priority: PriorityLevel, record: TestCase) => (
-        <InlineTagCell
-          value={priority}
-          config={PRIORITY_CONFIG}
-          record={record}
-          errorMsg="อัปเดตความสำคัญไม่สำเร็จ"
-          onChange={onPriorityChange}
-        />
-      ),
-    },
-    {
-      title: "ประเภท",
-      dataIndex: "testType",
-      key: "testType",
-      width: 120,
-      render: (testType: TestType, record: TestCase) => (
-        <InlineTagCell
-          value={testType}
-          config={TYPE_CONFIG}
-          record={record}
-          errorMsg="อัปเดตประเภทไม่สำเร็จ"
-          onChange={onTypeChange}
-        />
-      ),
-    },
-    {
-      title: "อัปเดต",
-      dataIndex: "updatedAt",
-      key: "updatedAt",
-      width: 110,
-      render: (v: string) => (
-        <Tooltip title={dayjs(v).format("DD/MM/YYYY HH:mm")}>
-          <span style={{ opacity: 0.5, fontSize: 12 }}>{dayjs(v).fromNow()}</span>
-        </Tooltip>
-      ),
-    },
-    {
-      title: "",
-      key: "action",
-      width: 80,
-      render: (_: unknown, record: TestCase) => (
-        <Space size={4}>
-          <Button
-            type="text"
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => onEdit(record)}
-          />
-          <Popconfirm
-            title="ลบ test case นี้?"
-            onConfirm={() => onDelete(record.id)}
-            okText="ลบ"
-            cancelText="ยกเลิก"
-          >
-            <Button type="text" danger size="small" icon={<DeleteOutlined />} />
-          </Popconfirm>
-        </Space>
-      ),
-    },
-  ];
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   return (
-    <Table
-      columns={columns}
-      dataSource={testCases}
-      rowKey="id"
-      loading={isLoading}
-      size="middle"
-      pagination={{
-        current: page,
-        pageSize,
-        total,
-        showSizeChanger: true,
-        showTotal: (t) => `ทั้งหมด ${t} รายการ`,
-        onChange: onPageChange,
-      }}
-      locale={{ emptyText: "ยังไม่มี test case ในโฟลเดอร์นี้" }}
-    />
+    <div className="flex flex-col flex-1 min-h-0">
+      {isLoading ? (
+        <div className="flex justify-center py-12">
+          <Spinner size="lg" />
+        </div>
+      ) : testCases.length === 0 ? (
+        <div className="flex justify-center py-12 text-sm text-muted">
+          ยังไม่มี test case ในโฟลเดอร์นี้
+        </div>
+      ) : (
+        <Table className="flex-1">
+          <Table.ScrollContainer>
+            <Table.Content aria-label="Test cases" className="min-w-[700px]">
+              <Table.Header>
+                <Table.Column isRowHeader>ชื่อ Test Case</Table.Column>
+                <Table.Column className="w-[130px]">สถานะ</Table.Column>
+                <Table.Column className="w-[120px]">ความสำคัญ</Table.Column>
+                <Table.Column className="w-[120px]">ประเภท</Table.Column>
+                <Table.Column className="w-[110px]">อัปเดต</Table.Column>
+                <Table.Column className="w-[80px]" />
+              </Table.Header>
+              <Table.Body>
+                {testCases.map((record) => (
+                  <Table.Row key={record.id} id={record.id}>
+                    <Table.Cell>
+                      <div className="flex items-center gap-2">
+                        {record.isAiGenerated && (
+                          <Tooltip>
+                            <Tooltip.Trigger>
+                              <Bot size={12} className="text-indigo-500 shrink-0" />
+                            </Tooltip.Trigger>
+                            <Tooltip.Content>สร้างด้วย AI</Tooltip.Content>
+                          </Tooltip>
+                        )}
+                        <span className="font-medium">{record.title}</span>
+                      </div>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <InlineChipCell
+                        value={record.status}
+                        config={STATUS_CONFIG}
+                        record={record}
+                        errorMsg="อัปเดตสถานะไม่สำเร็จ"
+                        onChange={onStatusChange}
+                      />
+                    </Table.Cell>
+                    <Table.Cell>
+                      <InlineChipCell
+                        value={record.priority}
+                        config={PRIORITY_CONFIG}
+                        record={record}
+                        errorMsg="อัปเดตความสำคัญไม่สำเร็จ"
+                        onChange={onPriorityChange}
+                      />
+                    </Table.Cell>
+                    <Table.Cell>
+                      <InlineChipCell
+                        value={record.testType}
+                        config={TYPE_CONFIG}
+                        record={record}
+                        errorMsg="อัปเดตประเภทไม่สำเร็จ"
+                        onChange={onTypeChange}
+                      />
+                    </Table.Cell>
+                    <Table.Cell>
+                      <Tooltip>
+                        <Tooltip.Trigger>
+                          <span className="text-xs text-muted">
+                            {dayjs(record.updatedAt).fromNow()}
+                          </span>
+                        </Tooltip.Trigger>
+                        <Tooltip.Content>
+                          {dayjs(record.updatedAt).format("DD/MM/YYYY HH:mm")}
+                        </Tooltip.Content>
+                      </Tooltip>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          isIconOnly
+                          size="sm"
+                          aria-label="แก้ไข"
+                          onPress={() => onEdit(record)}
+                        >
+                          <Pencil size={14} />
+                        </Button>
+                        <DeleteTestCaseButton onConfirm={() => onDelete(record.id)} />
+                      </div>
+                    </Table.Cell>
+                  </Table.Row>
+                ))}
+              </Table.Body>
+            </Table.Content>
+          </Table.ScrollContainer>
+          <Table.Footer>
+            <div className="flex items-center justify-between px-4 py-2">
+              <p className="text-xs text-muted">ทั้งหมด {total} รายการ</p>
+              <Pagination>
+                <Pagination.Content>
+                  <Pagination.Item>
+                    <Pagination.Previous
+                      isDisabled={page <= 1}
+                      onPress={() => onPageChange(page - 1, pageSize)}
+                    >
+                      <Pagination.PreviousIcon />
+                    </Pagination.Previous>
+                  </Pagination.Item>
+                  {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+                    const p = i + 1;
+                    return (
+                      <Pagination.Item key={p}>
+                        <Pagination.Link
+                          isActive={p === page}
+                          onPress={() => onPageChange(p, pageSize)}
+                        >
+                          {p}
+                        </Pagination.Link>
+                      </Pagination.Item>
+                    );
+                  })}
+                  <Pagination.Item>
+                    <Pagination.Next
+                      isDisabled={page >= totalPages}
+                      onPress={() => onPageChange(page + 1, pageSize)}
+                    >
+                      <Pagination.NextIcon />
+                    </Pagination.Next>
+                  </Pagination.Item>
+                </Pagination.Content>
+              </Pagination>
+            </div>
+          </Table.Footer>
+        </Table>
+      )}
+    </div>
   );
 }

@@ -3,16 +3,15 @@
 import { useEffect, useState } from "react";
 import {
   Modal,
-  Form,
-  Input,
-  Segmented,
+  TextField,
+  Label,
+  InputGroup,
+  TextArea,
   Button,
-  Space,
-} from "antd";
-import { message } from "@/lib/antd-static";
+  useOverlayState,
+} from "@heroui/react";
+import { message } from "@/lib/toast";
 import type { TestCase, TestCaseFormValues, ModalMode } from "@/types/app/testCase";
-
-const { TextArea } = Input;
 
 function TagInput({
   value = [],
@@ -33,40 +32,24 @@ function TagInput({
 
   return (
     <div
-      style={{
-        border: "1px solid #d9d9d9",
-        borderRadius: 6,
-        padding: "4px 8px",
-        display: "flex",
-        flexWrap: "wrap",
-        gap: 4,
-        minHeight: 36,
-        background: disabled ? "#f5f5f5" : "#fff",
-      }}
+      className={`border border-gray-300 dark:border-gray-600 rounded-md p-1 flex flex-wrap gap-1 min-h-9 ${
+        disabled ? "bg-gray-100 dark:bg-gray-800" : "bg-white dark:bg-gray-900"
+      }`}
     >
       {value.map((tag) => (
         <span
           key={tag}
-          style={{
-            background: "#f3f4f6",
-            border: "1px solid #e5e7eb",
-            borderRadius: 4,
-            padding: "1px 8px",
-            fontSize: 13,
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 6,
-            color: "#374151",
-          }}
+          className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded px-2 py-0.5 text-sm inline-flex items-center gap-1.5"
         >
           {tag}
           {!disabled && (
-            <span
+            <button
+              type="button"
               onClick={() => onChange?.(value.filter((t) => t !== tag))}
-              style={{ cursor: "pointer", color: "#9ca3af", fontSize: 12, lineHeight: 1 }}
+              className="cursor-pointer text-gray-400 text-xs leading-none"
             >
               ×
-            </span>
+            </button>
           )}
         </span>
       ))}
@@ -84,15 +67,7 @@ function TagInput({
           }}
           onBlur={addTag}
           placeholder={value.length === 0 ? "พิมพ์แล้วกด Enter เพื่อเพิ่มแท็ก" : ""}
-          style={{
-            border: "none",
-            outline: "none",
-            flex: 1,
-            minWidth: 120,
-            fontSize: 14,
-            background: "transparent",
-            padding: "1px 0",
-          }}
+          className="border-none outline-none flex-1 min-w-[120px] text-sm bg-transparent py-0.5"
         />
       )}
     </div>
@@ -121,32 +96,51 @@ export default function TestCaseModal({
   onUpdate,
   isLoading,
 }: TestCaseModalProps) {
-  const [form] = Form.useForm<TestCaseFormValues>();
+  const modalState = useOverlayState({
+    isOpen: open,
+    onOpenChange: (isOpen) => {
+      if (!isOpen) onClose();
+    },
+  });
+
   const isView = mode === "view";
+
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [expectedResult, setExpectedResult] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
 
   useEffect(() => {
     if (open) {
       if (data) {
-        form.setFieldsValue({
-          title: data.title,
-          description: data.description ?? undefined,
-          expectedResult: data.expectedResult ?? undefined,
-          testType: data.testType,
-          status: data.status,
-          priority: data.priority,
-          tags: data.tags,
-          folderId: data.folderId ?? folderId ?? undefined,
-        });
+        setTitle(data.title);
+        setDescription(data.description ?? "");
+        setExpectedResult(data.expectedResult ?? "");
+        setTags(data.tags ?? []);
       } else {
-        form.resetFields();
-        if (folderId) form.setFieldValue("folderId", folderId);
-        form.setFieldsValue({ testType: "manual", status: "not_tested", priority: "medium" });
+        setTitle("");
+        setDescription("");
+        setExpectedResult("");
+        setTags([]);
       }
     }
-  }, [open, data, folderId, form]);
+  }, [open, data]);
 
   const handleOk = async () => {
-    const values = await form.validateFields();
+    if (!title.trim()) {
+      message.warning("กรุณากรอกชื่อ");
+      return;
+    }
+    const values: TestCaseFormValues = {
+      title: title.trim(),
+      description: description || undefined,
+      expectedResult: expectedResult || undefined,
+      testType: data?.testType ?? "manual",
+      status: data?.status ?? "not_tested",
+      priority: data?.priority ?? "medium",
+      tags,
+      folderId: data?.folderId ?? folderId ?? undefined,
+    };
     try {
       if (mode === "edit" && data) {
         await onUpdate(data.id, values);
@@ -161,52 +155,71 @@ export default function TestCaseModal({
     }
   };
 
+  const modalTitle =
+    mode === "create" ? "สร้าง Test Case ใหม่" : mode === "edit" ? "แก้ไข Test Case" : "รายละเอียด";
+
   return (
-    <Modal
-      open={open}
-      onCancel={onClose}
-      title={mode === "create" ? "สร้าง Test Case ใหม่" : mode === "edit" ? "แก้ไข Test Case" : "รายละเอียด"}
-      width={700}
-      footer={
-        isView ? (
-          <Button onClick={onClose}>ปิด</Button>
-        ) : (
-          <Space>
-            <Button onClick={onClose}>ยกเลิก</Button>
-            <Button type="primary" onClick={handleOk} loading={isLoading}>
-              บันทึก
-            </Button>
-          </Space>
-        )
-      }
-    >
-      <Form form={form} layout="vertical" disabled={isView} requiredMark={false}>
-        <Form.Item name="title" label="ชื่อ Test Case" rules={[{ required: true, message: "กรุณากรอกชื่อ" }]}>
-          <Input placeholder="เช่น ทดสอบ login ด้วย email ที่ไม่ถูกต้อง" />
-        </Form.Item>
+    <Modal state={modalState}>
+      <Modal.Backdrop>
+        <Modal.Container size="lg">
+          <Modal.Dialog>
+            <Modal.Header>
+              <Modal.Heading>{modalTitle}</Modal.Heading>
+            </Modal.Header>
+            <Modal.Body className="flex flex-col gap-4">
+              <TextField value={title} onChange={setTitle} isRequired isDisabled={isView}>
+                <Label>ชื่อ Test Case</Label>
+                <InputGroup>
+                  <InputGroup.Input placeholder="เช่น ทดสอบ login ด้วย email ที่ไม่ถูกต้อง" />
+                </InputGroup>
+              </TextField>
 
-        <Form.Item name="description" label="คำอธิบาย">
-          <TextArea rows={3} placeholder="บรรยายสิ่งที่ต้องการทดสอบ..." />
-        </Form.Item>
+              <div className="flex flex-col gap-1">
+                <Label>คำอธิบาย</Label>
+                <TextArea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  disabled={isView}
+                  rows={3}
+                  placeholder="บรรยายสิ่งที่ต้องการทดสอบ..."
+                />
+              </div>
 
-        <Form.Item name="expectedResult" label="ผลลัพธ์ที่คาดหวัง">
-          <TextArea rows={3} placeholder="ระบบควรแสดง..." />
-                  
-       
+              <div className="flex flex-col gap-1">
+                <Label>ผลลัพธ์ที่คาดหวัง</Label>
+                <TextArea
+                  value={expectedResult}
+                  onChange={(e) => setExpectedResult(e.target.value)}
+                  disabled={isView}
+                  rows={3}
+                  placeholder="ระบบควรแสดง..."
+                />
+              </div>
 
-          
-           
-          
-        </Form.Item>
-
-  
-       
-        
-
-        <Form.Item name="tags" label="แท็ก">
-          <TagInput />
-        </Form.Item>
-      </Form>
+              <div className="flex flex-col gap-1">
+                <Label>แท็ก</Label>
+                <TagInput value={tags} onChange={setTags} disabled={isView} />
+              </div>
+            </Modal.Body>
+            <Modal.Footer>
+              {isView ? (
+                <Button slot="close" variant="secondary">
+                  ปิด
+                </Button>
+              ) : (
+                <>
+                  <Button slot="close" variant="secondary">
+                    ยกเลิก
+                  </Button>
+                  <Button variant="primary" isDisabled={isLoading} onPress={handleOk}>
+                    {isLoading ? "กำลังบันทึก..." : "บันทึก"}
+                  </Button>
+                </>
+              )}
+            </Modal.Footer>
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
     </Modal>
   );
 }

@@ -1,8 +1,8 @@
 "use client";
 
-import { Tabs, Skeleton, Breadcrumb, Tag } from "antd";
+import { Tabs, Skeleton, Breadcrumbs, Chip } from "@heroui/react";
 import { useRouter, usePathname } from "next/navigation";
-import { LockOutlined, GlobalOutlined } from "@ant-design/icons";
+import { Lock, Globe } from "lucide-react";
 import { BugPlay, GitCommitHorizontal, BookOpen, Settings } from "lucide-react";
 import { useRepository } from "@/hooks/repository";
 
@@ -12,10 +12,10 @@ interface RepoLayoutContentProps {
 }
 
 const TAB_ITEMS = [
-  { key: "test-cases", label: "Test Cases", icon: <BugPlay size={14} /> },
-  { key: "analysis", label: "Analysis", icon: <GitCommitHorizontal size={14} /> },
-  { key: "docs", label: "Docs", icon: <BookOpen size={14} /> },
-  { key: "settings", label: "Settings", icon: <Settings size={14} /> },
+  { key: "test-cases", label: "Test Cases", icon: BugPlay },
+  { key: "analysis", label: "Analysis", icon: GitCommitHorizontal },
+  { key: "docs", label: "Docs", icon: BookOpen },
+  { key: "settings", label: "Settings", icon: Settings },
 ];
 
 export default function RepoLayoutContent({ repoId, children }: RepoLayoutContentProps) {
@@ -25,55 +25,62 @@ export default function RepoLayoutContent({ repoId, children }: RepoLayoutConten
 
   const activeTab = TAB_ITEMS.find((t) => pathname.endsWith(t.key))?.key ?? "test-cases";
 
-  const onTabChange = (key: string) => {
+  const onTabChange = (key: string | number) => {
     router.push(`/repos/${repoId}/${key}`);
   };
 
   return (
     <div>
-      {/* Breadcrumb */}
-      <Breadcrumb
-        style={{ marginBottom: 12 }}
-        items={[
-          { title: <span onClick={() => router.push("/dashboard")} style={{ cursor: "pointer" }}>แดชบอร์ด</span> },
-          {
-            title: isLoading ? (
-              <Skeleton.Input active size="small" style={{ width: 120 }} />
-            ) : (
-              <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                {repository?.fullName}
-                {repository && (
-                  <Tag
-                    icon={repository.isPrivate ? <LockOutlined /> : <GlobalOutlined />}
-                    color={repository.isPrivate ? "default" : "green"}
-                    style={{ marginLeft: 4, fontSize: 11 }}
-                  >
+      <Breadcrumbs className="mb-3">
+        <Breadcrumbs.Item
+          href="#"
+          onClick={(e) => {
+            e.preventDefault();
+            router.push("/dashboard");
+          }}
+        >
+          แดชบอร์ด
+        </Breadcrumbs.Item>
+        <Breadcrumbs.Item>
+          {isLoading ? (
+            <Skeleton className="h-4 w-28 rounded" />
+          ) : (
+            <span className="flex items-center gap-1.5">
+              {repository?.fullName}
+              {repository && (
+                <Chip
+                  size="sm"
+                  variant="soft"
+                  color={repository.isPrivate ? undefined : "success"}
+                >
+                  <Chip.Label className="flex items-center gap-1 text-[11px]">
+                    {repository.isPrivate ? <Lock size={10} /> : <Globe size={10} />}
                     {repository.isPrivate ? "Private" : "Public"}
-                  </Tag>
-                )}
-              </span>
-            ),
-          },
-        ]}
-      />
-
-      {/* Tabs */}
-      <Tabs
-        activeKey={activeTab}
-        onChange={onTabChange}
-        style={{ marginBottom: 0 }}
-        items={TAB_ITEMS.map((t) => ({
-          key: t.key,
-          label: (
-            <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              {t.icon}
-              {t.label}
+                  </Chip.Label>
+                </Chip>
+              )}
             </span>
-          ),
-        }))}
-      />
+          )}
+        </Breadcrumbs.Item>
+      </Breadcrumbs>
 
-      <div style={{ paddingTop: 16 }}>{children}</div>
+      <Tabs selectedKey={activeTab} onSelectionChange={onTabChange}>
+        <Tabs.ListContainer>
+          <Tabs.List aria-label="Repository sections">
+            {TAB_ITEMS.map(({ key, label, icon: Icon }) => (
+              <Tabs.Tab key={key} id={key}>
+                <span className="flex items-center gap-1.5">
+                  <Icon size={14} />
+                  {label}
+                </span>
+              </Tabs.Tab>
+            ))}
+            <Tabs.Indicator />
+          </Tabs.List>
+        </Tabs.ListContainer>
+      </Tabs>
+
+      <div className="pt-4">{children}</div>
     </div>
   );
 }

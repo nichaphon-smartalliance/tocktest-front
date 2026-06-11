@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Input, Select } from "antd";
-import { PlusOutlined, RobotOutlined, SearchOutlined } from "@ant-design/icons";
+import { Button, SearchField, Select, ListBox } from "@heroui/react";
+import { Plus, Bot } from "lucide-react";
 import FolderTree from "./FolderTree";
 import TestCaseTable from "./TestCaseTable";
 import { TestCaseModal, AiGenerateModal } from "./Modal";
@@ -11,27 +11,25 @@ import type { TestCase, ModalMode, TestCaseFormValues, TestStatus, TestType, Pri
 
 const STATUS_OPTIONS = [
   { value: "not_tested", label: "ยังไม่ทดสอบ" },
-  { value: "pass",       label: "ผ่าน" },
-  { value: "fail",       label: "ไม่ผ่าน" },
-  { value: "blocked",    label: "ติดขัด" },
+  { value: "pass", label: "ผ่าน" },
+  { value: "fail", label: "ไม่ผ่าน" },
+  { value: "blocked", label: "ติดขัด" },
 ];
 
 const PRIORITY_OPTIONS = [
-  { value: "low",      label: "ต่ำ" },
-  { value: "medium",   label: "กลาง" },
-  { value: "high",     label: "สูง" },
+  { value: "low", label: "ต่ำ" },
+  { value: "medium", label: "กลาง" },
+  { value: "high", label: "สูง" },
   { value: "critical", label: "วิกฤต" },
 ];
 
 const TYPE_OPTIONS = [
-  { value: "manual",      label: "Manual" },
-  { value: "automated",   label: "Automated" },
-  { value: "ui",          label: "UI" },
-  { value: "api",         label: "API" },
+  { value: "manual", label: "Manual" },
+  { value: "automated", label: "Automated" },
+  { value: "ui", label: "UI" },
+  { value: "api", label: "API" },
   { value: "integration", label: "Integration" },
 ];
-
-const FILTER_SELECT_STYLE = { width: 140 } as const;
 
 interface TestCasesContentProps {
   repoId: string;
@@ -86,18 +84,8 @@ export default function TestCasesContent({ repoId }: TestCasesContentProps) {
   };
 
   return (
-    <div style={{ display: "flex", gap: 16, height: "calc(100vh - 200px)" }}>
-      {/* Folder sidebar */}
-      <div
-        style={{
-          width: 200,
-          flexShrink: 0,
-          borderRadius: 8,
-          border: "1px solid #e5e7eb",
-          overflow: "hidden",
-          backgroundColor: "inherit",
-        }}
-      >
+    <div className="flex gap-4 h-[calc(100vh-200px)]">
+      <div className="w-[200px] shrink-0 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
         <FolderTree
           repoId={repoId}
           selectedFolderId={selectedFolderId}
@@ -108,56 +96,110 @@ export default function TestCasesContent({ repoId }: TestCasesContentProps) {
         />
       </div>
 
-      {/* Main content */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, minWidth: 0 }}>
-        {/* Toolbar */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-          <Input
-            placeholder="ค้นหา..."
-            prefix={<SearchOutlined />}
+      <div className="flex-1 flex flex-col gap-3 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <SearchField
+            aria-label="ค้นหา test case"
             value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            style={{ width: 200 }}
-            allowClear
-          />
+            onChange={(v) => {
+              setSearch(v);
+              setPage(1);
+            }}
+            className="w-[200px]"
+          >
+            <SearchField.Group>
+              <SearchField.SearchIcon />
+              <SearchField.Input placeholder="ค้นหา..." />
+              <SearchField.ClearButton />
+            </SearchField.Group>
+          </SearchField>
+
           <Select
             placeholder="สถานะ"
-            allowClear
-            style={FILTER_SELECT_STYLE}
-            value={statusFilter}
-            onChange={(v) => { setStatusFilter(v); setPage(1); }}
-            options={STATUS_OPTIONS}
-          />
+            selectedKey={statusFilter ?? null}
+            onSelectionChange={(key) => {
+              setStatusFilter(key ? (String(key) as TestStatus) : undefined);
+              setPage(1);
+            }}
+            className="w-[140px]"
+          >
+            <Select.Trigger>
+              <Select.Value />
+              <Select.Indicator />
+            </Select.Trigger>
+            <Select.Popover>
+              <ListBox>
+                {STATUS_OPTIONS.map((o) => (
+                  <ListBox.Item key={o.value} id={o.value} textValue={o.label}>
+                    {o.label}
+                    <ListBox.ItemIndicator />
+                  </ListBox.Item>
+                ))}
+              </ListBox>
+            </Select.Popover>
+          </Select>
+
           <Select
             placeholder="ความสำคัญ"
-            allowClear
-            style={FILTER_SELECT_STYLE}
-            value={priorityFilter}
-            onChange={(v) => { setPriorityFilter(v); setPage(1); }}
-            options={PRIORITY_OPTIONS}
-          />
+            selectedKey={priorityFilter ?? null}
+            onSelectionChange={(key) => {
+              setPriorityFilter(key ? (String(key) as PriorityLevel) : undefined);
+              setPage(1);
+            }}
+            className="w-[140px]"
+          >
+            <Select.Trigger>
+              <Select.Value />
+              <Select.Indicator />
+            </Select.Trigger>
+            <Select.Popover>
+              <ListBox>
+                {PRIORITY_OPTIONS.map((o) => (
+                  <ListBox.Item key={o.value} id={o.value} textValue={o.label}>
+                    {o.label}
+                    <ListBox.ItemIndicator />
+                  </ListBox.Item>
+                ))}
+              </ListBox>
+            </Select.Popover>
+          </Select>
+
           <Select
             placeholder="ประเภท"
-            allowClear
-            style={FILTER_SELECT_STYLE}
-            value={typeFilter}
-            onChange={(v) => { setTypeFilter(v); setPage(1); }}
-            options={TYPE_OPTIONS}
-          />
-          <div style={{ flex: 1 }} />
-          <Button
-            icon={<RobotOutlined />}
-            onClick={() => setAiModalOpen(true)}
-            style={{ borderColor: "#6366f1", color: "#6366f1" }}
+            selectedKey={typeFilter ?? null}
+            onSelectionChange={(key) => {
+              setTypeFilter(key ? (String(key) as TestType) : undefined);
+              setPage(1);
+            }}
+            className="w-[140px]"
           >
+            <Select.Trigger>
+              <Select.Value />
+              <Select.Indicator />
+            </Select.Trigger>
+            <Select.Popover>
+              <ListBox>
+                {TYPE_OPTIONS.map((o) => (
+                  <ListBox.Item key={o.value} id={o.value} textValue={o.label}>
+                    {o.label}
+                    <ListBox.ItemIndicator />
+                  </ListBox.Item>
+                ))}
+              </ListBox>
+            </Select.Popover>
+          </Select>
+
+          <div className="flex-1" />
+          <Button variant="secondary" onPress={() => setAiModalOpen(true)}>
+            <Bot size={16} />
             สร้างด้วย AI
           </Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
+          <Button variant="primary" onPress={openCreate}>
+            <Plus size={16} />
             Test Case ใหม่
           </Button>
         </div>
 
-        {/* Table */}
         <TestCaseTable
           repoId={repoId}
           testCases={testCases}
@@ -165,7 +207,10 @@ export default function TestCasesContent({ repoId }: TestCasesContentProps) {
           isLoading={isLoading}
           page={page}
           pageSize={pageSize}
-          onPageChange={(p, s) => { setPage(p); setPageSize(s); }}
+          onPageChange={(p, s) => {
+            setPage(p);
+            setPageSize(s);
+          }}
           onEdit={openEdit}
           onDelete={handleDelete}
           onStatusChange={(id, status) => handleUpdate(id, { status })}

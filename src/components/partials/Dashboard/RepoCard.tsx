@@ -1,8 +1,7 @@
 "use client";
 
-import { Card, Tag, Tooltip } from "antd";
-import { LockOutlined, GlobalOutlined } from "@ant-design/icons";
-import { GitBranch, Clock } from "lucide-react";
+import { Card, Chip, Tooltip } from "@heroui/react";
+import { Lock, Globe, Package, GitBranch, Clock } from "lucide-react";
 import { useRouter } from "next/navigation";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -21,47 +20,53 @@ export default function RepoCard({ repo }: RepoCardProps) {
 
   return (
     <Card
-      hoverable
+      className="h-full rounded-xl cursor-pointer hover:shadow-md transition-shadow"
       onClick={() => router.push(`/repos/${repo.id}/test-cases`)}
-      style={{ borderRadius: 12, height: "100%" }}
-      styles={{ body: { padding: 20 } }}
     >
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 12 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: 20 }}>📦</span>
-          <Tooltip title={repo.fullName}>
-            <span style={{ fontWeight: 600, fontSize: 14, maxWidth: 140, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>
-              {repo.name}
+      <Card.Content className="p-5">
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center gap-2 min-w-0">
+            <Package size={20} className="text-indigo-500 shrink-0" />
+            <Tooltip>
+              <Tooltip.Trigger>
+                <span className="font-semibold text-sm truncate max-w-[140px] block">
+                  {repo.name}
+                </span>
+              </Tooltip.Trigger>
+              <Tooltip.Content>{repo.fullName}</Tooltip.Content>
+            </Tooltip>
+          </div>
+          <Chip
+            size="sm"
+            variant="soft"
+            color={repo.isPrivate ? undefined : "success"}
+          >
+            <Chip.Label className="flex items-center gap-1">
+              {repo.isPrivate ? <Lock size={10} /> : <Globe size={10} />}
+              {repo.isPrivate ? "Private" : "Public"}
+            </Chip.Label>
+          </Chip>
+        </div>
+
+        <p className="text-xs text-muted mb-3 min-h-[36px] line-clamp-2">
+          {repo.description || "ไม่มีคำอธิบาย"}
+        </p>
+
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-1.5 text-xs text-muted">
+            <GitBranch size={12} />
+            <span>{repo.defaultBranch}</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-xs text-muted">
+            <Clock size={12} />
+            <span>
+              {repo.lastSyncedAt
+                ? `ซิงค์ ${dayjs(repo.lastSyncedAt).fromNow()}`
+                : "ยังไม่ได้ซิงค์"}
             </span>
-          </Tooltip>
+          </div>
         </div>
-        <Tag
-          icon={repo.isPrivate ? <LockOutlined /> : <GlobalOutlined />}
-          color={repo.isPrivate ? "default" : "green"}
-          style={{ borderRadius: 6, fontSize: 11 }}
-        >
-          {repo.isPrivate ? "Private" : "Public"}
-        </Tag>
-      </div>
-
-      <p style={{ margin: "0 0 12px", opacity: 0.5, fontSize: 12, minHeight: 36, lineHeight: "18px" }}>
-        {repo.description || "ไม่มีคำอธิบาย"}
-      </p>
-
-      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, opacity: 0.6 }}>
-          <GitBranch size={12} />
-          <span>{repo.defaultBranch}</span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, opacity: 0.6 }}>
-          <Clock size={12} />
-          <span>
-            {repo.lastSyncedAt
-              ? `ซิงค์ ${dayjs(repo.lastSyncedAt).fromNow()}`
-              : "ยังไม่ได้ซิงค์"}
-          </span>
-        </div>
-      </div>
+      </Card.Content>
     </Card>
   );
 }

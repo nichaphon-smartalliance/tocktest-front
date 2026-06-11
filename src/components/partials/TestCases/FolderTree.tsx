@@ -1,10 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import { Tree, Button, Dropdown, Input, Modal, Spin } from "antd";
-import { message } from "@/lib/antd-static";
-import type { TreeDataNode } from "antd";
-import { FolderOutlined, FolderOpenOutlined, PlusOutlined, EllipsisOutlined } from "@ant-design/icons";
+import {
+  Button,
+  Dropdown,
+  TextField,
+  Label,
+  InputGroup,
+  Modal,
+  Spinner,
+  useOverlayState,
+} from "@heroui/react";
+import { message } from "@/lib/toast";
+import {
+  Folder,
+  FolderOpen,
+  Plus,
+  MoreHorizontal,
+  ChevronRight,
+  ChevronDown,
+} from "lucide-react";
 import type { TestCaseFolder } from "@/types/app/testCase";
 import { useTestCaseFolders } from "@/hooks/testCase";
 
@@ -14,20 +29,109 @@ interface FolderTreeProps {
   onSelectFolder: (folderId: string | null) => void;
 }
 
-function foldersToTreeData(folders: TestCaseFolder[]): TreeDataNode[] {
-  return folders.map((f) => ({
-    key: f.id,
-    title: f.name,
-    icon: ({ expanded }: { expanded?: boolean }) =>
-      expanded ? <FolderOpenOutlined /> : <FolderOutlined />,
-    children: f.children ? foldersToTreeData(f.children) : [],
-  }));
+function FolderNode({
+  folder,
+  selectedFolderId,
+  onSelectFolder,
+  onDelete,
+  depth = 0,
+}: {
+  folder: TestCaseFolder;
+  selectedFolderId: string | null;
+  onSelectFolder: (id: string) => void;
+  onDelete: (id: string) => void;
+  depth?: number;
+}) {
+  const [expanded, setExpanded] = useState(true);
+  const hasChildren = folder.children && folder.children.length > 0;
+  const isSelected = selectedFolderId === folder.id;
+
+  return (
+    <div>
+      <div
+        className={`group flex items-center gap-1 rounded-md py-1.5 pr-1 text-sm cursor-pointer ${
+          isSelected ? "bg-indigo-500/10 font-semibold text-indigo-600 dark:text-indigo-400" : "hover:bg-gray-100 dark:hover:bg-gray-800"
+        }`}
+        style={{ paddingLeft: 8 + depth * 12 }}
+      >
+        {hasChildren ? (
+          <button
+            type="button"
+            className="p-0.5 shrink-0 cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation();
+              setExpanded((v) => !v);
+            }}
+          >
+            {expanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+          </button>
+        ) : (
+          <span className="w-4 shrink-0" />
+        )}
+        <button
+          type="button"
+          className="flex flex-1 items-center gap-1.5 min-w-0 cursor-pointer"
+          onClick={() => onSelectFolder(folder.id)}
+        >
+          {expanded && hasChildren ? (
+            <FolderOpen size={14} className="opacity-50 shrink-0" />
+          ) : (
+            <Folder size={14} className="opacity-50 shrink-0" />
+          )}
+          <span className="truncate">{folder.name}</span>
+        </button>
+        <Dropdown>
+          <Dropdown.Trigger>
+            <button
+              type="button"
+              className="opacity-0 group-hover:opacity-100 p-0.5 rounded cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <MoreHorizontal size={14} />
+            </button>
+          </Dropdown.Trigger>
+          <Dropdown.Popover>
+            <Dropdown.Menu
+              onAction={() => onDelete(folder.id)}
+              aria-label="Folder actions"
+            >
+              <Dropdown.Item id="delete" textValue="ลบโฟลเดอร์" variant="danger">
+                ลบโฟลเดอร์
+              </Dropdown.Item>
+            </Dropdown.Menu>
+          </Dropdown.Popover>
+        </Dropdown>
+      </div>
+      {expanded &&
+        hasChildren &&
+        folder.children!.map((child) => (
+          <FolderNode
+            key={child.id}
+            folder={child}
+            selectedFolderId={selectedFolderId}
+            onSelectFolder={onSelectFolder}
+            onDelete={onDelete}
+            depth={depth + 1}
+          />
+        ))}
+    </div>
+  );
 }
 
 export default function FolderTree({ repoId, selectedFolderId, onSelectFolder }: FolderTreeProps) {
   const { folders, isLoading, createFolder, deleteFolder } = useTestCaseFolders(repoId);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
+
+  const createModalState = useOverlayState({
+    isOpen: createModalOpen,
+    onOpenChange: (isOpen) => {
+      if (!isOpen) {
+        setCreateModalOpen(false);
+        setNewFolderName("");
+      }
+    },
+  });
 
   const handleCreate = async () => {
     if (!newFolderName.trim()) return;
@@ -52,93 +156,80 @@ export default function FolderTree({ repoId, selectedFolderId, onSelectFolder }:
   };
 
   return (
-    <div style={{ padding: "8px 0" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 8px 8px", borderBottom: "1px solid #f0f0f0", marginBottom: 8 }}>
-        <span style={{ fontWeight: 600, fontSize: 13 }}>โฟลเดอร์</span>
+    <div className="py-2">
+      <div className="flex items-center justify-between px-2 pb-2 mb-2 border-b border-gray-100 dark:border-gray-800">
+        <span className="font-semibold text-sm">โฟลเดอร์</span>
         <Button
-          type="text"
-          size="small"
-          icon={<PlusOutlined />}
-          onClick={() => setCreateModalOpen(true)}
-        />
+          variant="ghost"
+          isIconOnly
+          size="sm"
+          aria-label="สร้างโฟลเดอร์"
+          onPress={() => setCreateModalOpen(true)}
+        >
+          <Plus size={14} />
+        </Button>
       </div>
 
-      {/* All test cases */}
-      <div
+      <button
+        type="button"
         onClick={() => onSelectFolder(null)}
-        style={{
-          padding: "6px 12px",
-          cursor: "pointer",
-          borderRadius: 6,
-          backgroundColor: selectedFolderId === null ? "#6366f115" : "transparent",
-          fontWeight: selectedFolderId === null ? 600 : 400,
-          fontSize: 13,
-          marginBottom: 4,
-          display: "flex",
-          alignItems: "center",
-          gap: 6,
-        }}
+        className={`flex w-full items-center gap-1.5 rounded-md px-3 py-1.5 text-sm mb-1 cursor-pointer ${
+          selectedFolderId === null
+            ? "bg-indigo-500/10 font-semibold text-indigo-600 dark:text-indigo-400"
+            : "hover:bg-gray-100 dark:hover:bg-gray-800"
+        }`}
       >
-        <FolderOpenOutlined style={{ opacity: 0.5 }} />
+        <FolderOpen size={14} className="opacity-50" />
         ทั้งหมด
-      </div>
+      </button>
 
-      <Spin spinning={isLoading}>
-        <Tree
-          showIcon
-          blockNode
-          selectedKeys={selectedFolderId ? [selectedFolderId] : []}
-          onSelect={(keys) => onSelectFolder(keys[0] as string ?? null)}
-          treeData={foldersToTreeData(folders)}
-          style={{ fontSize: 13 }}
-          titleRender={(node) => (
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
-              <span>{node.title as string}</span>
-              <Dropdown
-                menu={{
-                  items: [
-                    {
-                      key: "delete",
-                      label: "ลบโฟลเดอร์",
-                      danger: true,
-                      onClick: (e) => {
-                        e.domEvent.stopPropagation();
-                        handleDelete(node.key as string);
-                      },
-                    },
-                  ],
-                }}
-                trigger={["click"]}
-              >
-                <Button
-                  type="text"
-                  size="small"
-                  icon={<EllipsisOutlined />}
-                  onClick={(e) => e.stopPropagation()}
-                  style={{ opacity: 0, transition: "opacity 0.2s" }}
-                  className="folder-action-btn"
-                />
-              </Dropdown>
-            </div>
-          )}
-        />
-      </Spin>
+      {isLoading ? (
+        <div className="flex justify-center py-4">
+          <Spinner size="sm" />
+        </div>
+      ) : (
+        folders.map((folder) => (
+          <FolderNode
+            key={folder.id}
+            folder={folder}
+            selectedFolderId={selectedFolderId}
+            onSelectFolder={onSelectFolder}
+            onDelete={handleDelete}
+          />
+        ))
+      )}
 
-      <Modal
-        open={createModalOpen}
-        onCancel={() => setCreateModalOpen(false)}
-        onOk={handleCreate}
-        title="สร้างโฟลเดอร์ใหม่"
-        okText="สร้าง"
-        cancelText="ยกเลิก"
-      >
-        <Input
-          placeholder="ชื่อโฟลเดอร์"
-          value={newFolderName}
-          onChange={(e) => setNewFolderName(e.target.value)}
-          onPressEnter={handleCreate}
-          autoFocus
-        />
+      <Modal state={createModalState}>
+        <Modal.Backdrop>
+          <Modal.Container>
+            <Modal.Dialog>
+              <Modal.Header>
+                <Modal.Heading>สร้างโฟลเดอร์ใหม่</Modal.Heading>
+              </Modal.Header>
+              <Modal.Body>
+                <TextField value={newFolderName} onChange={setNewFolderName} autoFocus>
+                  <Label>ชื่อโฟลเดอร์</Label>
+                  <InputGroup>
+                    <InputGroup.Input
+                      placeholder="ชื่อโฟลเดอร์"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleCreate();
+                      }}
+                    />
+                  </InputGroup>
+                </TextField>
+              </Modal.Body>
+              <Modal.Footer>
+                <Button slot="close" variant="secondary">
+                  ยกเลิก
+                </Button>
+                <Button variant="primary" onPress={handleCreate}>
+                  สร้าง
+                </Button>
+              </Modal.Footer>
+            </Modal.Dialog>
+          </Modal.Container>
+        </Modal.Backdrop>
       </Modal>
     </div>
   );

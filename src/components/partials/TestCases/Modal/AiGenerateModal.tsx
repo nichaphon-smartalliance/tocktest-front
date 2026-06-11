@@ -3,27 +3,23 @@
 import { useState } from "react";
 import {
   Modal,
-  Form,
-  DatePicker,
   Button,
-  Space,
-  Spin,
   Card,
-  Tag,
+  Chip,
   Checkbox,
   Alert,
-  Typography,
-  Divider,
-} from "antd";
-import { message } from "@/lib/antd-static";
-import { RobotOutlined } from "@ant-design/icons";
+  Spinner,
+  TextField,
+  Label,
+  InputGroup,
+  useOverlayState,
+} from "@heroui/react";
+import { message } from "@/lib/toast";
+import { Bot } from "lucide-react";
 import dayjs from "dayjs";
 import { useAiGenerateTestCases } from "@/hooks/testCase";
 import type { GeneratedTestCasePreview } from "@/types/app/testCase";
-import { STATUS_CONFIG, TYPE_CONFIG, PRIORITY_CONFIG } from "../TestCases.config";
-
-const { RangePicker } = DatePicker;
-const { Text, Paragraph } = Typography;
+import { TYPE_CONFIG, PRIORITY_CONFIG } from "../TestCases.config";
 
 interface AiGenerateModalProps {
   repoId: string;
@@ -34,18 +30,24 @@ interface AiGenerateModalProps {
 }
 
 export default function AiGenerateModal({ repoId, folderId, open, onClose, onSaved }: AiGenerateModalProps) {
-  const [form] = Form.useForm();
+  const modalState = useOverlayState({
+    isOpen: open,
+    onOpenChange: (isOpen) => {
+      if (!isOpen) handleClose();
+    },
+  });
+
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const [previews, setPreviews] = useState<GeneratedTestCasePreview[]>([]);
   const { generate, isGenerating, save, isSaving } = useAiGenerateTestCases(repoId);
 
   const handleGenerate = async () => {
-    const values = await form.validateFields();
-    const [from, to] = values.dateRange ?? [];
     try {
       const result = await generate({
         repoId,
-        fromDate: from ? dayjs(from).toISOString() : undefined,
-        toDate: to ? dayjs(to).toISOString() : undefined,
+        fromDate: fromDate ? dayjs(fromDate).toISOString() : undefined,
+        toDate: toDate ? dayjs(toDate).toISOString() : undefined,
       });
       setPreviews(result);
     } catch {
@@ -64,7 +66,8 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
       await save(toSave);
       message.success(`บันทึก ${selected.length} test case สำเร็จ`);
       setPreviews([]);
-      form.resetFields();
+      setFromDate("");
+      setToDate("");
       onSaved();
       onClose();
     } catch {
@@ -80,113 +83,165 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
 
   const handleClose = () => {
     setPreviews([]);
-    form.resetFields();
+    setFromDate("");
+    setToDate("");
     onClose();
   };
 
   const selectedCount = previews.filter((p) => p.selected).length;
 
   return (
-    <Modal
-      open={open}
-      onCancel={handleClose}
-      title={
-        <Space>
-          <RobotOutlined style={{ color: "#6366f1" }} />
-          สร้าง Test Case ด้วย AI
-        </Space>
-      }
-      width={800}
-      footer={
-        previews.length > 0 ? (
-          <Space>
-            <Text type="secondary">{selectedCount} / {previews.length} รายการที่เลือก</Text>
-            <Button onClick={() => setPreviews([])}>เริ่มใหม่</Button>
-            <Button type="primary" onClick={handleSave} loading={isSaving} disabled={selectedCount === 0}>
-              บันทึก {selectedCount} รายการ
-            </Button>
-          </Space>
-        ) : null
-      }
-    >
-      {previews.length === 0 ? (
-        <Form form={form} layout="vertical" requiredMark={false}>
-          <Alert
-            title="AI จะวิเคราะห์ code changes และสร้าง test case ให้อัตโนมัติ"
-            type="info"
-            showIcon
-            style={{ marginBottom: 20 }}
-          />
+    <Modal state={modalState}>
+      <Modal.Backdrop>
+        <Modal.Container size="lg">
+          <Modal.Dialog>
+            <Modal.Header>
+              <Modal.Heading>
+                <span className="flex items-center gap-2">
+                  <Bot size={18} className="text-indigo-500" />
+                  สร้าง Test Case ด้วย AI
+                </span>
+              </Modal.Heading>
+            </Modal.Header>
+            <Modal.Body>
+              {previews.length === 0 ? (
+                <div className="flex flex-col gap-4">
+                  <Alert status="accent">
+                    <Alert.Indicator />
+                    <Alert.Content>
+                      <Alert.Description>
+                        AI จะวิเคราะห์ code changes และสร้าง test case ให้อัตโนมัติ
+                      </Alert.Description>
+                    </Alert.Content>
+                  </Alert>
 
-          <Form.Item
-            name="dateRange"
-            label="ช่วงเวลาของ commits"
-            extra="เลือกช่วงเวลาที่ต้องการวิเคราะห์"
-          >
-            <RangePicker
-              style={{ width: "100%" }}
-              placeholder={["วันเริ่มต้น", "วันสิ้นสุด"]}
-              format="DD/MM/YYYY"
-            />
-          </Form.Item>
+                  <div className="grid grid-cols-2 gap-3">
+                    <TextField value={fromDate} onChange={setFromDate}>
+                      <Label>วันเริ่มต้น</Label>
+                      <InputGroup>
+                        <InputGroup.Input type="date" />
+                      </InputGroup>
+                    </TextField>
+                    <TextField value={toDate} onChange={setToDate}>
+                      <Label>วันสิ้นสุด</Label>
+                      <InputGroup>
+                        <InputGroup.Input type="date" />
+                      </InputGroup>
+                    </TextField>
+                  </div>
+                  <p className="text-xs text-muted -mt-2">เลือกช่วงเวลาที่ต้องการวิเคราะห์</p>
 
-          <Button
-            type="primary"
-            icon={<RobotOutlined />}
-            loading={isGenerating}
-            onClick={handleGenerate}
-            block
-            size="large"
-            style={{ marginTop: 8 }}
-          >
-            {isGenerating ? "AI กำลังวิเคราะห์..." : "สร้าง Test Cases ด้วย AI"}
-          </Button>
-        </Form>
-      ) : (
-        <Spin spinning={isSaving}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <Text>AI สร้าง <b>{previews.length}</b> test case — เลือกรายการที่ต้องการบันทึก</Text>
-            <Space>
-              <Button size="small" onClick={() => setPreviews((p) => p.map((x) => ({ ...x, selected: true })))}>เลือกทั้งหมด</Button>
-              <Button size="small" onClick={() => setPreviews((p) => p.map((x) => ({ ...x, selected: false })))}>ยกเลิกทั้งหมด</Button>
-            </Space>
-          </div>
-          <Divider style={{ margin: "0 0 12px" }} />
-          <div style={{ maxHeight: 480, overflowY: "auto", display: "flex", flexDirection: "column", gap: 8 }}>
-            {previews.map((tc, index) => (
-              <Card
-                key={index}
-                size="small"
-                style={{
-                  borderRadius: 8,
-                  borderColor: tc.selected ? "#6366f1" : undefined,
-                  opacity: tc.selected ? 1 : 0.5,
-                  cursor: "pointer",
-                }}
-                onClick={() => toggleSelect(index)}
-                styles={{ body: { padding: "10px 14px" } }}
-              >
-                <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-                  <Checkbox checked={tc.selected} onChange={() => toggleSelect(index)} onClick={(e) => e.stopPropagation()} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 600, marginBottom: 4 }}>{tc.title}</div>
-                    {tc.description && (
-                      <Paragraph style={{ margin: "0 0 6px", fontSize: 12, opacity: 0.7 }} ellipsis={{ rows: 2 }}>
-                        {tc.description}
-                      </Paragraph>
+                  <Button
+                    variant="primary"
+                    fullWidth
+                    isDisabled={isGenerating}
+                    onPress={handleGenerate}
+                    className="h-11"
+                  >
+                    {isGenerating ? (
+                      <>
+                        <Spinner size="sm" color="current" />
+                        AI กำลังวิเคราะห์...
+                      </>
+                    ) : (
+                      <>
+                        <Bot size={16} />
+                        สร้าง Test Cases ด้วย AI
+                      </>
                     )}
-                    <Space size={4} wrap>
-                      <Tag color={TYPE_CONFIG[tc.testType].color} style={{ fontSize: 11 }}>{TYPE_CONFIG[tc.testType].label}</Tag>
-                      <Tag color={PRIORITY_CONFIG[tc.priority].color} style={{ fontSize: 11 }}>{PRIORITY_CONFIG[tc.priority].label}</Tag>
-                      {tc.tags.map((tag) => <Tag key={tag} style={{ fontSize: 11 }}>{tag}</Tag>)}
-                    </Space>
+                  </Button>
+                </div>
+              ) : (
+                <div>
+                  <div className="flex justify-between items-center mb-3 flex-wrap gap-2">
+                    <p className="text-sm">
+                      AI สร้าง <strong>{previews.length}</strong> test case — เลือกรายการที่ต้องการบันทึก
+                    </p>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onPress={() => setPreviews((p) => p.map((x) => ({ ...x, selected: true })))}
+                      >
+                        เลือกทั้งหมด
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onPress={() => setPreviews((p) => p.map((x) => ({ ...x, selected: false })))}
+                      >
+                        ยกเลิกทั้งหมด
+                      </Button>
+                    </div>
+                  </div>
+                  <hr className="border-gray-200 dark:border-gray-700 mb-3" />
+                  <div className="max-h-[480px] overflow-y-auto flex flex-col gap-2">
+                    {previews.map((tc, index) => (
+                      <Card
+                        key={index}
+                        className={`cursor-pointer rounded-lg ${
+                          tc.selected ? "ring-2 ring-indigo-500 opacity-100" : "opacity-50"
+                        }`}
+                        onClick={() => toggleSelect(index)}
+                      >
+                        <Card.Content className="p-3">
+                          <div className="flex items-start gap-2.5">
+                            <Checkbox
+                              isSelected={tc.selected}
+                              onChange={() => toggleSelect(index)}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Checkbox.Control>
+                                <Checkbox.Indicator />
+                              </Checkbox.Control>
+                            </Checkbox>
+                            <div className="flex-1 min-w-0">
+                              <div className="font-semibold mb-1">{tc.title}</div>
+                              {tc.description && (
+                                <p className="text-xs text-muted mb-1.5 line-clamp-2">{tc.description}</p>
+                              )}
+                              <div className="flex flex-wrap gap-1">
+                                <Chip size="sm" variant="soft" color={TYPE_CONFIG[tc.testType].color}>
+                                  <Chip.Label>{TYPE_CONFIG[tc.testType].label}</Chip.Label>
+                                </Chip>
+                                <Chip size="sm" variant="soft" color={PRIORITY_CONFIG[tc.priority].color}>
+                                  <Chip.Label>{PRIORITY_CONFIG[tc.priority].label}</Chip.Label>
+                                </Chip>
+                                {tc.tags.map((tag) => (
+                                  <Chip key={tag} size="sm" variant="soft">
+                                    <Chip.Label>{tag}</Chip.Label>
+                                  </Chip>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </Card.Content>
+                      </Card>
+                    ))}
                   </div>
                 </div>
-              </Card>
-            ))}
-          </div>
-        </Spin>
-      )}
+              )}
+            </Modal.Body>
+            {previews.length > 0 && (
+              <Modal.Footer>
+                <span className="text-sm text-muted mr-auto">
+                  {selectedCount} / {previews.length} รายการที่เลือก
+                </span>
+                <Button variant="secondary" onPress={() => setPreviews([])}>
+                  เริ่มใหม่
+                </Button>
+                <Button
+                  variant="primary"
+                  isDisabled={selectedCount === 0 || isSaving}
+                  onPress={handleSave}
+                >
+                  {isSaving ? "กำลังบันทึก..." : `บันทึก ${selectedCount} รายการ`}
+                </Button>
+              </Modal.Footer>
+            )}
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
     </Modal>
   );
 }

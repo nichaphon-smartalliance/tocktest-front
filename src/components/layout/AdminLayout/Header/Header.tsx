@@ -1,18 +1,10 @@
 "use client";
 
-import { Layout, Button, Dropdown, Avatar } from "antd";
-import {
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
-  LogoutOutlined,
-  UserOutlined,
-} from "@ant-design/icons";
-import { Sun, Moon } from "lucide-react";
+import { Button, Dropdown, Avatar } from "@heroui/react";
+import { PanelLeftClose, PanelLeftOpen, LogOut, Sun, Moon } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { useTheme } from "@/context/theme/ThemeProvider";
 import type { Session } from "next-auth";
-
-const { Header: AntHeader } = Layout;
 
 interface HeaderProps {
   collapsed: boolean;
@@ -23,51 +15,43 @@ interface HeaderProps {
 export default function Header({ collapsed, onToggle, session }: HeaderProps) {
   const { mode, toggle } = useTheme();
 
-  const userMenuItems = [
-    {
-      key: "logout",
-      icon: <LogoutOutlined />,
-      label: "ออกจากระบบ",
-      onClick: () => signOut({ callbackUrl: "/login" }),
-    },
-  ];
-
   return (
-    <AntHeader
-      style={{
-        padding: "0 16px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        borderBottom: "1px solid #e5e7eb",
-        position: "sticky",
-        top: 0,
-        zIndex: 100,
-        height: 64,
-      }}
-    >
-      <Button
-        type="text"
-        icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-        onClick={onToggle}
-        style={{ fontSize: 16, width: 40, height: 40 }}
-      />
+    <header className="sticky top-0 z-100 flex h-16 items-center justify-between border-b border-gray-200 bg-[var(--bg-sider)] px-4 dark:border-gray-700">
+      <Button variant="ghost" isIconOnly onPress={onToggle} aria-label="Toggle sidebar">
+        {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+      </Button>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <Button
-          type="text"
-          icon={mode === "dark" ? <Sun size={18} /> : <Moon size={18} />}
-          onClick={toggle}
-          style={{ width: 40, height: 40 }}
-        />
+      <div className="flex items-center gap-2">
+        <Button variant="ghost" isIconOnly onPress={toggle} aria-label="Toggle theme">
+          {mode === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+        </Button>
 
-        <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
-          <div style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
-            <Avatar size={32} icon={<UserOutlined />} style={{ backgroundColor: "#6366f1" }} />
-            <span style={{ fontSize: 14, fontWeight: 500, color: "#ffffff" }}>{session.user.name}</span>
-          </div>
+        <Dropdown>
+          <Dropdown.Trigger>
+            <button
+              type="button"
+              className="flex items-center gap-2 rounded-lg px-2 py-1 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
+            >
+              <Avatar size="sm" color="accent">
+                <Avatar.Fallback>{session.user.name?.charAt(0)?.toUpperCase() ?? "U"}</Avatar.Fallback>
+              </Avatar>
+              <span className="text-sm font-medium hidden sm:inline">{session.user.name}</span>
+            </button>
+          </Dropdown.Trigger>
+          <Dropdown.Popover placement="bottom end">
+            <Dropdown.Menu
+              onAction={(key) => {
+                if (key === "logout") signOut({ callbackUrl: "/login" });
+              }}
+            >
+              <Dropdown.Item id="logout" textValue="ออกจากระบบ">
+                <LogOut size={14} />
+                ออกจากระบบ
+              </Dropdown.Item>
+            </Dropdown.Menu>
+          </Dropdown.Popover>
         </Dropdown>
       </div>
-    </AntHeader>
+    </header>
   );
 }
