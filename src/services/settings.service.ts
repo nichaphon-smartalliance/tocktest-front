@@ -13,5 +13,5 @@ type UpdateRepoSettingsBody = Pick<
 
 export const updateRepoSettings = async (repoId: string, body: Partial<UpdateRepoSettingsBody>) => {
   const res = await updateRepoSettingsApi(repoId, body);
-  return res.data.data;
+  return res.data?.data ?? null;
 };

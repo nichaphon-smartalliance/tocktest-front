@@ -37,7 +37,7 @@ export const getGithubTokens = async (): Promise<GithubToken[]> => {
 
 export const createGithubToken = async (label: string, token: string): Promise<GithubToken> => {
   const res = await createGithubTokenApi({ label, token });
-  return mapGithubToken(res.data.data);
+  return mapGithubToken(res.data?.data);
 };
 
 export const deleteGithubToken = async (id: string): Promise<void> => {

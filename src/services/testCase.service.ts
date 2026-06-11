@@ -20,12 +20,12 @@ export const getTestCaseFolders = async (repoId: string): Promise<TestCaseFolder
 
 export const createFolder = async (repoId: string, name: string, parentId?: string): Promise<TestCaseFolder> => {
   const res = await createFolderApi(repoId, { name, parentId });
-  return res.data.data;
+  return res.data?.data;
 };
 
 export const updateFolder = async (repoId: string, folderId: string, name: string): Promise<TestCaseFolder> => {
   const res = await updateFolderApi(repoId, folderId, { name });
-  return res.data.data;
+  return res.data?.data;
 };
 
 export const deleteFolder = async (repoId: string, folderId: string): Promise<void> => {
@@ -40,12 +40,12 @@ export const getTestCases = async (repoId: string, params?: TestCaseFilterParams
 
 export const createTestCase = async (repoId: string, values: TestCaseFormValues): Promise<TestCase> => {
   const res = await createTestCaseApi(repoId, values);
-  return res.data.data;
+  return res.data?.data;
 };
 
 export const updateTestCase = async (repoId: string, id: string, values: Partial<TestCaseFormValues>): Promise<TestCase> => {
   const res = await updateTestCaseApi(repoId, id, values);
-  return res.data.data;
+  return res.data?.data;
 };
 
 export const deleteTestCase = async (repoId: string, id: string): Promise<void> => {

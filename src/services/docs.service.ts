@@ -8,7 +8,7 @@ export const getProjectDoc = async (repoId: string): Promise<ProjectDoc | null> 
 
 export const updateProjectDoc = async (repoId: string, content: string): Promise<ProjectDoc> => {
   const res = await updateProjectDocApi(repoId, content);
-  return res.data.data;
+  return res.data?.data;
 };
 
 export const getDocVersions = async (repoId: string): Promise<DocVersion[]> => {
@@ -18,7 +18,7 @@ export const getDocVersions = async (repoId: string): Promise<DocVersion[]> => {
 
 export const autoUpdateDoc = async (repoId: string): Promise<ProjectDoc> => {
   const res = await autoUpdateDocApi(repoId);
-  return res.data.data;
+  return res.data?.data;
 };
 
 export const deleteProjectDoc = async (repoId: string): Promise<void> => {

@@ -55,7 +55,6 @@ export const useCommitList = (repoId: string, params?: AnalysisFilterParams) => 
           (old) => patchCommitAfterAnalyze(old, commitSha, data)
         );
       }
-      qc.invalidateQueries({ queryKey: [...COMMIT_LIST_QUERY_KEY, repoId] });
     },
   });
 

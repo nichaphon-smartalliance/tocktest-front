@@ -97,6 +97,7 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
                   สร้าง Test Case ด้วย AI
                 </span>
               </Modal.Heading>
+              <Modal.CloseTrigger />
             </Modal.Header>
             <Modal.Body>
               {previews.length === 0 ? (

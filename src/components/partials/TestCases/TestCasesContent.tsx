@@ -87,7 +87,6 @@ export default function TestCasesContent({ repoId }: TestCasesContentProps) {
       message.success("ลบ test case สำเร็จ");
     } catch (error) {
       message.error(getApiErrorMessage(error, "ลบไม่สำเร็จ"));
-      throw error;
     }
   };
 

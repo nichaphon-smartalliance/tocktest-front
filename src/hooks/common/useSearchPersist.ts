@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 
-const EXPIRE_DAYS = parseInt(process.env.NEXT_PUBLIC_SEARCH_PERSIST_EXPIRE_NUM || "7");
+const EXPIRE_DAYS = parseInt(process.env.NEXT_PUBLIC_SEARCH_PERSIST_EXPIRE_NUM || "7") || 7;
 
 export function useSearchPersist<T extends Record<string, string>>(
   key: string,
