@@ -34,7 +34,7 @@ export const TYPE_CONFIG: Record<TestType, { label: string; color: ChipColor }> 
 };
 
 export const PRIORITY_CONFIG: Record<PriorityLevel, { label: string; color: ChipColor }> = {
-  low: { label: "ต่ำ", color: undefined },
+  low: { label: "ต่ำ", color: "success" },
   medium: { label: "กลาง", color: "accent" },
   high: { label: "สูง", color: "warning" },
   critical: { label: "วิกฤต", color: "danger" },

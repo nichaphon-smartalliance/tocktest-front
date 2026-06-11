@@ -14,7 +14,7 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/th";
 import type { TestCase, TestStatus, TestType, PriorityLevel } from "@/types/app/testCase";
 import { STATUS_CONFIG, TYPE_CONFIG, PRIORITY_CONFIG } from "./TestCases.config";
-import { InlineChipPicker, configToChipOptions } from "./InlineChipPicker";
+import { InlineChipPicker, configToChipOptions, CHIP_PICKER_WIDTH } from "./InlineChipPicker";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 dayjs.extend(relativeTime);
@@ -66,12 +66,12 @@ export default function TestCaseTable({
       ) : (
         <Table className="flex-1">
           <Table.ScrollContainer>
-            <Table.Content aria-label="Test cases" className="min-w-[700px]">
+            <Table.Content aria-label="Test cases" className="min-w-[760px] w-full table-fixed">
               <Table.Header>
-                <Table.Column isRowHeader>ชื่อ Test Case</Table.Column>
+                <Table.Column isRowHeader className="w-auto">ชื่อ Test Case</Table.Column>
                 <Table.Column className="w-[130px]">สถานะ</Table.Column>
-                <Table.Column className="w-[120px]">ความสำคัญ</Table.Column>
-                <Table.Column className="w-[120px]">ประเภท</Table.Column>
+                <Table.Column className="w-[100px]">ความสำคัญ</Table.Column>
+                <Table.Column className="w-[130px]">ประเภท</Table.Column>
                 <Table.Column className="w-[110px]">อัปเดต</Table.Column>
                 <Table.Column className="w-[80px]" />
               </Table.Header>
@@ -91,28 +91,31 @@ export default function TestCaseTable({
                         <span className="font-medium">{record.title}</span>
                       </div>
                     </Table.Cell>
-                    <Table.Cell>
+                    <Table.Cell className="w-[130px]">
                       <InlineChipPicker
                         value={record.status}
                         options={configToChipOptions(STATUS_CONFIG)}
+                        chipWidth={CHIP_PICKER_WIDTH.status}
                         ariaLabel="เปลี่ยนสถานะ"
                         errorMsg="อัปเดตสถานะไม่สำเร็จ"
                         onChange={(status) => onStatusChange(record.id, status)}
                       />
                     </Table.Cell>
-                    <Table.Cell>
+                    <Table.Cell className="w-[100px]">
                       <InlineChipPicker
                         value={record.priority}
                         options={configToChipOptions(PRIORITY_CONFIG)}
+                        chipWidth={CHIP_PICKER_WIDTH.priority}
                         ariaLabel="เปลี่ยนความสำคัญ"
                         errorMsg="อัปเดตความสำคัญไม่สำเร็จ"
                         onChange={(priority) => onPriorityChange(record.id, priority)}
                       />
                     </Table.Cell>
-                    <Table.Cell>
+                    <Table.Cell className="w-[130px]">
                       <InlineChipPicker
                         value={record.testType}
                         options={configToChipOptions(TYPE_CONFIG)}
+                        chipWidth={CHIP_PICKER_WIDTH.type}
                         ariaLabel="เปลี่ยนประเภท"
                         errorMsg="อัปเดตประเภทไม่สำเร็จ"
                         onChange={(testType) => onTypeChange(record.id, testType)}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Popover, ListBox, Spinner } from "@heroui/react";
 import { ChevronDown } from "lucide-react";
 import { message } from "@/lib/toast";
@@ -22,6 +22,7 @@ interface InlineChipPickerProps<T extends string> {
   options: ChipOption<T>[];
   ariaLabel: string;
   errorMsg: string;
+  chipWidth: string;
   onChange: (value: T) => Promise<void>;
 }
 
@@ -30,22 +31,32 @@ export function InlineChipPicker<T extends string>({
   options,
   ariaLabel,
   errorMsg,
+  chipWidth,
   onChange,
 }: InlineChipPickerProps<T>) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const current = options.find((o) => o.value === value) ?? options[0];
+  const [displayValue, setDisplayValue] = useState(value);
+
+  useEffect(() => {
+    setDisplayValue(value);
+  }, [value]);
+
+  const current = options.find((o) => o.value === displayValue) ?? options[0];
 
   const handleSelect = async (next: T) => {
-    if (next === value) {
+    if (next === displayValue) {
       setOpen(false);
       return;
     }
+    const prev = displayValue;
+    setDisplayValue(next);
+    setOpen(false);
     setLoading(true);
     try {
       await onChange(next);
-      setOpen(false);
     } catch {
+      setDisplayValue(prev);
       message.error(errorMsg);
     } finally {
       setLoading(false);
@@ -56,13 +67,13 @@ export function InlineChipPicker<T extends string>({
     <Popover isOpen={open} onOpenChange={setOpen}>
       <Popover.Trigger
         aria-label={ariaLabel}
-        className={`inline-flex max-w-full items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium leading-none outline-none cursor-pointer transition-[opacity,box-shadow] hover:opacity-90 focus-visible:ring-2 focus-visible:ring-indigo-500/40 ${chipClass(current?.color)} ${loading ? "opacity-60 pointer-events-none" : ""}`}
+        className={`inline-flex ${chipWidth} h-7 shrink-0 items-center justify-center gap-1 rounded-full px-2 text-xs font-medium leading-none outline-none cursor-pointer transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-indigo-500/40 ${chipClass(current?.color)} ${loading ? "opacity-60 pointer-events-none" : ""}`}
       >
         {loading ? (
           <Spinner size="sm" />
         ) : (
           <>
-            <span className="truncate">{current?.label}</span>
+            <span className="min-w-0 flex-1 truncate text-center">{current?.label}</span>
             <ChevronDown size={12} className="shrink-0 opacity-45" aria-hidden />
           </>
         )}
@@ -71,7 +82,7 @@ export function InlineChipPicker<T extends string>({
         <Popover.Dialog className="p-0 outline-none">
           <ListBox
             selectionMode="single"
-            selectedKeys={[value]}
+            selectedKeys={[displayValue]}
             onSelectionChange={(keys) => {
               const key = keys === "all" ? null : Array.from(keys)[0];
               if (key) void handleSelect(String(key) as T);
@@ -101,3 +112,10 @@ export function configToChipOptions<T extends string>(
     color: config[key].color,
   }));
 }
+
+/** Fixed chip widths — prevents table columns shifting when labels differ in length */
+export const CHIP_PICKER_WIDTH = {
+  status: "w-[6.75rem]",
+  priority: "w-[4.25rem]",
+  type: "w-[7.25rem]",
+} as const;
