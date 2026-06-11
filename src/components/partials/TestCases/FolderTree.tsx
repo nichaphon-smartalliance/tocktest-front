@@ -83,16 +83,11 @@ function FolderNode({
           <span className="truncate">{folder.name}</span>
         </button>
         <Dropdown>
-          <Dropdown.Trigger>
-            <Button
-              variant="ghost"
-              isIconOnly
-              size="sm"
-              aria-label="จัดการโฟลเดอร์"
-              className="opacity-0 group-hover:opacity-100 min-w-6 h-6 text-[var(--text-primary)]"
-            >
-              <MoreHorizontal size={14} />
-            </Button>
+          <Dropdown.Trigger
+            aria-label="จัดการโฟลเดอร์"
+            className="opacity-0 group-hover:opacity-100 min-w-6 h-6 inline-flex items-center justify-center rounded-md bg-transparent border-0 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 text-[var(--text-primary)]"
+          >
+            <MoreHorizontal size={14} />
           </Dropdown.Trigger>
           <Dropdown.Popover>
             <Dropdown.Menu

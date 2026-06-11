@@ -3,10 +3,10 @@
 import { useState } from "react";
 import {
   Table,
-  Chip,
   Button,
   Tooltip,
-  Dropdown,
+  Select,
+  ListBox,
   Spinner,
   Pagination,
 } from "@heroui/react";
@@ -16,13 +16,16 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/th";
 import type { TestCase, TestStatus, TestType, PriorityLevel } from "@/types/app/testCase";
-import { STATUS_CONFIG, TYPE_CONFIG, PRIORITY_CONFIG } from "./TestCases.config";
+import { STATUS_CONFIG, TYPE_CONFIG, PRIORITY_CONFIG, CHIP_SOFT_CLASS } from "./TestCases.config";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 dayjs.extend(relativeTime);
 dayjs.locale("th");
 
-type ConfigRecord = Record<string, { label: string; color: "success" | "warning" | "danger" | "accent" | undefined }>;
+type ConfigRecord = Record<string, { label: string; color: keyof typeof CHIP_SOFT_CLASS | undefined }>;
+
+const chipClass = (color: ConfigRecord[string]["color"]) =>
+  CHIP_SOFT_CLASS[color ?? "default"];
 
 function InlineChipCell<T extends string>({
   value,
@@ -53,34 +56,32 @@ function InlineChipCell<T extends string>({
   };
 
   return (
-    <Dropdown>
-      <Dropdown.Trigger>
-        <Button
-          variant="ghost"
-          size="sm"
-          isDisabled={loading}
-          className="h-auto min-h-0 px-1 py-0"
-        >
-          <Chip size="sm" variant="soft" color={cfg.color}>
-            <Chip.Label>{cfg.label}</Chip.Label>
-          </Chip>
-        </Button>
-      </Dropdown.Trigger>
-      <Dropdown.Popover>
-        <Dropdown.Menu
-          onAction={(key) => handleSelect(String(key) as T)}
-          aria-label="Change value"
-        >
+    <Select
+      selectedKey={value}
+      onSelectionChange={(key) => key && void handleSelect(String(key) as T)}
+      isDisabled={loading}
+      aria-label="Change value"
+      className="w-auto"
+    >
+      <Select.Trigger
+        className={`h-7 min-h-7 w-auto gap-1 rounded-full border-0 px-2 shadow-none ${chipClass(cfg.color)}`}
+      >
+        <Select.Value />
+        <Select.Indicator className="size-3 opacity-50" />
+      </Select.Trigger>
+      <Select.Popover>
+        <ListBox>
           {(Object.keys(config) as T[]).map((k) => (
-            <Dropdown.Item key={k} id={k} textValue={config[k].label}>
-              <Chip size="sm" variant="soft" color={config[k].color}>
-                <Chip.Label>{config[k].label}</Chip.Label>
-              </Chip>
-            </Dropdown.Item>
+            <ListBox.Item key={k} id={k} textValue={config[k].label}>
+              <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${chipClass(config[k].color)}`}>
+                {config[k].label}
+              </span>
+              <ListBox.ItemIndicator />
+            </ListBox.Item>
           ))}
-        </Dropdown.Menu>
-      </Dropdown.Popover>
-    </Dropdown>
+        </ListBox>
+      </Select.Popover>
+    </Select>
   );
 }
 
