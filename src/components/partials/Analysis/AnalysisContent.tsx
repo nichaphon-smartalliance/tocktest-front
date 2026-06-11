@@ -1,18 +1,14 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import type { Selection } from "@heroui/react";
 import {
   Table,
   Card,
-  Button,
   Alert,
   Chip,
   Select,
   ListBox,
-  Checkbox,
   Spinner,
-  Tooltip,
 } from "@heroui/react";
 import { Bot, GitBranch, Zap } from "lucide-react";
 import { message } from "@/lib/toast";
@@ -38,7 +34,7 @@ interface AnalysisContentProps {
 }
 
 export default function AnalysisContent({ repoId }: AnalysisContentProps) {
-  const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set());
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [analyzingIds, setAnalyzingIds] = useState<Set<string>>(new Set());
   const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
 
@@ -55,13 +51,24 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
   } = useCommitList(repoId, { pageSize: 30, branch: selectedBranch ?? undefined });
 
   useEffect(() => {
-    setSelectedKeys(new Set());
+    setSelected(new Set());
   }, [selectedBranch]);
 
-  const selectedShas = useMemo(() => {
-    if (selectedKeys === "all") return commits.map((c) => c.commitSha);
-    return Array.from(selectedKeys as Set<string>);
-  }, [selectedKeys, commits]);
+  const selectedShas = useMemo(() => Array.from(selected), [selected]);
+  const allSelected = commits.length > 0 && commits.every((c) => selected.has(c.commitSha));
+
+  const toggleOne = (sha: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(sha)) next.delete(sha);
+      else next.add(sha);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    setSelected(allSelected ? new Set() : new Set(commits.map((c) => c.commitSha)));
+  };
 
   const handleAnalyze = async (commitSha: string) => {
     setAnalyzingIds((prev) => new Set(prev).add(commitSha));
@@ -107,45 +114,34 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
     const isAnalyzed = !!record.analyzedAt;
     const isAnalyzing = analyzingIds.has(record.commitSha);
 
-    if (!isAnalyzed) {
-      return (
-        <Button
-          size="sm"
-          variant="secondary"
-          isDisabled={isAnalyzing}
-          onPress={() => handleAnalyze(record.commitSha)}
-        >
-          {isAnalyzing ? <Spinner size="sm" color="current" /> : <Bot size={14} />}
-          วิเคราะห์
-        </Button>
-      );
-    }
+    const analyzeBtn = (label?: string) => (
+      <button
+        type="button"
+        disabled={isAnalyzing}
+        onClick={(e) => {
+          e.stopPropagation();
+          handleAnalyze(record.commitSha);
+        }}
+        className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-2.5 py-1.5 text-xs font-medium text-[var(--text-primary)] cursor-pointer hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:hover:bg-gray-800"
+      >
+        {isAnalyzing ? <Spinner size="sm" color="current" /> : <Bot size={14} />}
+        {label}
+      </button>
+    );
+
+    if (!isAnalyzed) return analyzeBtn("วิเคราะห์");
 
     return (
-      <div className="flex items-center gap-1">
-        <Tooltip>
-          <Tooltip.Trigger>
-            <span className="inline-flex">
-              <Chip color="success" size="sm" variant="soft">
-                <Chip.Label>วิเคราะห์แล้ว</Chip.Label>
-              </Chip>
-            </span>
-          </Tooltip.Trigger>
-          <Tooltip.Content>
-            {record.analyzedAt
-              ? `วิเคราะห์เมื่อ ${dayjs(record.analyzedAt).fromNow()}`
-              : "วิเคราะห์สำเร็จแล้ว"}
-          </Tooltip.Content>
-        </Tooltip>
-        <Button
-          size="sm"
-          variant="ghost"
-          isDisabled={isAnalyzing}
-          className="min-w-0 px-1 text-[var(--text-primary)]"
-          onPress={() => handleAnalyze(record.commitSha)}
+      <div className="flex items-center gap-1.5">
+        <span
+          title={record.analyzedAt ? `วิเคราะห์เมื่อ ${dayjs(record.analyzedAt).fromNow()}` : "วิเคราะห์สำเร็จแล้ว"}
+          className="inline-flex"
         >
-          {isAnalyzing ? <Spinner size="sm" color="current" /> : <Bot size={14} />}
-        </Button>
+          <Chip color="success" size="sm" variant="soft">
+            <Chip.Label>วิเคราะห์แล้ว</Chip.Label>
+          </Chip>
+        </span>
+        {analyzeBtn()}
       </div>
     );
   };
@@ -192,14 +188,15 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
               <p className="font-semibold text-sm">ควรทดสอบอะไรหลังจาก commits เหล่านี้?</p>
               <p className="text-xs text-muted">เลือก commit จากตารางแล้วถาม AI</p>
             </div>
-            <Button
-              variant="primary"
-              isDisabled={selectedShas.length === 0 || isLoadingWhatToTest}
-              onPress={handleWhatToTest}
+            <button
+              type="button"
+              disabled={selectedShas.length === 0 || isLoadingWhatToTest}
+              onClick={handleWhatToTest}
+              className="inline-flex items-center gap-2 rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white cursor-pointer hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isLoadingWhatToTest ? <Spinner size="sm" color="current" /> : <Bot size={16} />}
               ถาม AI ({selectedShas.length} commits)
-            </Button>
+            </button>
           </div>
 
           {whatToTestResult && (
@@ -240,20 +237,16 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
           ) : (
             <Table>
               <Table.ScrollContainer>
-                <Table.Content
-                  aria-label="Commits analysis table"
-                  className="min-w-[800px]"
-                  selectedKeys={selectedKeys}
-                  selectionMode="multiple"
-                  onSelectionChange={setSelectedKeys}
-                >
+                <Table.Content aria-label="Commits analysis table" className="min-w-[800px]">
                   <Table.Header>
                     <Table.Column className="w-10 pr-0">
-                      <Checkbox aria-label="Select all" slot="selection">
-                        <Checkbox.Control>
-                          <Checkbox.Indicator />
-                        </Checkbox.Control>
-                      </Checkbox>
+                      <input
+                        type="checkbox"
+                        aria-label="Select all"
+                        checked={allSelected}
+                        onChange={toggleAll}
+                        className="size-4 cursor-pointer accent-sky-600"
+                      />
                     </Table.Column>
                     <Table.Column isRowHeader>Commit</Table.Column>
                     <Table.Column>การเปลี่ยนแปลง</Table.Column>
@@ -265,15 +258,13 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
                     {commits.map((record) => (
                       <Table.Row key={record.commitSha} id={record.commitSha}>
                         <Table.Cell className="pr-0">
-                          <Checkbox
+                          <input
+                            type="checkbox"
                             aria-label={`Select ${record.commitSha.slice(0, 7)}`}
-                            slot="selection"
-                            variant="secondary"
-                          >
-                            <Checkbox.Control>
-                              <Checkbox.Indicator />
-                            </Checkbox.Control>
-                          </Checkbox>
+                            checked={selected.has(record.commitSha)}
+                            onChange={() => toggleOne(record.commitSha)}
+                            className="size-4 cursor-pointer accent-sky-600"
+                          />
                         </Table.Cell>
                         <Table.Cell>
                           <div className="font-mono text-xs text-muted">{record.commitSha.slice(0, 7)}</div>
