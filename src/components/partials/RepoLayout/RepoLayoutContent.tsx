@@ -5,6 +5,8 @@ import { useRouter, usePathname } from "next/navigation";
 import { Lock, Globe } from "lucide-react";
 import { BugPlay, GitCommitHorizontal, BookOpen, Settings } from "lucide-react";
 import { useRepository } from "@/hooks/repository";
+import { trackRecentRepo } from "@/hooks/common/useRecentRepos";
+import { useEffect } from "react";
 
 interface RepoLayoutContentProps {
   repoId: string;
@@ -22,6 +24,10 @@ export default function RepoLayoutContent({ repoId, children }: RepoLayoutConten
   const router = useRouter();
   const pathname = usePathname();
   const { repository, isLoading } = useRepository(repoId);
+
+  useEffect(() => {
+    if (repository?.fullName) trackRecentRepo(repoId, repository.fullName);
+  }, [repoId, repository?.fullName]);
 
   const activeTab = TAB_ITEMS.find((t) => pathname.endsWith(t.key))?.key ?? "test-cases";
 
