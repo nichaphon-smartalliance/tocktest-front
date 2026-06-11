@@ -28,15 +28,12 @@ export default function Header({ collapsed, onToggle, session }: HeaderProps) {
 
         <Dropdown>
           <Dropdown.Trigger>
-            <button
-              type="button"
-              className="flex items-center gap-2 rounded-lg px-2 py-1 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
-            >
+            <div className="flex items-center gap-2 rounded-lg px-2 py-1 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800">
               <Avatar size="sm" color="accent">
                 <Avatar.Fallback>{session.user.name?.charAt(0)?.toUpperCase() ?? "U"}</Avatar.Fallback>
               </Avatar>
               <span className="text-sm font-medium text-[var(--text-primary)] hidden sm:inline">{session.user.name}</span>
-            </button>
+            </div>
           </Dropdown.Trigger>
           <Dropdown.Popover placement="bottom end">
             <Dropdown.Menu

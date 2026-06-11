@@ -1,8 +1,8 @@
 "use client";
 
-import { Card, Chip, Tooltip } from "@heroui/react";
+import { Card, Chip } from "@heroui/react";
 import { Lock, Globe, Package, GitBranch, Clock } from "lucide-react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/th";
@@ -16,23 +16,23 @@ interface RepoCardProps {
 }
 
 export default function RepoCard({ repo }: RepoCardProps) {
+  const router = useRouter();
+
   return (
-    <Link href={`/repos/${repo.id}/test-cases`} className="block h-full">
     <Card
       className="h-full rounded-xl cursor-pointer hover:shadow-md transition-shadow"
+      onClick={() => router.push(`/repos/${repo.id}/test-cases`)}
     >
       <Card.Content className="p-5">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-2 min-w-0">
             <Package size={20} className="text-indigo-500 shrink-0" />
-            <Tooltip>
-              <Tooltip.Trigger>
-                <span className="font-semibold text-sm truncate max-w-[140px] block">
-                  {repo.name}
-                </span>
-              </Tooltip.Trigger>
-              <Tooltip.Content>{repo.fullName}</Tooltip.Content>
-            </Tooltip>
+            <span
+              className="font-semibold text-sm truncate max-w-[140px] block"
+              title={repo.fullName}
+            >
+              {repo.name}
+            </span>
           </div>
           <Chip
             size="sm"
@@ -66,6 +66,5 @@ export default function RepoCard({ repo }: RepoCardProps) {
         </div>
       </Card.Content>
     </Card>
-    </Link>
   );
 }
