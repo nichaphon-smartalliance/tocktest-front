@@ -10,6 +10,7 @@ import {
 } from "@heroui/react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { message } from "@/lib/toast";
+import { getApiErrorMessage } from "@/lib/api-error";
 import {
   ArrowLeft,
   Bot,
@@ -51,10 +52,7 @@ export default function DocsContent({ repoId }: DocsContentProps) {
       message.success("บันทึก Docs สำเร็จ");
       setIsEditing(false);
     } catch (error) {
-      console.error("Save Docs Error:", error);
-      const err = error as { response?: { data?: { message?: string } }; message?: string };
-      const backendMessage = err?.response?.data?.message || err?.message || "บันทึกไม่สำเร็จ";
-      message.error(`บันทึกไม่สำเร็จ: ${backendMessage}`);
+      message.error(getApiErrorMessage(error, "บันทึกไม่สำเร็จ"));
     }
   };
 

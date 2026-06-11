@@ -15,11 +15,15 @@ import {
 } from "@heroui/react";
 import { ControlledModal } from "@/components/ui/ControlledModal";
 import { message } from "@/lib/toast";
+import { getApiErrorMessage } from "@/lib/api-error";
 import { Bot } from "lucide-react";
 import dayjs from "dayjs";
 import { useAiGenerateTestCases } from "@/hooks/testCase";
 import type { GeneratedTestCasePreview } from "@/types/app/testCase";
 import { TYPE_CONFIG, PRIORITY_CONFIG } from "../TestCases.config";
+
+const typeCfg = (t: GeneratedTestCasePreview["testType"]) => TYPE_CONFIG[t] ?? TYPE_CONFIG.manual;
+const priorityCfg = (p: GeneratedTestCasePreview["priority"]) => PRIORITY_CONFIG[p] ?? PRIORITY_CONFIG.medium;
 
 interface AiGenerateModalProps {
   repoId: string;
@@ -43,8 +47,8 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
         toDate: toDate ? dayjs(toDate).toISOString() : undefined,
       });
       setPreviews(result);
-    } catch {
-      message.error("AI สร้าง test case ไม่สำเร็จ กรุณาลองใหม่");
+    } catch (error) {
+      message.error(getApiErrorMessage(error, "AI สร้าง test case ไม่สำเร็จ กรุณาลองใหม่"));
     }
   };
 
@@ -63,15 +67,13 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
       setToDate("");
       onSaved();
       onClose();
-    } catch {
-      message.error("บันทึกไม่สำเร็จ");
+    } catch (error) {
+      message.error(getApiErrorMessage(error, "บันทึกไม่สำเร็จ"));
     }
   };
 
-  const toggleSelect = (index: number) => {
-    setPreviews((prev) =>
-      prev.map((p, i) => (i === index ? { ...p, selected: !p.selected } : p))
-    );
+  const setSelected = (index: number, selected: boolean) => {
+    setPreviews((prev) => prev.map((p, i) => (i === index ? { ...p, selected } : p)));
   };
 
   const handleClose = () => {
@@ -170,46 +172,45 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
                   <hr className="border-gray-200 dark:border-gray-700 mb-3" />
                   <div className="max-h-[480px] overflow-y-auto flex flex-col gap-2">
                     {previews.map((tc, index) => (
-                      <Card
+                      <button
                         key={index}
-                        className={`cursor-pointer rounded-lg ${
+                        type="button"
+                        onClick={() => setSelected(index, !tc.selected)}
+                        className={`w-full text-left rounded-lg transition-opacity ${
                           tc.selected ? "ring-2 ring-indigo-500 opacity-100" : "opacity-50"
                         }`}
-                        onClick={() => toggleSelect(index)}
                       >
-                        <Card.Content className="p-3">
-                          <div className="flex items-start gap-2.5">
-                            <Checkbox
-                              isSelected={tc.selected}
-                              onChange={() => toggleSelect(index)}
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <Checkbox.Control>
-                                <Checkbox.Indicator />
-                              </Checkbox.Control>
-                            </Checkbox>
-                            <div className="flex-1 min-w-0">
-                              <div className="font-semibold mb-1">{tc.title}</div>
-                              {tc.description && (
-                                <p className="text-xs text-muted mb-1.5 line-clamp-2">{tc.description}</p>
-                              )}
-                              <div className="flex flex-wrap gap-1">
-                                <Chip size="sm" variant="soft" color={TYPE_CONFIG[tc.testType].color}>
-                                  <Chip.Label>{TYPE_CONFIG[tc.testType].label}</Chip.Label>
-                                </Chip>
-                                <Chip size="sm" variant="soft" color={PRIORITY_CONFIG[tc.priority].color}>
-                                  <Chip.Label>{PRIORITY_CONFIG[tc.priority].label}</Chip.Label>
-                                </Chip>
+                        <Card className="rounded-lg">
+                          <Card.Content className="p-3">
+                            <div className="flex items-start gap-2.5">
+                              <Checkbox isSelected={tc.selected} aria-hidden>
+                                <Checkbox.Control>
+                                  <Checkbox.Indicator />
+                                </Checkbox.Control>
+                              </Checkbox>
+                              <div className="flex-1 min-w-0">
+                                <div className="font-semibold mb-1">{tc.title}</div>
+                                {tc.description && (
+                                  <p className="text-xs text-muted mb-1.5 line-clamp-2">{tc.description}</p>
+                                )}
+                                <div className="flex flex-wrap gap-1">
+                                  <Chip size="sm" variant="soft" color={typeCfg(tc.testType).color}>
+                                    <Chip.Label>{typeCfg(tc.testType).label}</Chip.Label>
+                                  </Chip>
+                                  <Chip size="sm" variant="soft" color={priorityCfg(tc.priority).color}>
+                                    <Chip.Label>{priorityCfg(tc.priority).label}</Chip.Label>
+                                  </Chip>
                                 {tc.tags.map((tag) => (
                                   <Chip key={tag} size="sm" variant="soft">
                                     <Chip.Label>{tag}</Chip.Label>
                                   </Chip>
                                 ))}
                               </div>
+                              </div>
                             </div>
-                          </div>
-                        </Card.Content>
-                      </Card>
+                          </Card.Content>
+                        </Card>
+                      </button>
                     ))}
                   </div>
                 </div>

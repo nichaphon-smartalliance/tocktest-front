@@ -11,6 +11,7 @@ import {
 } from "@heroui/react";
 import { ControlledModal } from "@/components/ui/ControlledModal";
 import { message } from "@/lib/toast";
+import { getApiErrorMessage } from "@/lib/api-error";
 import type { TestCase, TestCaseFormValues, ModalMode } from "@/types/app/testCase";
 
 function TagInput({
@@ -143,8 +144,8 @@ export default function TestCaseModal({
         message.success("สร้าง test case สำเร็จ");
       }
       onClose();
-    } catch {
-      message.error("เกิดข้อผิดพลาด กรุณาลองใหม่");
+    } catch (error) {
+      message.error(getApiErrorMessage(error, "เกิดข้อผิดพลาด กรุณาลองใหม่"));
     }
   };
 

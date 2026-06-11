@@ -57,8 +57,10 @@ export const aiGenerateTestCases = async (req: AiGenerateRequest): Promise<Gener
   return (res.data?.data?.testCases ?? []).map((tc) => ({ ...tc, selected: true }));
 };
 
+const toBulkSavePayload = ({ selected: _selected, ...tc }: GeneratedTestCasePreview) => tc;
+
 export const bulkSaveTestCases = async (repoId: string, previews: GeneratedTestCasePreview[]): Promise<TestCase[]> => {
-  const selected = previews.filter((p) => p.selected);
-  const res = await bulkSaveTestCasesApi(repoId, selected);
+  const payload = previews.filter((p) => p.selected).map(toBulkSavePayload);
+  const res = await bulkSaveTestCasesApi(repoId, payload);
   return res.data?.data ?? [];
 };

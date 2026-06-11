@@ -1,7 +1,6 @@
 "use client";
 
 import { Modal, useOverlayState } from "@heroui/react";
-import type { UseOverlayStateReturn } from "@heroui/react";
 import type { ReactNode } from "react";
 
 interface ControlledModalProps {

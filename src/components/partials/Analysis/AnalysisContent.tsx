@@ -16,6 +16,7 @@ import {
 } from "@heroui/react";
 import { Bot, GitBranch, Zap } from "lucide-react";
 import { message } from "@/lib/toast";
+import { getApiErrorMessage } from "@/lib/api-error";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/th";
@@ -68,9 +69,7 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
       await analyze(commitSha);
       message.success("วิเคราะห์ commit สำเร็จ");
     } catch (error) {
-      console.error("Analyze error:", error);
-      const err = error as { response?: { data?: { message?: string } } };
-      message.error(err.response?.data?.message || "วิเคราะห์ไม่สำเร็จ กรุณาตรวจสอบ GitHub Token");
+      message.error(getApiErrorMessage(error, "วิเคราะห์ไม่สำเร็จ กรุณาตรวจสอบ GitHub Token"));
     } finally {
       setAnalyzingIds((prev) => {
         const next = new Set(prev);
@@ -89,9 +88,7 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
       await getWhatToTest(selectedShas);
       message.success("ได้คำแนะนำจาก AI สำเร็จ");
     } catch (error) {
-      console.error("What to test error:", error);
-      const err = error as { response?: { data?: { message?: string } } };
-      message.error(err.response?.data?.message || "เกิดข้อผิดพลาดในการเชื่อมต่อ AI service");
+      message.error(getApiErrorMessage(error, "เกิดข้อผิดพลาดในการเชื่อมต่อ AI service"));
     }
   };
 

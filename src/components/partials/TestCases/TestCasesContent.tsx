@@ -7,6 +7,8 @@ import FolderTree from "./FolderTree";
 import TestCaseTable from "./TestCaseTable";
 import { TestCaseModal, AiGenerateModal } from "./Modal";
 import { useTestCaseList } from "@/hooks/testCase";
+import { message } from "@/lib/toast";
+import { getApiErrorMessage } from "@/lib/api-error";
 import type { TestCase, ModalMode, TestCaseFormValues, TestStatus, TestType, PriorityLevel } from "@/types/app/testCase";
 
 const STATUS_OPTIONS = [
@@ -80,7 +82,13 @@ export default function TestCasesContent({ repoId }: TestCasesContentProps) {
   };
 
   const handleDelete = async (id: string) => {
-    await remove(id);
+    try {
+      await remove(id);
+      message.success("ลบ test case สำเร็จ");
+    } catch (error) {
+      message.error(getApiErrorMessage(error, "ลบไม่สำเร็จ"));
+      throw error;
+    }
   };
 
   return (
