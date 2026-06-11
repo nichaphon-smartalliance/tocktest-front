@@ -2,7 +2,7 @@
 
 import { Card, Chip, Tooltip } from "@heroui/react";
 import { Lock, Globe, Package, GitBranch, Clock } from "lucide-react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/th";
@@ -16,12 +16,10 @@ interface RepoCardProps {
 }
 
 export default function RepoCard({ repo }: RepoCardProps) {
-  const router = useRouter();
-
   return (
+    <Link href={`/repos/${repo.id}/test-cases`} className="block h-full">
     <Card
       className="h-full rounded-xl cursor-pointer hover:shadow-md transition-shadow"
-      onClick={() => router.push(`/repos/${repo.id}/test-cases`)}
     >
       <Card.Content className="p-5">
         <div className="flex items-start justify-between mb-3">
@@ -68,5 +66,6 @@ export default function RepoCard({ repo }: RepoCardProps) {
         </div>
       </Card.Content>
     </Card>
+    </Link>
   );
 }

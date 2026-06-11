@@ -9,8 +9,8 @@ import {
   InputGroup,
   Modal,
   Spinner,
-  useOverlayState,
 } from "@heroui/react";
+import { ControlledModal } from "@/components/ui/ControlledModal";
 import { message } from "@/lib/toast";
 import {
   Folder,
@@ -123,15 +123,10 @@ export default function FolderTree({ repoId, selectedFolderId, onSelectFolder }:
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
 
-  const createModalState = useOverlayState({
-    isOpen: createModalOpen,
-    onOpenChange: (isOpen) => {
-      if (!isOpen) {
-        setCreateModalOpen(false);
-        setNewFolderName("");
-      }
-    },
-  });
+  const closeCreateModal = () => {
+    setCreateModalOpen(false);
+    setNewFolderName("");
+  };
 
   const handleCreate = async () => {
     if (!newFolderName.trim()) return;
@@ -139,7 +134,7 @@ export default function FolderTree({ repoId, selectedFolderId, onSelectFolder }:
       await createFolder({ name: newFolderName.trim() });
       message.success("สร้างโฟลเดอร์สำเร็จ");
       setNewFolderName("");
-      setCreateModalOpen(false);
+      closeCreateModal();
     } catch {
       message.error("สร้างโฟลเดอร์ไม่สำเร็จ");
     }
@@ -199,12 +194,13 @@ export default function FolderTree({ repoId, selectedFolderId, onSelectFolder }:
         ))
       )}
 
-      <Modal state={createModalState}>
+      <ControlledModal open={createModalOpen} onClose={closeCreateModal}>
         <Modal.Backdrop>
           <Modal.Container>
             <Modal.Dialog>
               <Modal.Header>
                 <Modal.Heading>สร้างโฟลเดอร์ใหม่</Modal.Heading>
+                <Modal.CloseTrigger />
               </Modal.Header>
               <Modal.Body>
                 <TextField value={newFolderName} onChange={setNewFolderName} autoFocus>
@@ -230,7 +226,7 @@ export default function FolderTree({ repoId, selectedFolderId, onSelectFolder }:
             </Modal.Dialog>
           </Modal.Container>
         </Modal.Backdrop>
-      </Modal>
+      </ControlledModal>
     </div>
   );
 }

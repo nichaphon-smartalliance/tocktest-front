@@ -5,7 +5,6 @@ import {
   Table,
   Chip,
   Button,
-  AlertDialog,
   Tooltip,
   Dropdown,
   Spinner,
@@ -18,6 +17,7 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/th";
 import type { TestCase, TestStatus, TestType, PriorityLevel } from "@/types/app/testCase";
 import { STATUS_CONFIG, TYPE_CONFIG, PRIORITY_CONFIG } from "./TestCases.config";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 dayjs.extend(relativeTime);
 dayjs.locale("th");
@@ -80,36 +80,6 @@ function InlineChipCell<T extends string>({
         </Dropdown.Menu>
       </Dropdown.Popover>
     </Dropdown>
-  );
-}
-
-function DeleteTestCaseButton({ onConfirm }: { onConfirm: () => void }) {
-  return (
-    <AlertDialog>
-      <AlertDialog.Trigger>
-        <Button variant="ghost" isIconOnly size="sm" aria-label="ลบ test case">
-          <Trash2 size={14} className="text-red-500" />
-        </Button>
-      </AlertDialog.Trigger>
-      <AlertDialog.Backdrop>
-        <AlertDialog.Container>
-          <AlertDialog.Dialog>
-            <AlertDialog.Header>
-              <AlertDialog.Icon status="danger" />
-              <AlertDialog.Heading>ลบ test case นี้?</AlertDialog.Heading>
-            </AlertDialog.Header>
-            <AlertDialog.Footer>
-              <Button slot="close" variant="secondary">
-                ยกเลิก
-              </Button>
-              <Button variant="danger" onPress={onConfirm}>
-                ลบ
-              </Button>
-            </AlertDialog.Footer>
-          </AlertDialog.Dialog>
-        </AlertDialog.Container>
-      </AlertDialog.Backdrop>
-    </AlertDialog>
   );
 }
 
@@ -231,7 +201,17 @@ export default function TestCaseTable({
                         >
                           <Pencil size={14} />
                         </Button>
-                        <DeleteTestCaseButton onConfirm={() => onDelete(record.id)} />
+                        <ConfirmDialog
+                          title="ลบ test case นี้?"
+                          confirmLabel="ลบ"
+                          confirmVariant="danger"
+                          onConfirm={() => onDelete(record.id)}
+                          trigger={
+                            <Button variant="ghost" isIconOnly size="sm" aria-label="ลบ test case">
+                              <Trash2 size={14} className="text-red-500" />
+                            </Button>
+                          }
+                        />
                       </div>
                     </Table.Cell>
                   </Table.Row>

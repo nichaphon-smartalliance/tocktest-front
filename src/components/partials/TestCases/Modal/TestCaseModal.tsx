@@ -8,8 +8,8 @@ import {
   InputGroup,
   TextArea,
   Button,
-  useOverlayState,
 } from "@heroui/react";
+import { ControlledModal } from "@/components/ui/ControlledModal";
 import { message } from "@/lib/toast";
 import type { TestCase, TestCaseFormValues, ModalMode } from "@/types/app/testCase";
 
@@ -96,13 +96,6 @@ export default function TestCaseModal({
   onUpdate,
   isLoading,
 }: TestCaseModalProps) {
-  const modalState = useOverlayState({
-    isOpen: open,
-    onOpenChange: (isOpen) => {
-      if (!isOpen) onClose();
-    },
-  });
-
   const isView = mode === "view";
 
   const [title, setTitle] = useState("");
@@ -159,12 +152,13 @@ export default function TestCaseModal({
     mode === "create" ? "สร้าง Test Case ใหม่" : mode === "edit" ? "แก้ไข Test Case" : "รายละเอียด";
 
   return (
-    <Modal state={modalState}>
+    <ControlledModal open={open} onClose={onClose}>
       <Modal.Backdrop>
         <Modal.Container size="lg">
           <Modal.Dialog>
             <Modal.Header>
               <Modal.Heading>{modalTitle}</Modal.Heading>
+              <Modal.CloseTrigger />
             </Modal.Header>
             <Modal.Body className="flex flex-col gap-4">
               <TextField value={title} onChange={setTitle} isRequired isDisabled={isView}>
@@ -220,6 +214,6 @@ export default function TestCaseModal({
           </Modal.Dialog>
         </Modal.Container>
       </Modal.Backdrop>
-    </Modal>
+    </ControlledModal>
   );
 }

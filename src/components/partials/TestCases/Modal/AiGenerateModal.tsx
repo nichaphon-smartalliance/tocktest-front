@@ -12,8 +12,8 @@ import {
   TextField,
   Label,
   InputGroup,
-  useOverlayState,
 } from "@heroui/react";
+import { ControlledModal } from "@/components/ui/ControlledModal";
 import { message } from "@/lib/toast";
 import { Bot } from "lucide-react";
 import dayjs from "dayjs";
@@ -30,13 +30,6 @@ interface AiGenerateModalProps {
 }
 
 export default function AiGenerateModal({ repoId, folderId, open, onClose, onSaved }: AiGenerateModalProps) {
-  const modalState = useOverlayState({
-    isOpen: open,
-    onOpenChange: (isOpen) => {
-      if (!isOpen) handleClose();
-    },
-  });
-
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [previews, setPreviews] = useState<GeneratedTestCasePreview[]>([]);
@@ -91,7 +84,7 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
   const selectedCount = previews.filter((p) => p.selected).length;
 
   return (
-    <Modal state={modalState}>
+    <ControlledModal open={open} onClose={handleClose}>
       <Modal.Backdrop>
         <Modal.Container size="lg">
           <Modal.Dialog>
@@ -242,6 +235,6 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
           </Modal.Dialog>
         </Modal.Container>
       </Modal.Backdrop>
-    </Modal>
+    </ControlledModal>
   );
 }

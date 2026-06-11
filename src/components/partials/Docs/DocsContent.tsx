@@ -6,9 +6,9 @@ import {
   Chip,
   Spinner,
   Alert,
-  AlertDialog,
   TextArea,
 } from "@heroui/react";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { message } from "@/lib/toast";
 import {
   ArrowLeft,
@@ -98,35 +98,18 @@ export default function DocsContent({ repoId }: DocsContentProps) {
 
           {!isEditing ? (
             <div className="flex items-center gap-2 flex-wrap">
-              <AlertDialog>
-                <AlertDialog.Trigger>
+              <ConfirmDialog
+                title="AI Auto Update"
+                description="AI จะวิเคราะห์ code และอัปเดต Docs อัตโนมัติ ดำเนินการหรือไม่?"
+                confirmLabel="ดำเนินการ"
+                onConfirm={handleAutoUpdate}
+                trigger={
                   <Button variant="secondary" size="sm" isDisabled={isAutoUpdating}>
                     <Bot size={14} />
                     AI Auto Update
                   </Button>
-                </AlertDialog.Trigger>
-                <AlertDialog.Backdrop>
-                  <AlertDialog.Container>
-                    <AlertDialog.Dialog>
-                      <AlertDialog.Header>
-                        <AlertDialog.Icon status="accent" />
-                        <AlertDialog.Heading>AI Auto Update</AlertDialog.Heading>
-                      </AlertDialog.Header>
-                      <AlertDialog.Body>
-                        AI จะวิเคราะห์ code และอัปเดต Docs อัตโนมัติ ดำเนินการหรือไม่?
-                      </AlertDialog.Body>
-                      <AlertDialog.Footer>
-                        <Button slot="close" variant="secondary">
-                          ยกเลิก
-                        </Button>
-                        <Button variant="primary" onPress={handleAutoUpdate}>
-                          ดำเนินการ
-                        </Button>
-                      </AlertDialog.Footer>
-                    </AlertDialog.Dialog>
-                  </AlertDialog.Container>
-                </AlertDialog.Backdrop>
-              </AlertDialog>
+                }
+              />
 
               <Button variant="secondary" size="sm" onPress={() => setShowHistory((v) => !v)}>
                 <History size={14} />
@@ -134,35 +117,19 @@ export default function DocsContent({ repoId }: DocsContentProps) {
               </Button>
 
               {doc && (
-                <AlertDialog>
-                  <AlertDialog.Trigger>
+                <ConfirmDialog
+                  title="ลบ Docs"
+                  description="ลบ Docs ทั้งหมดหรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้"
+                  confirmLabel="ลบ"
+                  confirmVariant="danger"
+                  onConfirm={handleDelete}
+                  trigger={
                     <Button variant="danger" size="sm" isDisabled={isDeleting}>
                       <Trash2 size={14} />
                       ลบ
                     </Button>
-                  </AlertDialog.Trigger>
-                  <AlertDialog.Backdrop>
-                    <AlertDialog.Container>
-                      <AlertDialog.Dialog>
-                        <AlertDialog.Header>
-                          <AlertDialog.Icon status="danger" />
-                          <AlertDialog.Heading>ลบ Docs</AlertDialog.Heading>
-                        </AlertDialog.Header>
-                        <AlertDialog.Body>
-                          ลบ Docs ทั้งหมดหรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้
-                        </AlertDialog.Body>
-                        <AlertDialog.Footer>
-                          <Button slot="close" variant="secondary">
-                            ยกเลิก
-                          </Button>
-                          <Button variant="danger" onPress={handleDelete}>
-                            ลบ
-                          </Button>
-                        </AlertDialog.Footer>
-                      </AlertDialog.Dialog>
-                    </AlertDialog.Container>
-                  </AlertDialog.Backdrop>
-                </AlertDialog>
+                  }
+                />
               )}
 
               <Button variant="primary" size="sm" onPress={startEdit}>

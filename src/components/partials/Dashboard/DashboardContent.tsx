@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button, SearchField, Spinner, Tooltip } from "@heroui/react";
+import { Button, SearchField, Spinner } from "@heroui/react";
 import { message } from "@/lib/toast";
 import { Plus, RefreshCw, Github } from "lucide-react";
 import { useRepositoryList } from "@/hooks/repository";
@@ -50,19 +50,15 @@ export default function DashboardContent() {
             <Github size={16} />
             GitHub Token
           </Button>
-          <Tooltip>
-            <Tooltip.Trigger>
-              <Button
-                variant="primary"
-                isDisabled={isSyncing}
-                onPress={handleSync}
-              >
-                <RefreshCw size={16} className={isSyncing ? "animate-spin" : ""} />
-                ซิงค์
-              </Button>
-            </Tooltip.Trigger>
-            <Tooltip.Content>ซิงค์ repositories จาก GitHub</Tooltip.Content>
-          </Tooltip>
+          <Button
+            variant="primary"
+            isDisabled={isSyncing}
+            onPress={handleSync}
+            aria-label="ซิงค์ repositories จาก GitHub"
+          >
+            <RefreshCw size={16} className={isSyncing ? "animate-spin" : ""} />
+            ซิงค์
+          </Button>
         </div>
       </div>
 

@@ -6,7 +6,6 @@ import {
   Button,
   Table,
   Chip,
-  AlertDialog,
   TextField,
   Label,
   InputGroup,
@@ -19,40 +18,11 @@ import { useGithubTokens } from "@/hooks/repository";
 import { useRepoSettings } from "@/hooks/settings";
 import type { GithubToken } from "@/types/app/repository";
 import { AddTokenModal } from "@/components/partials/Dashboard/Modal";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import dayjs from "dayjs";
 
 interface SettingsContentProps {
   repoId: string;
-}
-
-function DeleteTokenButton({ onConfirm }: { onConfirm: () => void }) {
-  return (
-    <AlertDialog>
-      <AlertDialog.Trigger>
-        <Button variant="ghost" isIconOnly size="sm" aria-label="ลบ Token">
-          <Trash2 size={14} className="text-red-500" />
-        </Button>
-      </AlertDialog.Trigger>
-      <AlertDialog.Backdrop>
-        <AlertDialog.Container>
-          <AlertDialog.Dialog>
-            <AlertDialog.Header>
-              <AlertDialog.Icon status="danger" />
-              <AlertDialog.Heading>ลบ Token นี้?</AlertDialog.Heading>
-            </AlertDialog.Header>
-            <AlertDialog.Footer>
-              <Button slot="close" variant="secondary">
-                ยกเลิก
-              </Button>
-              <Button variant="danger" onPress={onConfirm}>
-                ลบ
-              </Button>
-            </AlertDialog.Footer>
-          </AlertDialog.Dialog>
-        </AlertDialog.Container>
-      </AlertDialog.Backdrop>
-    </AlertDialog>
-  );
 }
 
 export default function SettingsContent({ repoId }: SettingsContentProps) {
@@ -69,6 +39,15 @@ export default function SettingsContent({ repoId }: SettingsContentProps) {
       setAutoAnalyzeOnPush(settings.autoAnalyzeOnPush ?? false);
     }
   }, [settings]);
+
+  const handleDeleteToken = async (id: string) => {
+    try {
+      await deleteToken(id);
+      message.success("ลบ Token สำเร็จ");
+    } catch {
+      message.error("ลบ Token ไม่สำเร็จ");
+    }
+  };
 
   const handleSaveSettings = async () => {
     try {
@@ -140,7 +119,17 @@ export default function SettingsContent({ repoId }: SettingsContentProps) {
                           )}
                         </Table.Cell>
                         <Table.Cell>
-                          <DeleteTokenButton onConfirm={() => deleteToken(record.id)} />
+                          <ConfirmDialog
+                            title="ลบ Token นี้?"
+                            confirmLabel="ลบ"
+                            confirmVariant="danger"
+                            onConfirm={() => handleDeleteToken(record.id)}
+                            trigger={
+                              <Button variant="ghost" isIconOnly size="sm" aria-label="ลบ Token">
+                                <Trash2 size={14} className="text-red-500" />
+                              </Button>
+                            }
+                          />
                         </Table.Cell>
                       </Table.Row>
                     ))}
@@ -168,7 +157,10 @@ export default function SettingsContent({ repoId }: SettingsContentProps) {
                 </InputGroup>
               </TextField>
 
-              <Switch isSelected={autoAnalyzeOnPush} onChange={setAutoAnalyzeOnPush}>
+              <Switch
+                isSelected={autoAnalyzeOnPush}
+                onChange={(selected) => setAutoAnalyzeOnPush(selected)}
+              >
                 <Switch.Control>
                   <Switch.Thumb />
                 </Switch.Control>

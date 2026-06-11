@@ -6,7 +6,12 @@ export const getRepoSettings = async (repoId: string) => {
   return res.data?.data ?? null;
 };
 
-export const updateRepoSettings = async (repoId: string, body: Partial<RepoSettingsResponse>) => {
+type UpdateRepoSettingsBody = Pick<
+  RepoSettingsResponse,
+  "defaultBranch" | "autoAnalyzeOnPush" | "aiProvider" | "aiModel"
+>;
+
+export const updateRepoSettings = async (repoId: string, body: Partial<UpdateRepoSettingsBody>) => {
   const res = await updateRepoSettingsApi(repoId, body);
   return res.data.data;
 };
