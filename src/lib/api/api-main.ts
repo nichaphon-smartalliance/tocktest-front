@@ -10,7 +10,7 @@ import type { CommitResponse, AiAnalysisResponse, WhatToTestResponse } from "@/t
 import type { ProjectDocResponse, DocVersionResponse } from "@/types/api/main/docs";
 import type { RepoSettingsResponse } from "@/types/api/main/settings";
 import type { UserProfileResponse, UserSettingsResponse, UpdateUserSettingsRequest } from "@/types/api/main/user";
-import type { QaSummaryResponse } from "@/types/api/main/dashboard";
+import type { GithubAppSetupResponse, QaSummaryResponse } from "@/types/api/main/dashboard";
 import { mainClient } from "./client";
 
 // ── Repositories ──────────────────────────────────────────────────────────
@@ -131,3 +131,6 @@ export const updateUserSettingsApi = (body: UpdateUserSettingsRequest) =>
 // ── Dashboard / QA Summary ────────────────────────────────────────────────
 export const getQaSummaryApi = () =>
   mainClient.get<ApiResponse<QaSummaryResponse>>("/api/v1/dashboard/qa-summary");
+
+export const getGithubAppSetupApi = () =>
+  mainClient.get<ApiResponse<GithubAppSetupResponse>>("/api/v1/github-app/setup");

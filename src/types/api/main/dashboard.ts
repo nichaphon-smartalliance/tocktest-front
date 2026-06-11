@@ -23,6 +23,15 @@ export interface QaCapabilityResponse {
   description: string;
 }
 
+export interface GithubAppSetupResponse {
+  configured: boolean;
+  appName: string | null;
+  installUrl: string | null;
+  appIdConfigured: boolean;
+  privateKeyConfigured: boolean;
+  webhookSecretConfigured: boolean;
+}
+
 export interface QaRecentRepoResponse {
   id: string;
   fullName: string;

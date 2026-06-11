@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { Button, SearchField, Spinner } from "@heroui/react";
 import { message } from "@/lib/toast";
-import { Plus, RefreshCw, Github, CheckCircle2, AlertTriangle, CircleDashed } from "lucide-react";
+import { Plus, RefreshCw, Github, CheckCircle2, AlertTriangle, CircleDashed, ExternalLink } from "lucide-react";
 import { useRepositoryList } from "@/hooks/repository";
 import { useGithubTokens } from "@/hooks/repository";
-import { useQaSummary } from "@/hooks/dashboard";
+import { useGithubAppSetup, useQaSummary } from "@/hooks/dashboard";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import RepoCard from "./RepoCard";
 import { AddTokenModal } from "./Modal";
@@ -19,6 +19,7 @@ export default function DashboardContent() {
   const privateCount = repositories.filter((r) => r.isPrivate).length;
   const { syncRepositories, isSyncing } = useGithubTokens();
   const { summary } = useQaSummary();
+  const { setup } = useGithubAppSetup();
 
   const handleSync = async () => {
     try {
@@ -131,6 +132,40 @@ export default function DashboardContent() {
             <p className="m-0 mt-1 text-sm text-muted">
               Highest-value additions based on the features still missing from the platform.
             </p>
+
+            {setup && (
+              <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-800/60">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="m-0 text-sm font-semibold">GitHub App setup</p>
+                    <p className="m-0 mt-1 text-xs text-muted">
+                      App ID: {setup.appIdConfigured ? "configured" : "missing"} · Private key: {setup.privateKeyConfigured ? "configured" : "missing"} · Webhook secret: {setup.webhookSecretConfigured ? "configured" : "missing"}
+                    </p>
+                  </div>
+                  {setup.configured ? (
+                    <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+                      Ready
+                    </span>
+                  ) : (
+                    <span className="rounded-full bg-amber-50 px-3 py-1 text-xs text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
+                      Needs config
+                    </span>
+                  )}
+                </div>
+
+                {setup.installUrl && (
+                  <a
+                    href={setup.installUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-sky-700 hover:text-sky-800 dark:text-sky-300 dark:hover:text-sky-200"
+                  >
+                    Open GitHub App install link
+                    <ExternalLink size={14} />
+                  </a>
+                )}
+              </div>
+            )}
 
             <div className="mt-4 space-y-3">
               {(summary.nextMilestones ?? []).map((step, index) => (
