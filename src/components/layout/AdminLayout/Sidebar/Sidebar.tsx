@@ -255,7 +255,7 @@ export default function Sidebar({ collapsed, session }: SidebarProps) {
         ) : (
           <div className="text-left">
             <span className="text-base font-bold text-white tracking-tight block">TockTest</span>
-            <span className="text-[10px] text-indigo-100/80">QA Platform</span>
+            <span className="text-[10px] text-indigo-100/80">AI QA Platform</span>
           </div>
         )}
       </button>
