@@ -67,7 +67,9 @@ export const deleteTestCaseApi = (repoId: string, testCaseId: string) =>
   mainClient.delete<ApiResponse<void>>(`/api/v1/repositories/${repoId}/test-cases/${testCaseId}`);
 
 export const aiGenerateTestCasesApi = (body: AiGenerateRequest) =>
-  mainClient.post<ApiResponse<AiGenerateResponse>>("/api/v1/ai/generate-test-cases", body);
+  mainClient.post<ApiResponse<AiGenerateResponse>>("/api/v1/ai/generate-test-cases", body, {
+    timeout: 90_000,
+  });
 
 export const aiHealthApi = () =>
   mainClient.get<ApiResponse<{ available: boolean }>>("/api/v1/ai/health");

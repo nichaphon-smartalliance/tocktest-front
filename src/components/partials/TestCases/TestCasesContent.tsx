@@ -6,9 +6,9 @@ import { Button, SearchField, Select, ListBox } from "@heroui/react";
 import { Plus, Bot } from "lucide-react";
 import FolderTree from "./FolderTree";
 import TestCaseTable from "./TestCaseTable";
+import AiGenerateModal from "./Modal/AiGenerateModal";
 
 const TestCaseModal = dynamic(() => import("./Modal/TestCaseModal"), { ssr: false });
-const AiGenerateModal = dynamic(() => import("./Modal/AiGenerateModal"), { ssr: false });
 import { useTestCaseList } from "@/hooks/testCase";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { message } from "@/lib/toast";

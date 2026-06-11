@@ -9,9 +9,7 @@ import {
   Checkbox,
   Alert,
   Spinner,
-  TextField,
   Label,
-  InputGroup,
 } from "@heroui/react";
 import { ControlledModal } from "@/components/ui/ControlledModal";
 import { message } from "@/lib/toast";
@@ -40,13 +38,27 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
   const { generate, isGenerating, save, isSaving } = useAiGenerateTestCases(repoId);
 
   const handleGenerate = async () => {
+    if (!fromDate || !toDate) {
+      message.warning("กรุณาเลือกวันเริ่มต้นและวันสิ้นสุด");
+      return;
+    }
+    if (dayjs(fromDate).isAfter(dayjs(toDate))) {
+      message.warning("วันเริ่มต้นต้องไม่เกินวันสิ้นสุด");
+      return;
+    }
+
     try {
       const result = await generate({
         repoId,
-        fromDate: fromDate ? dayjs(fromDate).toISOString() : undefined,
-        toDate: toDate ? dayjs(toDate).toISOString() : undefined,
+        fromDate: dayjs(fromDate).startOf("day").toISOString(),
+        toDate: dayjs(toDate).endOf("day").toISOString(),
       });
+      if (result.length === 0) {
+        message.warning("ไม่พบ test case ในช่วงเวลานี้ — ลองเลือกช่วงเวลาอื่นหรือตรวจสอบ GitHub Token");
+        return;
+      }
       setPreviews(result);
+      message.success(`AI สร้าง ${result.length} test case`);
     } catch (error) {
       message.error(getApiErrorMessage(error, "AI สร้าง test case ไม่สำเร็จ กรุณาลองใหม่"));
     }
@@ -112,26 +124,34 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
                   </Alert>
 
                   <div className="grid grid-cols-2 gap-3">
-                    <TextField value={fromDate} onChange={setFromDate}>
-                      <Label>วันเริ่มต้น</Label>
-                      <InputGroup>
-                        <InputGroup.Input type="date" />
-                      </InputGroup>
-                    </TextField>
-                    <TextField value={toDate} onChange={setToDate}>
-                      <Label>วันสิ้นสุด</Label>
-                      <InputGroup>
-                        <InputGroup.Input type="date" />
-                      </InputGroup>
-                    </TextField>
+                    <div className="flex flex-col gap-1">
+                      <Label htmlFor="ai-from-date">วันเริ่มต้น</Label>
+                      <input
+                        id="ai-from-date"
+                        type="date"
+                        value={fromDate}
+                        onChange={(e) => setFromDate(e.target.value)}
+                        className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <Label htmlFor="ai-to-date">วันสิ้นสุด</Label>
+                      <input
+                        id="ai-to-date"
+                        type="date"
+                        value={toDate}
+                        onChange={(e) => setToDate(e.target.value)}
+                        className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+                      />
+                    </div>
                   </div>
                   <p className="text-xs text-muted -mt-2">เลือกช่วงเวลาที่ต้องการวิเคราะห์</p>
 
                   <Button
                     variant="primary"
                     fullWidth
-                    isDisabled={isGenerating}
-                    onPress={handleGenerate}
+                    isDisabled={isGenerating || !fromDate || !toDate}
+                    onPress={() => void handleGenerate()}
                     className="h-11"
                   >
                     {isGenerating ? (
