@@ -54,6 +54,13 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
     setSelected(new Set());
   }, [selectedBranch]);
 
+  // Auto-select first branch — avoids slow DB-only path and loads commits immediately
+  useEffect(() => {
+    if (!selectedBranch && branches.length > 0) {
+      setSelectedBranch(branches[0].name);
+    }
+  }, [branches, selectedBranch]);
+
   const selectedShas = useMemo(() => Array.from(selected), [selected]);
   const allSelected = commits.length > 0 && commits.every((c) => selected.has(c.commitSha));
 

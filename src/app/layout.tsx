@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Providers } from "@/context/Providers";
+import { inter, notoSansThai } from "@/lib/fonts";
 import "@/app/globals.css";
 
 export const metadata: Metadata = {
@@ -13,12 +14,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="th" suppressHydrationWarning>
+    <html lang="th" suppressHydrationWarning className={`${inter.variable} ${notoSansThai.variable}`}>
       <head>
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
         <link href="/heroui.min.css" rel="stylesheet" />
       </head>
       <body>

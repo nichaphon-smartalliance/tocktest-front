@@ -55,8 +55,6 @@ export const useCommitList = (repoId: string, params?: AnalysisFilterParams) => 
           (old) => patchCommitAfterAnalyze(old, commitSha, data)
         );
       }
-      // Refetch from backend to guarantee risk/summary are in sync
-      qc.invalidateQueries({ queryKey: [...COMMIT_LIST_QUERY_KEY, repoId] });
     },
   });
 
