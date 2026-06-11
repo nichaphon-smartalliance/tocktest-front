@@ -86,9 +86,9 @@ export default function DashboardContent() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
           {[
             { label: "ทั้งหมด", value: total },
-            { label: "Public", value: total - privateCount },
-            { label: "Private", value: privateCount },
             { label: "แสดงผล", value: repositories.length },
+            { label: "Public", value: repositories.length - privateCount },
+            { label: "Private", value: privateCount },
           ].map((s) => (
             <div key={s.label} className="rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-3">
               <p className="text-xs text-muted m-0">{s.label}</p>
