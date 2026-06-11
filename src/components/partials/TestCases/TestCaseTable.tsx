@@ -1,12 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import {
   Table,
   Button,
   Tooltip,
-  Select,
-  ListBox,
   Spinner,
   Pagination,
 } from "@heroui/react";
@@ -16,76 +13,12 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/th";
 import type { TestCase, TestStatus, TestType, PriorityLevel } from "@/types/app/testCase";
-import { STATUS_CONFIG, TYPE_CONFIG, PRIORITY_CONFIG, CHIP_SOFT_CLASS } from "./TestCases.config";
+import { STATUS_CONFIG, TYPE_CONFIG, PRIORITY_CONFIG } from "./TestCases.config";
+import { InlineChipPicker, configToChipOptions } from "./InlineChipPicker";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 dayjs.extend(relativeTime);
 dayjs.locale("th");
-
-type ConfigRecord = Record<string, { label: string; color: keyof typeof CHIP_SOFT_CLASS | undefined }>;
-
-const chipClass = (color: ConfigRecord[string]["color"]) =>
-  CHIP_SOFT_CLASS[color ?? "default"];
-
-function InlineChipCell<T extends string>({
-  value,
-  config,
-  record,
-  errorMsg,
-  onChange,
-}: {
-  value: T;
-  config: ConfigRecord;
-  record: TestCase;
-  errorMsg: string;
-  onChange: (id: string, value: T) => Promise<void>;
-}) {
-  const [loading, setLoading] = useState(false);
-  const cfg = config[value];
-
-  const handleSelect = async (v: T) => {
-    if (v === value) return;
-    setLoading(true);
-    try {
-      await onChange(record.id, v);
-    } catch {
-      message.error(errorMsg);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <Select
-      selectedKey={value}
-      onSelectionChange={(key) => key && void handleSelect(String(key) as T)}
-      isDisabled={loading}
-      aria-label="Change value"
-      className="inline-flex w-auto"
-    >
-      <Select.Trigger className="!h-auto !min-h-0 !w-auto !rounded-none !border-0 !bg-transparent !p-0 !shadow-none hover:!bg-transparent data-[hovered]:!bg-transparent data-[focus-visible]:!bg-transparent data-[focus-visible]:!shadow-none">
-        <span
-          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium leading-none ${chipClass(cfg.color)}`}
-        >
-          <Select.Value className="!p-0 text-inherit text-xs font-medium" />
-          <Select.Indicator className="!relative !size-3 shrink-0 opacity-50" />
-        </span>
-      </Select.Trigger>
-      <Select.Popover>
-        <ListBox>
-          {(Object.keys(config) as T[]).map((k) => (
-            <ListBox.Item key={k} id={k} textValue={config[k].label}>
-              <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${chipClass(config[k].color)}`}>
-                {config[k].label}
-              </span>
-              <ListBox.ItemIndicator />
-            </ListBox.Item>
-          ))}
-        </ListBox>
-      </Select.Popover>
-    </Select>
-  );
-}
 
 interface TestCaseTableProps {
   repoId: string;
@@ -159,30 +92,30 @@ export default function TestCaseTable({
                       </div>
                     </Table.Cell>
                     <Table.Cell>
-                      <InlineChipCell
+                      <InlineChipPicker
                         value={record.status}
-                        config={STATUS_CONFIG}
-                        record={record}
+                        options={configToChipOptions(STATUS_CONFIG)}
+                        ariaLabel="เปลี่ยนสถานะ"
                         errorMsg="อัปเดตสถานะไม่สำเร็จ"
-                        onChange={onStatusChange}
+                        onChange={(status) => onStatusChange(record.id, status)}
                       />
                     </Table.Cell>
                     <Table.Cell>
-                      <InlineChipCell
+                      <InlineChipPicker
                         value={record.priority}
-                        config={PRIORITY_CONFIG}
-                        record={record}
+                        options={configToChipOptions(PRIORITY_CONFIG)}
+                        ariaLabel="เปลี่ยนความสำคัญ"
                         errorMsg="อัปเดตความสำคัญไม่สำเร็จ"
-                        onChange={onPriorityChange}
+                        onChange={(priority) => onPriorityChange(record.id, priority)}
                       />
                     </Table.Cell>
                     <Table.Cell>
-                      <InlineChipCell
+                      <InlineChipPicker
                         value={record.testType}
-                        config={TYPE_CONFIG}
-                        record={record}
+                        options={configToChipOptions(TYPE_CONFIG)}
+                        ariaLabel="เปลี่ยนประเภท"
                         errorMsg="อัปเดตประเภทไม่สำเร็จ"
-                        onChange={onTypeChange}
+                        onChange={(testType) => onTypeChange(record.id, testType)}
                       />
                     </Table.Cell>
                     <Table.Cell>

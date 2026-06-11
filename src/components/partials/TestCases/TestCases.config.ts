@@ -10,6 +10,14 @@ export const CHIP_SOFT_CLASS: Record<NonNullable<ChipColor> | "default", string>
   default: "bg-gray-500/10 text-gray-600 dark:text-gray-400",
 };
 
+export const CHIP_DOT_CLASS: Record<NonNullable<ChipColor> | "default", string> = {
+  success: "bg-emerald-500",
+  warning: "bg-amber-500",
+  danger: "bg-red-500",
+  accent: "bg-indigo-500",
+  default: "bg-gray-400",
+};
+
 export const STATUS_CONFIG: Record<TestStatus, { label: string; color: ChipColor }> = {
   pass: { label: "ผ่าน", color: "success" },
   fail: { label: "ไม่ผ่าน", color: "danger" },
