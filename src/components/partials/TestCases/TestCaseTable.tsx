@@ -121,8 +121,11 @@ export default function TestCaseTable({
           <Spinner size="lg" />
         </div>
       ) : testCases.length === 0 ? (
-        <div className="flex justify-center py-12 text-sm text-muted">
-          ยังไม่มี test case ในโฟลเดอร์นี้
+        <div className="flex flex-col items-center py-16 text-center px-4">
+          <p className="font-medium mb-1">ยังไม่มี test case</p>
+          <p className="text-sm text-muted max-w-xs">
+            กด &quot;Test Case ใหม่&quot; เพื่อสร้างเอง หรือ &quot;สร้างด้วย AI&quot; ให้ระบบช่วยร่าง
+          </p>
         </div>
       ) : (
         <Table className="flex-1">

@@ -14,7 +14,8 @@ export default function DashboardContent() {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search);
   const [tokenModalOpen, setTokenModalOpen] = useState(false);
-  const { repositories, isLoading, refetch } = useRepositoryList({ search: debouncedSearch || undefined });
+  const { repositories, total, isLoading, refetch } = useRepositoryList({ search: debouncedSearch || undefined });
+  const privateCount = repositories.filter((r) => r.isPrivate).length;
   const { syncRepositories, isSyncing } = useGithubTokens();
 
   const handleSync = async () => {
@@ -32,7 +33,7 @@ export default function DashboardContent() {
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
           <h1 className="text-[22px] font-bold m-0">แดชบอร์ด</h1>
-          <p className="m-0 text-muted text-sm">{repositories.length} repositories</p>
+          <p className="m-0 text-muted text-sm">{total || repositories.length} repositories</p>
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -81,11 +82,26 @@ export default function DashboardContent() {
           </Button>
         </div>
       ) : (
+        <>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+          {[
+            { label: "ทั้งหมด", value: total },
+            { label: "Public", value: total - privateCount },
+            { label: "Private", value: privateCount },
+            { label: "แสดงผล", value: repositories.length },
+          ].map((s) => (
+            <div key={s.label} className="rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-3">
+              <p className="text-xs text-muted m-0">{s.label}</p>
+              <p className="text-xl font-bold m-0 mt-0.5">{s.value}</p>
+            </div>
+          ))}
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
           {repositories.map((repo) => (
             <RepoCard key={repo.id} repo={repo} />
           ))}
         </div>
+        </>
       )}
 
       <AddTokenModal open={tokenModalOpen} onClose={() => setTokenModalOpen(false)} />

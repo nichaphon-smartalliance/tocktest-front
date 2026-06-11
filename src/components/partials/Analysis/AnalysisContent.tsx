@@ -241,6 +241,20 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
             <div className="flex justify-center py-12">
               <Spinner size="lg" />
             </div>
+          ) : !selectedBranch ? (
+            <div className="flex flex-col items-center py-16 text-center px-4">
+              <GitBranch size={48} className="opacity-20 mb-4 text-sky-500" />
+              <p className="font-medium mb-1">เลือก branch เพื่อดู commits</p>
+              <p className="text-sm text-muted max-w-sm">
+                ใช้ตัวเลือก branch ด้านบน ระบบจะดึง commits จาก GitHub และแสดงความเสี่ยง / AI summary
+              </p>
+            </div>
+          ) : commits.length === 0 ? (
+            <div className="flex flex-col items-center py-16 text-center px-4">
+              <GitBranch size={48} className="opacity-20 mb-4" />
+              <p className="font-medium mb-1">ไม่พบ commits ใน branch นี้</p>
+              <p className="text-sm text-muted">ลองเปลี่ยน branch หรือตรวจสอบ GitHub Token</p>
+            </div>
           ) : (
             <Table>
               <Table.ScrollContainer>
