@@ -61,19 +61,21 @@ function InlineChipCell<T extends string>({
       onSelectionChange={(key) => key && void handleSelect(String(key) as T)}
       isDisabled={loading}
       aria-label="Change value"
-      className="w-auto"
+      className="inline-flex w-auto"
     >
-      <Select.Trigger
-        className={`h-7 min-h-7 w-auto gap-1 rounded-full border-0 px-2 shadow-none ${chipClass(cfg.color)}`}
-      >
-        <Select.Value />
-        <Select.Indicator className="size-3 opacity-50" />
+      <Select.Trigger className="!h-auto !min-h-0 !w-auto !rounded-none !border-0 !bg-transparent !p-0 !shadow-none hover:!bg-transparent data-[hovered]:!bg-transparent data-[focus-visible]:!bg-transparent data-[focus-visible]:!shadow-none">
+        <span
+          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium leading-none ${chipClass(cfg.color)}`}
+        >
+          <Select.Value className="!p-0 text-inherit text-xs font-medium" />
+          <Select.Indicator className="!relative !size-3 shrink-0 opacity-50" />
+        </span>
       </Select.Trigger>
       <Select.Popover>
         <ListBox>
           {(Object.keys(config) as T[]).map((k) => (
             <ListBox.Item key={k} id={k} textValue={config[k].label}>
-              <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${chipClass(config[k].color)}`}>
+              <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${chipClass(config[k].color)}`}>
                 {config[k].label}
               </span>
               <ListBox.ItemIndicator />
