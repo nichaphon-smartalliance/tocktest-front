@@ -11,5 +11,12 @@ export const useRepositoryList = (params?: Record<string, unknown>) => {
     queryFn: () => getRepositories(params),
   });
 
-  return { repositories: data ?? [], isLoading, isError, error, refetch };
+  return {
+    repositories: data?.items ?? [],
+    total: data?.total ?? 0,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  };
 };

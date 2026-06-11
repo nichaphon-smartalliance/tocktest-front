@@ -44,6 +44,7 @@ export const useCommitList = (repoId: string, params?: AnalysisFilterParams) => 
     queryKey: [...BRANCHES_QUERY_KEY, repoId],
     queryFn: () => getBranches(repoId),
     enabled: !!repoId,
+    staleTime: 10 * 60_000,
   });
 
   const analyzeMutation = useMutation({

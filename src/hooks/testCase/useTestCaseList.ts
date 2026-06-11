@@ -14,6 +14,7 @@ export const useTestCaseList = (repoId: string, params?: TestCaseFilterParams) =
     queryKey: key,
     queryFn: () => getTestCases(repoId, params),
     enabled: !!repoId,
+    placeholderData: (prev) => prev,
   });
 
   const createMutation = useMutation({

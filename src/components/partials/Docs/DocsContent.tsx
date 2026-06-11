@@ -21,8 +21,10 @@ import {
   X,
   FileText,
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import ReactMarkdown from "react-markdown";
+
+const ReactMarkdown = dynamic(() => import("react-markdown"), { ssr: false });
 import dayjs from "dayjs";
 import "dayjs/locale/th";
 import { useProjectDoc } from "@/hooks/docs";

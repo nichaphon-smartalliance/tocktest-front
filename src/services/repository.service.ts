@@ -15,9 +15,10 @@ const mapGithubToken = (token: GithubTokenResponse): GithubToken => ({
   expiresAt: token.expiresAt ?? null,
 });
 
-export const getRepositories = async (params?: Record<string, unknown>): Promise<Repository[]> => {
+export const getRepositories = async (params?: Record<string, unknown>): Promise<{ items: Repository[]; total: number }> => {
   const res = await getRepositoriesApi(params);
-  return res.data?.data?.content ?? [];
+  const data = res.data?.data;
+  return { items: data?.content ?? [], total: data?.totalElements ?? 0 };
 };
 
 export const getRepository = async (id: string): Promise<Repository | null> => {
