@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertDialog, Button } from "@heroui/react";
-import { cloneElement, isValidElement, type ReactNode } from "react";
+import { cloneElement, isValidElement, useState, type ReactNode } from "react";
 
 interface ConfirmDialogProps {
   trigger: ReactNode;
@@ -14,7 +14,7 @@ interface ConfirmDialogProps {
   onConfirm: () => void | Promise<void>;
 }
 
-/** Trigger is DialogTrigger child — not wrapped in AlertDialog.Trigger (avoids nested buttons). */
+/** Controlled open state — trigger stays outside AlertDialog (avoids slot="trigger" inside Table.Row). */
 export function ConfirmDialog({
   trigger,
   title,
@@ -25,13 +25,25 @@ export function ConfirmDialog({
   status,
   onConfirm,
 }: ConfirmDialogProps) {
+  const [open, setOpen] = useState(false);
   const iconStatus = status ?? (confirmVariant === "danger" ? "danger" : "accent");
-  const triggerNode =
-    isValidElement(trigger) ? cloneElement(trigger, { slot: "trigger" } as Record<string, string>) : trigger;
+  const triggerNode = isValidElement(trigger)
+    ? cloneElement(trigger, {
+        onPress: (...args: unknown[]) => {
+          (trigger.props as { onPress?: (...a: unknown[]) => void }).onPress?.(...args);
+          setOpen(true);
+        },
+      } as Record<string, unknown>)
+    : (
+        <span role="presentation" className="inline-flex" onClick={() => setOpen(true)}>
+          {trigger}
+        </span>
+      );
 
   return (
-    <AlertDialog>
+    <>
       {triggerNode}
+      <AlertDialog isOpen={open} onOpenChange={setOpen}>
       <AlertDialog.Backdrop>
         <AlertDialog.Container>
           <AlertDialog.Dialog>
@@ -58,5 +70,6 @@ export function ConfirmDialog({
         </AlertDialog.Container>
       </AlertDialog.Backdrop>
     </AlertDialog>
+    </>
   );
 }
