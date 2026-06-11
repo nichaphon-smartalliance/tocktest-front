@@ -146,17 +146,28 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
 
     if (!isAnalyzed) return analyzeBtn("วิเคราะห์");
 
+    const analyzedTitle = record.analyzedAt
+      ? `วิเคราะห์เมื่อ ${dayjs(record.analyzedAt).fromNow()}`
+      : "วิเคราะห์สำเร็จแล้ว";
+
     return (
-      <div className="flex items-center gap-1.5">
-        <span
-          title={record.analyzedAt ? `วิเคราะห์เมื่อ ${dayjs(record.analyzedAt).fromNow()}` : "วิเคราะห์สำเร็จแล้ว"}
-          className="inline-flex"
+      <div className="flex flex-col items-start gap-1.5 min-w-[100px]">
+        <Chip color="success" size="sm" variant="soft" title={analyzedTitle}>
+          <Chip.Label>วิเคราะห์แล้ว</Chip.Label>
+        </Chip>
+        <button
+          type="button"
+          disabled={isAnalyzing}
+          title="วิเคราะห์อีกครั้ง"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleAnalyze(record.commitSha);
+          }}
+          className="inline-flex items-center gap-1 text-xs text-muted cursor-pointer hover:text-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <Chip color="success" size="sm" variant="soft">
-            <Chip.Label>วิเคราะห์แล้ว</Chip.Label>
-          </Chip>
-        </span>
-        {analyzeBtn()}
+          {isAnalyzing ? <Spinner size="sm" color="current" /> : <Bot size={12} />}
+          อีกครั้ง
+        </button>
       </div>
     );
   };
@@ -281,7 +292,7 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
                     <Table.Column>การเปลี่ยนแปลง</Table.Column>
                     <Table.Column>ความเสี่ยง</Table.Column>
                     <Table.Column>AI Summary</Table.Column>
-                    <Table.Column className="w-28" />
+                    <Table.Column className="min-w-[110px] w-[110px]" />
                   </Table.Header>
                   <Table.Body>
                     {commits.map((record) => (
