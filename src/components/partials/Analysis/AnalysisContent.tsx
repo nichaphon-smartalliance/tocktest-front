@@ -1,20 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import type { Selection } from "@heroui/react";
 import {
   Table,
-  Tag,
+  Card,
   Button,
   Alert,
-  Space,
-  Typography,
-  Tooltip,
-  Card,
+  Chip,
   Select,
-} from "antd";
+  ListBox,
+  Checkbox,
+  Spinner,
+  Tooltip,
+} from "@heroui/react";
+import { Bot, GitBranch, Zap } from "lucide-react";
 import { message } from "@/lib/antd-static";
-import { RobotOutlined, ThunderboltOutlined, BranchesOutlined } from "@ant-design/icons";
-import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/th";
@@ -24,72 +25,52 @@ import type { CommitItem, RiskLevel } from "@/types/app/analysis";
 dayjs.extend(relativeTime);
 dayjs.locale("th");
 
-const RISK_CONFIG: Record<RiskLevel, { color: string; label: string }> = {
-  low: { color: "green", label: "ต่ำ" },
-  medium: { color: "orange", label: "กลาง" },
-  high: { color: "red", label: "สูง" },
-  critical: { color: "volcano", label: "วิกฤต" },
+const RISK_CONFIG: Record<RiskLevel, { color: "success" | "warning" | "danger" | "accent"; label: string }> = {
+  low: { color: "success", label: "ต่ำ" },
+  medium: { color: "warning", label: "กลาง" },
+  high: { color: "danger", label: "สูง" },
+  critical: { color: "danger", label: "วิกฤต" },
 };
 
 interface AnalysisContentProps {
   repoId: string;
 }
 
-const { Paragraph, Text } = Typography;
-
 export default function AnalysisContent({ repoId }: AnalysisContentProps) {
-  const [selectedShas, setSelectedShas] = useState<string[]>([]);
+  const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set());
   const [analyzingIds, setAnalyzingIds] = useState<Set<string>>(new Set());
-  const [selectedBranch, setSelectedBranch] = useState<string | undefined>();
-  
-  const [localAnalyzedShas, setLocalAnalyzedShas] = useState<Set<string>>(new Set());
+  const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
 
-  const commitHookContext = useCommitList(repoId, { pageSize: 30, branch: selectedBranch });
-
-  const { 
-    commits, 
-    total, 
-    isLoading, 
-    branches, 
-    branchesLoading, 
-    analyze, 
-    getWhatToTest, 
-    whatToTestResult, 
-    isLoadingWhatToTest 
-  } = commitHookContext;
+  const {
+    commits,
+    total,
+    isLoading,
+    branches,
+    branchesLoading,
+    analyze,
+    getWhatToTest,
+    whatToTestResult,
+    isLoadingWhatToTest,
+  } = useCommitList(repoId, { pageSize: 30, branch: selectedBranch ?? undefined });
 
   useEffect(() => {
-    setSelectedShas([]);
+    setSelectedKeys(new Set());
   }, [selectedBranch]);
 
-  const handleAnalyze = async (commitSha: string) => {
-    setAnalyzingIds((prev) => {
-      const next = new Set(prev);
-      next.add(commitSha);
-      return next;
-    });
+  const selectedShas = useMemo(() => {
+    if (selectedKeys === "all") return commits.map((c) => c.commitSha);
+    return Array.from(selectedKeys as Set<string>);
+  }, [selectedKeys, commits]);
 
+  const handleAnalyze = async (commitSha: string) => {
+    setAnalyzingIds((prev) => new Set(prev).add(commitSha));
     try {
       await analyze(commitSha);
-      
-      setLocalAnalyzedShas((prev) => {
-        const next = new Set(prev);
-        next.add(commitSha);
-        return next;
-      });
-
       message.success("วิเคราะห์ commit สำเร็จ");
-
-      const contextAny = commitHookContext as any;
-      if (typeof contextAny.mutate === "function") contextAny.mutate();
-      if (typeof contextAny.refresh === "function") contextAny.refresh();
-      if (typeof contextAny.reload === "function") contextAny.reload();
-
     } catch (error) {
       console.error("Analyze error:", error);
-      const err = error as any;
-      const backendMessage = err.response?.data?.message || "วิเคราะห์ไม่สำเร็จ กรุณาตรวจสอบ GitHub Token";
-      message.error(backendMessage);
+      const err = error as { response?: { data?: { message?: string } } };
+      message.error(err.response?.data?.message || "วิเคราะห์ไม่สำเร็จ กรุณาตรวจสอบ GitHub Token");
     } finally {
       setAnalyzingIds((prev) => {
         const next = new Set(prev);
@@ -109,169 +90,216 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
       message.success("ได้คำแนะนำจาก AI สำเร็จ");
     } catch (error) {
       console.error("What to test error:", error);
-      const err = error as any;
-      const backendMessage = err.response?.data?.message || "เกิดข้อผิดพลาดในการเชื่อมต่อ AI service";
-      message.error(backendMessage);
+      const err = error as { response?: { data?: { message?: string } } };
+      message.error(err.response?.data?.message || "เกิดข้อผิดพลาดในการเชื่อมต่อ AI service");
     }
   };
 
-  const columns: ColumnsType<CommitItem> = [
-    {
-      title: "Commit",
-      key: "commit",
-      render: (_, record) => (
-        <div>
-          <div style={{ fontFamily: "monospace", fontSize: 12, opacity: 0.6 }}>{record.commitSha.slice(0, 7)}</div>
-          <div style={{ fontWeight: 500, fontSize: 13 }}>{record.commitMessage}</div>
-          <div style={{ fontSize: 11, opacity: 0.5 }}>{record.authorName} · {dayjs(record.committedAt).fromNow()}</div>
-        </div>
-      ),
-    },
-    {
-      title: "การเปลี่ยนแปลง",
-      key: "changes",
-      width: 140,
-      render: (_, r) => (
-        <Space direction="vertical" size={2}>
-          <Text style={{ fontSize: 12 }}>{r.filesChanged} ไฟล์</Text>
-          <Space size={4}>
-            <Text style={{ fontSize: 11, color: "#16a34a" }}>+{r.additions}</Text>
-            <Text style={{ fontSize: 11, color: "#dc2626" }}>-{r.deletions}</Text>
-          </Space>
-        </Space>
-      ),
-    },
-    {
-      title: "ความเสี่ยง",
-      dataIndex: "riskLevel",
-      key: "riskLevel",
-      width: 90,
-      render: (v: RiskLevel | null) =>
-        v && RISK_CONFIG[v] ? (
-          <Tag color={RISK_CONFIG[v].color}>{RISK_CONFIG[v].label}</Tag>
-        ) : (
-          <Tag>ยังไม่วิเคราะห์</Tag>
-        ),
-    },
-    {
-      title: "AI Summary",
-      dataIndex: "aiSummary",
-      key: "aiSummary",
-      render: (v: string | null) =>
-        v ? (
-          <Paragraph style={{ margin: 0, fontSize: 12 }} ellipsis={{ rows: 2, expandable: true, symbol: "อ่านเพิ่ม" }}>
-            {v}
-          </Paragraph>
-        ) : (
-          <Text type="secondary" style={{ fontSize: 12 }}>ยังไม่มี AI summary</Text>
-        ),
-    },
-    {
-      title: "",
-      key: "action",
-      width: 110,
-      render: (_, record) => {
-        const isAnalyzed = !!record.analyzedAt || localAnalyzedShas.has(record.commitSha);
+  const renderRisk = (v: RiskLevel | null) =>
+    v && RISK_CONFIG[v] ? (
+      <Chip color={RISK_CONFIG[v].color} size="sm" variant="soft">
+        <Chip.Label>{RISK_CONFIG[v].label}</Chip.Label>
+      </Chip>
+    ) : (
+      <Chip size="sm" variant="soft">
+        <Chip.Label>ยังไม่วิเคราะห์</Chip.Label>
+      </Chip>
+    );
 
-        return !isAnalyzed ? (
-          <Button
-            size="small"
-            icon={<RobotOutlined />}
-            loading={analyzingIds.has(record.commitSha)}
-            onClick={() => handleAnalyze(record.commitSha)}
-          >
-            วิเคราะห์
-          </Button>
-        ) : (
-          <Tooltip title={record.analyzedAt ? `วิเคราะห์เมื่อ ${dayjs(record.analyzedAt).fromNow()}` : "วิเคราะห์สำเร็จแล้ว"}>
-            <Tag color="green" style={{ cursor: "default" }}>วิเคราะห์แล้ว</Tag>
-          </Tooltip>
-        );
-      },
-    },
-  ];
+  const renderAction = (record: CommitItem) => {
+    const isAnalyzed = !!record.analyzedAt;
+    const isAnalyzing = analyzingIds.has(record.commitSha);
+
+    if (!isAnalyzed) {
+      return (
+        <Button
+          size="sm"
+          variant="secondary"
+          isDisabled={isAnalyzing}
+          onPress={() => handleAnalyze(record.commitSha)}
+        >
+          {isAnalyzing ? <Spinner size="sm" color="current" /> : <Bot size={14} />}
+          วิเคราะห์
+        </Button>
+      );
+    }
+
+    return (
+      <Tooltip>
+        <Tooltip.Trigger>
+          <Chip color="success" size="sm" variant="soft">
+            <Chip.Label>วิเคราะห์แล้ว</Chip.Label>
+          </Chip>
+        </Tooltip.Trigger>
+        <Tooltip.Content>
+          {record.analyzedAt
+            ? `วิเคราะห์เมื่อ ${dayjs(record.analyzedAt).fromNow()}`
+            : "วิเคราะห์สำเร็จแล้ว"}
+        </Tooltip.Content>
+      </Tooltip>
+    );
+  };
 
   return (
-    <div>
-      <Card style={{ marginBottom: 16, borderRadius: 8 }} styles={{ body: { padding: 16 } }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-          <BranchesOutlined style={{ color: "#0ea5e9", fontSize: 20 }} />
-          <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 600 }}>เลือก Branch</div>
-            <div style={{ fontSize: 12, opacity: 0.6 }}>ระบบจะดึง commits จากไปนี้</div>
+    <div className="flex flex-col gap-4">
+      <Card>
+        <Card.Content className="flex flex-wrap items-center gap-3 p-4">
+          <GitBranch className="size-5 text-sky-500 shrink-0" />
+          <div className="flex-1 min-w-[200px]">
+            <p className="font-semibold text-sm">เลือก Branch</p>
+            <p className="text-xs text-muted">ระบบจะดึง commits จาก branch นี้</p>
           </div>
           <Select
-            style={{ minWidth: 200 }}
+            className="min-w-[200px]"
             placeholder="เลือก branch..."
-            loading={branchesLoading}
-            value={selectedBranch}
-            onChange={setSelectedBranch}
-            allowClear
-            options={branches?.map((b) => ({
-              label: b.name,
-              value: b.name,
-            })) || []}
-          />
-        </div>
-      </Card>
-
-      <Card style={{ marginBottom: 16, borderRadius: 8 }} styles={{ body: { padding: 16 } }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-          <ThunderboltOutlined style={{ color: "#6366f1", fontSize: 20 }} />
-          <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 600 }}>ควรทดสอบอะไรหลังจาก commits เหล่านี้?</div>
-            <div style={{ fontSize: 12, opacity: 0.6 }}>เลือก commit จากตารางแล้วถาม AI</div>
-          </div>
-          <Button
-            type="primary"
-            icon={<RobotOutlined />}
-            loading={isLoadingWhatToTest}
-            onClick={handleWhatToTest}
-            disabled={selectedShas.length === 0}
+            selectedKey={selectedBranch}
+            onSelectionChange={(key) => setSelectedBranch(key ? String(key) : null)}
+            isDisabled={branchesLoading}
           >
-            ถาม AI ({selectedShas.length} commits)
-          </Button>
-        </div>
-
-        {whatToTestResult && (
-          <Alert
-            style={{ marginTop: 12 }}
-            type="info"
-            message={
-              <div>
-                <div style={{ fontWeight: 600, marginBottom: 8 }}>คำแนะนำจาก AI</div>
-                {whatToTestResult.recommendations?.length > 0 ? (
-                  <ul style={{ margin: 0, paddingLeft: 20 }}>
-                    {whatToTestResult.recommendations.map((r, i) => (
-                      <li key={i} style={{ marginBottom: 4, fontSize: 13 }}>{r}</li>
-                    ))}
-                  </ul>
-                ) : (
-                  <div style={{ fontSize: 13, opacity: 0.6 }}>ไม่มีคำแนะนำที่ระบุแน่ชัด</div>
-                )}
-                {whatToTestResult.reasoning && (
-                  <div style={{ marginTop: 8, fontSize: 12, opacity: 0.7 }}>
-                    <strong>เหตุผล:</strong> {whatToTestResult.reasoning}
-                  </div>
-                )}
-              </div>
-            }
-          />
-        )}
+            <Select.Trigger>
+              <Select.Value />
+              <Select.Indicator />
+            </Select.Trigger>
+            <Select.Popover>
+              <ListBox>
+                {(branches ?? []).map((b) => (
+                  <ListBox.Item key={b.name} id={b.name} textValue={b.name}>
+                    {b.name}
+                    <ListBox.ItemIndicator />
+                  </ListBox.Item>
+                ))}
+              </ListBox>
+            </Select.Popover>
+          </Select>
+        </Card.Content>
       </Card>
 
-      <Table
-        columns={columns}
-        dataSource={commits}
-        rowKey="commitSha"
-        loading={isLoading}
-        rowSelection={{
-          selectedRowKeys: selectedShas,
-          onChange: (keys) => setSelectedShas(keys as string[]),
-        }}
-        size="middle"
-        pagination={{ total, showTotal: (t) => `${t} commits` }}
-      />
+      <Card>
+        <Card.Content className="p-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <Zap className="size-5 text-indigo-500 shrink-0" />
+            <div className="flex-1 min-w-[200px]">
+              <p className="font-semibold text-sm">ควรทดสอบอะไรหลังจาก commits เหล่านี้?</p>
+              <p className="text-xs text-muted">เลือก commit จากตารางแล้วถาม AI</p>
+            </div>
+            <Button
+              variant="primary"
+              isDisabled={selectedShas.length === 0 || isLoadingWhatToTest}
+              onPress={handleWhatToTest}
+            >
+              {isLoadingWhatToTest ? <Spinner size="sm" color="current" /> : <Bot size={16} />}
+              ถาม AI ({selectedShas.length} commits)
+            </Button>
+          </div>
+
+          {whatToTestResult && (
+            <Alert status="accent" className="mt-3">
+              <Alert.Indicator />
+              <Alert.Content>
+                <Alert.Title>คำแนะนำจาก AI</Alert.Title>
+                <Alert.Description>
+                  {whatToTestResult.recommendations?.length > 0 ? (
+                    <ul className="mt-1 list-disc pl-5 text-sm">
+                      {whatToTestResult.recommendations.map((r, i) => (
+                        <li key={i} className="mb-1">
+                          {r}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <span className="text-sm text-muted">ไม่มีคำแนะนำที่ระบุแน่ชัด</span>
+                  )}
+                  {whatToTestResult.reasoning && (
+                    <p className="mt-2 text-xs text-muted">
+                      <strong>เหตุผล:</strong> {whatToTestResult.reasoning}
+                    </p>
+                  )}
+                </Alert.Description>
+              </Alert.Content>
+            </Alert>
+          )}
+        </Card.Content>
+      </Card>
+
+      <Card>
+        <Card.Content className="p-0">
+          {isLoading ? (
+            <div className="flex justify-center py-12">
+              <Spinner size="lg" />
+            </div>
+          ) : (
+            <Table>
+              <Table.ScrollContainer>
+                <Table.Content
+                  aria-label="Commits analysis table"
+                  className="min-w-[800px]"
+                  selectedKeys={selectedKeys}
+                  selectionMode="multiple"
+                  onSelectionChange={setSelectedKeys}
+                >
+                  <Table.Header>
+                    <Table.Column className="w-10 pr-0">
+                      <Checkbox aria-label="Select all" slot="selection">
+                        <Checkbox.Control>
+                          <Checkbox.Indicator />
+                        </Checkbox.Control>
+                      </Checkbox>
+                    </Table.Column>
+                    <Table.Column isRowHeader>Commit</Table.Column>
+                    <Table.Column>การเปลี่ยนแปลง</Table.Column>
+                    <Table.Column>ความเสี่ยง</Table.Column>
+                    <Table.Column>AI Summary</Table.Column>
+                    <Table.Column className="w-28" />
+                  </Table.Header>
+                  <Table.Body>
+                    {commits.map((record) => (
+                      <Table.Row key={record.commitSha} id={record.commitSha}>
+                        <Table.Cell className="pr-0">
+                          <Checkbox
+                            aria-label={`Select ${record.commitSha.slice(0, 7)}`}
+                            slot="selection"
+                            variant="secondary"
+                          >
+                            <Checkbox.Control>
+                              <Checkbox.Indicator />
+                            </Checkbox.Control>
+                          </Checkbox>
+                        </Table.Cell>
+                        <Table.Cell>
+                          <div className="font-mono text-xs text-muted">{record.commitSha.slice(0, 7)}</div>
+                          <div className="font-medium text-sm">{record.commitMessage}</div>
+                          <div className="text-xs text-muted">
+                            {record.authorName} · {dayjs(record.committedAt).fromNow()}
+                          </div>
+                        </Table.Cell>
+                        <Table.Cell>
+                          <div className="text-xs">{record.filesChanged} ไฟล์</div>
+                          <div className="flex gap-1 text-xs">
+                            <span className="text-green-600">+{record.additions}</span>
+                            <span className="text-red-600">-{record.deletions}</span>
+                          </div>
+                        </Table.Cell>
+                        <Table.Cell>{renderRisk(record.riskLevel)}</Table.Cell>
+                        <Table.Cell>
+                          {record.aiSummary ? (
+                            <p className="text-xs line-clamp-2">{record.aiSummary}</p>
+                          ) : (
+                            <span className="text-xs text-muted">ยังไม่มี AI summary</span>
+                          )}
+                        </Table.Cell>
+                        <Table.Cell>{renderAction(record)}</Table.Cell>
+                      </Table.Row>
+                    ))}
+                  </Table.Body>
+                </Table.Content>
+              </Table.ScrollContainer>
+              <Table.Footer>
+                <p className="px-4 py-2 text-xs text-muted">{total} commits</p>
+              </Table.Footer>
+            </Table>
+          )}
+        </Card.Content>
+      </Card>
     </div>
   );
 }
