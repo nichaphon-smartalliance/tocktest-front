@@ -3,14 +3,11 @@
 import { useState } from "react";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
-import type { Session } from "next-auth";
-import { setupInterceptors } from "@/lib/api/interceptor";
-
-setupInterceptors();
+import type { ClientSession } from "@/types/app/session";
 
 interface AdminLayoutShellProps {
   children: React.ReactNode;
-  session: Session;
+  session: ClientSession;
 }
 
 export default function AdminLayoutShell({ children, session }: AdminLayoutShellProps) {

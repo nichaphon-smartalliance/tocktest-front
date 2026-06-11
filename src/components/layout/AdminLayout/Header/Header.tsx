@@ -4,19 +4,19 @@ import { Button, Dropdown, Avatar } from "@heroui/react";
 import { PanelLeftClose, PanelLeftOpen, LogOut, Sun, Moon } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { useTheme } from "@/context/theme/ThemeProvider";
-import type { Session } from "next-auth";
+import type { ClientSession } from "@/types/app/session";
 
 interface HeaderProps {
   collapsed: boolean;
   onToggle: () => void;
-  session: Session;
+  session: ClientSession;
 }
 
 export default function Header({ collapsed, onToggle, session }: HeaderProps) {
   const { mode, toggle } = useTheme();
 
   return (
-    <header className="sticky top-0 z-100 flex h-16 items-center justify-between border-b border-gray-200 bg-[var(--bg-sider)] px-4 dark:border-gray-700">
+    <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-gray-200 bg-[var(--bg-sider)] px-4 dark:border-gray-700">
       <Button variant="ghost" isIconOnly onPress={onToggle} aria-label="Toggle sidebar" className="text-[var(--text-primary)]">
         {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
       </Button>

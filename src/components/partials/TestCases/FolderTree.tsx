@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import {
+  AlertDialog,
   Button,
   Dropdown,
   TextField,
@@ -43,6 +44,7 @@ function FolderNode({
   depth?: number;
 }) {
   const [expanded, setExpanded] = useState(true);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const hasChildren = folder.children && folder.children.length > 0;
   const isSelected = selectedFolderId === folder.id;
 
@@ -82,17 +84,21 @@ function FolderNode({
         </button>
         <Dropdown>
           <Dropdown.Trigger>
-            <button
-              type="button"
-              className="opacity-0 group-hover:opacity-100 p-0.5 rounded cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700"
-              onClick={(e) => e.stopPropagation()}
+            <Button
+              variant="ghost"
+              isIconOnly
+              size="sm"
+              aria-label="จัดการโฟลเดอร์"
+              className="opacity-0 group-hover:opacity-100 min-w-6 h-6 text-[var(--text-primary)]"
             >
               <MoreHorizontal size={14} />
-            </button>
+            </Button>
           </Dropdown.Trigger>
           <Dropdown.Popover>
             <Dropdown.Menu
-              onAction={() => onDelete(folder.id)}
+              onAction={(key) => {
+                if (key === "delete") setDeleteOpen(true);
+              }}
               aria-label="Folder actions"
             >
               <Dropdown.Item id="delete" textValue="ลบโฟลเดอร์" variant="danger">
@@ -101,6 +107,32 @@ function FolderNode({
             </Dropdown.Menu>
           </Dropdown.Popover>
         </Dropdown>
+        <AlertDialog isOpen={deleteOpen} onOpenChange={setDeleteOpen}>
+          <AlertDialog.Backdrop>
+            <AlertDialog.Container>
+              <AlertDialog.Dialog>
+                <AlertDialog.Header>
+                  <AlertDialog.Icon status="danger" />
+                  <AlertDialog.Heading>ลบโฟลเดอร์นี้?</AlertDialog.Heading>
+                </AlertDialog.Header>
+                <AlertDialog.Footer>
+                  <Button slot="close" variant="secondary">
+                    ยกเลิก
+                  </Button>
+                  <Button
+                    slot="close"
+                    variant="danger"
+                    onPress={() => {
+                      void onDelete(folder.id);
+                    }}
+                  >
+                    ลบ
+                  </Button>
+                </AlertDialog.Footer>
+              </AlertDialog.Dialog>
+            </AlertDialog.Container>
+          </AlertDialog.Backdrop>
+        </AlertDialog>
       </div>
       {expanded &&
         hasChildren &&
@@ -159,6 +191,7 @@ export default function FolderTree({ repoId, selectedFolderId, onSelectFolder }:
           isIconOnly
           size="sm"
           aria-label="สร้างโฟลเดอร์"
+          className="text-[var(--text-primary)]"
           onPress={() => setCreateModalOpen(true)}
         >
           <Plus size={14} />

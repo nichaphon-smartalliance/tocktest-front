@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertDialog, Button } from "@heroui/react";
-import type { ReactNode } from "react";
+import { cloneElement, isValidElement, type ReactNode } from "react";
 
 interface ConfirmDialogProps {
   trigger: ReactNode;
@@ -14,6 +14,7 @@ interface ConfirmDialogProps {
   onConfirm: () => void | Promise<void>;
 }
 
+/** Trigger is DialogTrigger child — not wrapped in AlertDialog.Trigger (avoids nested buttons). */
 export function ConfirmDialog({
   trigger,
   title,
@@ -25,10 +26,12 @@ export function ConfirmDialog({
   onConfirm,
 }: ConfirmDialogProps) {
   const iconStatus = status ?? (confirmVariant === "danger" ? "danger" : "accent");
+  const triggerNode =
+    isValidElement(trigger) ? cloneElement(trigger, { slot: "trigger" } as Record<string, string>) : trigger;
 
   return (
     <AlertDialog>
-      <AlertDialog.Trigger>{trigger}</AlertDialog.Trigger>
+      {triggerNode}
       <AlertDialog.Backdrop>
         <AlertDialog.Container>
           <AlertDialog.Dialog>

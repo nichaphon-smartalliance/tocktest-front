@@ -3,6 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import axios from "axios";
 
 export const authOptions: AuthOptions = {
+  secret: process.env.NEXTAUTH_SECRET,
   providers: [
     CredentialsProvider({
       name: "credentials",
@@ -15,7 +16,7 @@ export const authOptions: AuthOptions = {
         try {
           const res = await axios.post(
             `${process.env.BACKEND_URL}/api/v1/auth/login`,
-            { email: credentials.email, password: credentials.password }
+            { email: credentials.email, password: credentials.password },
           );
           const { accessToken, user } = res.data?.data ?? {};
           if (accessToken && user) {
@@ -32,15 +33,21 @@ export const authOptions: AuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.accessToken = user.accessToken;
+        token.email = user.email;
+        token.name = user.name;
         token.role = user.role;
+        token.accessToken = user.accessToken;
       }
       return token;
     },
     async session({ session, token }) {
-      session.user.id = token.id as string;
-      session.user.role = token.role as string;
-      session.accessToken = token.accessToken as string;
+      if (session.user) {
+        session.user.id = (token.id as string) ?? "";
+        session.user.email = (token.email as string) ?? session.user.email ?? "";
+        session.user.name = (token.name as string) ?? session.user.name ?? "";
+        session.user.role = (token.role as string) ?? "";
+      }
+      session.accessToken = (token.accessToken as string) ?? "";
       return session;
     },
   },

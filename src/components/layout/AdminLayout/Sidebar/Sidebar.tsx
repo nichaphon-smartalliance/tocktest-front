@@ -2,11 +2,11 @@
 
 import { LayoutDashboard } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import type { Session } from "next-auth";
+import type { ClientSession } from "@/types/app/session";
 
 interface SidebarProps {
   collapsed: boolean;
-  session: Session;
+  session: ClientSession;
 }
 
 const NAV_ITEMS = [

@@ -122,18 +122,31 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
     }
 
     return (
-      <Tooltip>
-        <Tooltip.Trigger>
-          <Chip color="success" size="sm" variant="soft">
-            <Chip.Label>วิเคราะห์แล้ว</Chip.Label>
-          </Chip>
-        </Tooltip.Trigger>
-        <Tooltip.Content>
-          {record.analyzedAt
-            ? `วิเคราะห์เมื่อ ${dayjs(record.analyzedAt).fromNow()}`
-            : "วิเคราะห์สำเร็จแล้ว"}
-        </Tooltip.Content>
-      </Tooltip>
+      <div className="flex items-center gap-1">
+        <Tooltip>
+          <Tooltip.Trigger>
+            <span className="inline-flex">
+              <Chip color="success" size="sm" variant="soft">
+                <Chip.Label>วิเคราะห์แล้ว</Chip.Label>
+              </Chip>
+            </span>
+          </Tooltip.Trigger>
+          <Tooltip.Content>
+            {record.analyzedAt
+              ? `วิเคราะห์เมื่อ ${dayjs(record.analyzedAt).fromNow()}`
+              : "วิเคราะห์สำเร็จแล้ว"}
+          </Tooltip.Content>
+        </Tooltip>
+        <Button
+          size="sm"
+          variant="ghost"
+          isDisabled={isAnalyzing}
+          className="min-w-0 px-1 text-[var(--text-primary)]"
+          onPress={() => handleAnalyze(record.commitSha)}
+        >
+          {isAnalyzing ? <Spinner size="sm" color="current" /> : <Bot size={14} />}
+        </Button>
+      </div>
     );
   };
 

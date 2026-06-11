@@ -55,15 +55,16 @@ function InlineChipCell<T extends string>({
   return (
     <Dropdown>
       <Dropdown.Trigger>
-        <button
-          type="button"
-          disabled={loading}
-          className="cursor-pointer disabled:opacity-60 disabled:cursor-wait"
+        <Button
+          variant="ghost"
+          size="sm"
+          isDisabled={loading}
+          className="h-auto min-h-0 px-1 py-0"
         >
           <Chip size="sm" variant="soft" color={cfg.color}>
             <Chip.Label>{cfg.label}</Chip.Label>
           </Chip>
-        </button>
+        </Button>
       </Dropdown.Trigger>
       <Dropdown.Popover>
         <Dropdown.Menu
@@ -197,6 +198,7 @@ export default function TestCaseTable({
                           isIconOnly
                           size="sm"
                           aria-label="แก้ไข"
+                          className="text-[var(--text-primary)]"
                           onPress={() => onEdit(record)}
                         >
                           <Pencil size={14} />

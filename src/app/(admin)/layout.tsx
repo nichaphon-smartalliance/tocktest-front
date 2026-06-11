@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { AdminLayoutShell } from "@/components/layout/AdminLayout";
+import { toClientSession } from "@/types/app/session";
 
 export default async function AdminLayout({
   children,
@@ -11,5 +12,5 @@ export default async function AdminLayout({
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
 
-  return <AdminLayoutShell session={session}>{children}</AdminLayoutShell>;
+  return <AdminLayoutShell session={toClientSession(session)}>{children}</AdminLayoutShell>;
 }
