@@ -80,8 +80,12 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
   const handleAnalyze = async (commitSha: string) => {
     setAnalyzingIds((prev) => new Set(prev).add(commitSha));
     try {
-      await analyze(commitSha);
-      message.success("วิเคราะห์ commit สำเร็จ");
+      const result = await analyze(commitSha);
+      message.success(
+        result?.source === "heuristic"
+          ? "วิเคราะห์แบบ heuristic (AI offline)"
+          : "วิเคราะห์ commit สำเร็จ"
+      );
     } catch (error) {
       message.error(getApiErrorMessage(error, "วิเคราะห์ไม่สำเร็จ กรุณาตรวจสอบ GitHub Token"));
     } finally {
@@ -99,8 +103,12 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
       return;
     }
     try {
-      await getWhatToTest(selectedShas);
-      message.success("ได้คำแนะนำจาก AI สำเร็จ");
+      const result = await getWhatToTest(selectedShas);
+      message.success(
+        result?.source === "heuristic"
+          ? "ได้คำแนะนำแบบ heuristic (AI offline)"
+          : "ได้คำแนะนำจาก AI สำเร็จ"
+      );
     } catch (error) {
       message.error(getApiErrorMessage(error, "เกิดข้อผิดพลาดในการเชื่อมต่อ AI service"));
     }

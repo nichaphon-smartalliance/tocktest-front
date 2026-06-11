@@ -12,7 +12,6 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { message } from "@/lib/toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import {
-  ArrowLeft,
   Bot,
   History,
   Trash2,
@@ -22,7 +21,6 @@ import {
   FileText,
 } from "lucide-react";
 import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
 
 const ReactMarkdown = dynamic(() => import("react-markdown"), { ssr: false });
 import dayjs from "dayjs";
@@ -36,7 +34,6 @@ interface DocsContentProps {
 }
 
 export default function DocsContent({ repoId }: DocsContentProps) {
-  const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState("");
   const [showHistory, setShowHistory] = useState(false);
@@ -83,10 +80,6 @@ export default function DocsContent({ repoId }: DocsContentProps) {
     <div className="flex gap-4">
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-4 flex-wrap">
-          <Button variant="ghost" size="sm" onPress={() => router.back()}>
-            <ArrowLeft size={16} />
-            กลับ
-          </Button>
           {doc && (
             <Chip size="sm" variant="soft">
               <Chip.Label>v{doc.version}</Chip.Label>

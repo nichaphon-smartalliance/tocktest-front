@@ -16,15 +16,19 @@ export interface CommitResponse {
   analyzedAt: string | null;
 }
 
+export type AiResponseSource = "ai" | "heuristic";
+
 export interface AiAnalysisResponse {
   summary: string;
   riskLevel: RiskLevel;
   testSuggestions: string[];
   affectedAreas: string[];
+  source?: AiResponseSource;
 }
 
 export interface WhatToTestResponse {
   recommendations: string[];
   priority: "low" | "medium" | "high";
   reasoning: string;
+  source?: AiResponseSource;
 }

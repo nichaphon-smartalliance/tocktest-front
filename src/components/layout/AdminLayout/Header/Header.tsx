@@ -3,7 +3,9 @@
 import { Button, Dropdown, Avatar, Chip } from "@heroui/react";
 import { PanelLeftClose, PanelLeftOpen, LogOut, Sun, Moon, BotOff } from "lucide-react";
 import { signOut } from "next-auth/react";
+import { usePathname } from "next/navigation";
 import { useTheme } from "@/context/theme/ThemeProvider";
+import { BackButton } from "@/components/ui/BackButton";
 import { useAiHealth } from "@/hooks/ai/useAiHealth";
 import type { ClientSession } from "@/types/app/session";
 
@@ -14,14 +16,19 @@ interface HeaderProps {
 }
 
 export default function Header({ collapsed, onToggle, session }: HeaderProps) {
+  const pathname = usePathname();
   const { mode, toggle } = useTheme();
   const { aiAvailable } = useAiHealth();
+  const showBack = pathname.startsWith("/repos/");
 
   return (
     <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-gray-200 bg-[var(--bg-sider)] px-4 dark:border-gray-700">
-      <Button variant="ghost" isIconOnly onPress={onToggle} aria-label="Toggle sidebar" className="text-[var(--text-primary)]">
-        {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
-      </Button>
+      <div className="flex items-center gap-2">
+        <Button variant="ghost" isIconOnly onPress={onToggle} aria-label="Toggle sidebar" className="text-[var(--text-primary)]">
+          {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+        </Button>
+        {showBack && <BackButton fallbackHref="/dashboard" />}
+      </div>
 
       <div className="flex items-center gap-2">
         {!aiAvailable && (
