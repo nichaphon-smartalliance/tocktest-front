@@ -7,11 +7,15 @@ import FolderTree from "./FolderTree";
 import TestCaseTable from "./TestCaseTable";
 import { TestCaseModal, AiGenerateModal } from "./Modal";
 import { useTestCaseList } from "@/hooks/testCase";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { message } from "@/lib/toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import type { TestCase, ModalMode, TestCaseFormValues, TestStatus, TestType, PriorityLevel } from "@/types/app/testCase";
 
+const ALL = "__all__";
+
 const STATUS_OPTIONS = [
+  { value: ALL, label: "ทุกสถานะ" },
   { value: "not_tested", label: "ยังไม่ทดสอบ" },
   { value: "pass", label: "ผ่าน" },
   { value: "fail", label: "ไม่ผ่าน" },
@@ -19,6 +23,7 @@ const STATUS_OPTIONS = [
 ];
 
 const PRIORITY_OPTIONS = [
+  { value: ALL, label: "ทุกความสำคัญ" },
   { value: "low", label: "ต่ำ" },
   { value: "medium", label: "กลาง" },
   { value: "high", label: "สูง" },
@@ -26,6 +31,7 @@ const PRIORITY_OPTIONS = [
 ];
 
 const TYPE_OPTIONS = [
+  { value: ALL, label: "ทุกประเภท" },
   { value: "manual", label: "Manual" },
   { value: "automated", label: "Automated" },
   { value: "ui", label: "UI" },
@@ -46,6 +52,7 @@ export default function TestCasesContent({ repoId }: TestCasesContentProps) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search);
   const [statusFilter, setStatusFilter] = useState<TestStatus | undefined>();
   const [priorityFilter, setPriorityFilter] = useState<PriorityLevel | undefined>();
   const [typeFilter, setTypeFilter] = useState<TestType | undefined>();
@@ -56,7 +63,7 @@ export default function TestCasesContent({ repoId }: TestCasesContentProps) {
       status: statusFilter,
       testType: typeFilter,
       priority: priorityFilter,
-      search: search || undefined,
+      search: debouncedSearch || undefined,
       page,
       pageSize,
     });
@@ -91,8 +98,8 @@ export default function TestCasesContent({ repoId }: TestCasesContentProps) {
   };
 
   return (
-    <div className="flex gap-4 h-[calc(100vh-200px)]">
-      <div className="w-[200px] shrink-0 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div className="flex flex-col md:flex-row gap-4 md:h-[calc(100vh-200px)]">
+      <div className="w-full md:w-[200px] shrink-0 max-h-48 md:max-h-none rounded-lg border border-gray-200 dark:border-gray-700 overflow-auto md:overflow-hidden">
         <FolderTree
           repoId={repoId}
           selectedFolderId={selectedFolderId}
@@ -125,7 +132,7 @@ export default function TestCasesContent({ repoId }: TestCasesContentProps) {
             placeholder="สถานะ"
             selectedKey={statusFilter ?? null}
             onSelectionChange={(key) => {
-              setStatusFilter(key ? (String(key) as TestStatus) : undefined);
+              setStatusFilter(key && key !== ALL ? (String(key) as TestStatus) : undefined);
               setPage(1);
             }}
             className="w-[140px]"
@@ -150,7 +157,7 @@ export default function TestCasesContent({ repoId }: TestCasesContentProps) {
             placeholder="ความสำคัญ"
             selectedKey={priorityFilter ?? null}
             onSelectionChange={(key) => {
-              setPriorityFilter(key ? (String(key) as PriorityLevel) : undefined);
+              setPriorityFilter(key && key !== ALL ? (String(key) as PriorityLevel) : undefined);
               setPage(1);
             }}
             className="w-[140px]"
@@ -175,7 +182,7 @@ export default function TestCasesContent({ repoId }: TestCasesContentProps) {
             placeholder="ประเภท"
             selectedKey={typeFilter ?? null}
             onSelectionChange={(key) => {
-              setTypeFilter(key ? (String(key) as TestType) : undefined);
+              setTypeFilter(key && key !== ALL ? (String(key) as TestType) : undefined);
               setPage(1);
             }}
             className="w-[140px]"

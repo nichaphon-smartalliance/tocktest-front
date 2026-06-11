@@ -6,13 +6,15 @@ import { message } from "@/lib/toast";
 import { Plus, RefreshCw, Github } from "lucide-react";
 import { useRepositoryList } from "@/hooks/repository";
 import { useGithubTokens } from "@/hooks/repository";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import RepoCard from "./RepoCard";
 import { AddTokenModal } from "./Modal";
 
 export default function DashboardContent() {
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search);
   const [tokenModalOpen, setTokenModalOpen] = useState(false);
-  const { repositories, isLoading, refetch } = useRepositoryList({ search: search || undefined });
+  const { repositories, isLoading, refetch } = useRepositoryList({ search: debouncedSearch || undefined });
   const { syncRepositories, isSyncing } = useGithubTokens();
 
   const handleSync = async () => {

@@ -22,6 +22,7 @@ import {
   FileText,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import ReactMarkdown from "react-markdown";
 import dayjs from "dayjs";
 import "dayjs/locale/th";
 import { useProjectDoc } from "@/hooks/docs";
@@ -169,8 +170,8 @@ export default function DocsContent({ repoId }: DocsContentProps) {
             </Button>
           </div>
         ) : (
-          <div className="p-6 border border-gray-200 dark:border-gray-700 rounded-lg min-h-[400px] whitespace-pre-wrap text-sm leading-relaxed">
-            {doc.content || "ยังไม่มีเนื้อหา"}
+          <div className="markdown-body p-6 border border-gray-200 dark:border-gray-700 rounded-lg min-h-[400px] text-sm leading-relaxed">
+            {doc.content ? <ReactMarkdown>{doc.content}</ReactMarkdown> : "ยังไม่มีเนื้อหา"}
           </div>
         )}
       </div>

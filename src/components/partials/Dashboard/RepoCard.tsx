@@ -20,8 +20,17 @@ export default function RepoCard({ repo }: RepoCardProps) {
 
   return (
     <Card
-      className="h-full rounded-xl cursor-pointer hover:shadow-md transition-shadow"
+      role="link"
+      tabIndex={0}
+      aria-label={`เปิด ${repo.fullName}`}
+      className="h-full rounded-xl cursor-pointer hover:shadow-md transition-shadow focus-visible:outline-2 focus-visible:outline-indigo-500"
       onClick={() => router.push(`/repos/${repo.id}/test-cases`)}
+      onKeyDown={(e: React.KeyboardEvent) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          router.push(`/repos/${repo.id}/test-cases`);
+        }
+      }}
     >
       <Card.Content className="p-5">
         <div className="flex items-start justify-between mb-3">

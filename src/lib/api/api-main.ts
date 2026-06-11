@@ -69,6 +69,9 @@ export const deleteTestCaseApi = (repoId: string, testCaseId: string) =>
 export const aiGenerateTestCasesApi = (body: AiGenerateRequest) =>
   mainClient.post<ApiResponse<AiGenerateResponse>>("/api/v1/ai/generate-test-cases", body);
 
+export const aiHealthApi = () =>
+  mainClient.get<ApiResponse<{ available: boolean }>>("/api/v1/ai/health");
+
 export const bulkSaveTestCasesApi = (repoId: string, testCases: Partial<TestCaseResponse>[]) =>
   mainClient.post<ApiResponse<TestCaseResponse[]>>(`/api/v1/repositories/${repoId}/test-cases/bulk`, { testCases });
 
