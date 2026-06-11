@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutDashboard } from "lucide-react";
+import { LayoutDashboard, Settings } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import type { ClientSession } from "@/types/app/session";
 
@@ -11,6 +11,7 @@ interface SidebarProps {
 
 const NAV_ITEMS = [
   { key: "/dashboard", icon: LayoutDashboard, label: "แดชบอร์ด" },
+  { key: "/settings", icon: Settings, label: "การตั้งค่า" },
 ];
 
 export default function Sidebar({ collapsed, session }: SidebarProps) {

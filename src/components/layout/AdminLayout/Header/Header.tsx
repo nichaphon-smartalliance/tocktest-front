@@ -1,9 +1,9 @@
 "use client";
 
 import { Button, Dropdown, Avatar, Chip } from "@heroui/react";
-import { PanelLeftClose, PanelLeftOpen, LogOut, Sun, Moon, BotOff } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen, LogOut, Sun, Moon, BotOff, Settings } from "lucide-react";
 import { signOut } from "next-auth/react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "@/context/theme/ThemeProvider";
 import { BackButton } from "@/components/ui/BackButton";
 import { useAiHealth } from "@/hooks/ai/useAiHealth";
@@ -17,6 +17,7 @@ interface HeaderProps {
 
 export default function Header({ collapsed, onToggle, session }: HeaderProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const { mode, toggle } = useTheme();
   const { aiAvailable } = useAiHealth();
   const showBack = pathname.startsWith("/repos/");
@@ -57,9 +58,14 @@ export default function Header({ collapsed, onToggle, session }: HeaderProps) {
           <Dropdown.Popover placement="bottom end">
             <Dropdown.Menu
               onAction={(key) => {
+                if (key === "settings") router.push("/settings");
                 if (key === "logout") signOut({ callbackUrl: "/login" });
               }}
             >
+              <Dropdown.Item id="settings" textValue="การตั้งค่า">
+                <Settings size={14} />
+                การตั้งค่า
+              </Dropdown.Item>
               <Dropdown.Item id="logout" textValue="ออกจากระบบ">
                 <LogOut size={14} />
                 ออกจากระบบ

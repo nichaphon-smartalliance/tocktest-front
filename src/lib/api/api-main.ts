@@ -9,6 +9,7 @@ import type {
 import type { CommitResponse, AiAnalysisResponse, WhatToTestResponse } from "@/types/api/main/analysis";
 import type { ProjectDocResponse, DocVersionResponse } from "@/types/api/main/docs";
 import type { RepoSettingsResponse } from "@/types/api/main/settings";
+import type { UserProfileResponse, UserSettingsResponse, UpdateUserSettingsRequest } from "@/types/api/main/user";
 import { mainClient } from "./client";
 
 // ── Repositories ──────────────────────────────────────────────────────────
@@ -109,3 +110,19 @@ export const getRepoSettingsApi = (repoId: string) =>
 
 export const updateRepoSettingsApi = (repoId: string, body: Partial<RepoSettingsResponse>) =>
   mainClient.put<ApiResponse<RepoSettingsResponse>>(`/api/v1/repositories/${repoId}/settings`, body);
+
+// ── User / Admin Settings ─────────────────────────────────────────────────
+export const getUserProfileApi = () =>
+  mainClient.get<ApiResponse<UserProfileResponse>>("/api/v1/users/me");
+
+export const updateUserProfileApi = (body: { name: string }) =>
+  mainClient.put<ApiResponse<UserProfileResponse>>("/api/v1/users/me", body);
+
+export const changeUserPasswordApi = (body: { currentPassword: string; newPassword: string }) =>
+  mainClient.put<ApiResponse<{ success: boolean }>>("/api/v1/users/me/password", body);
+
+export const getUserSettingsApi = () =>
+  mainClient.get<ApiResponse<UserSettingsResponse>>("/api/v1/users/me/settings");
+
+export const updateUserSettingsApi = (body: UpdateUserSettingsRequest) =>
+  mainClient.put<ApiResponse<UserSettingsResponse>>("/api/v1/users/me/settings", body);
