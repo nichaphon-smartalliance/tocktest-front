@@ -1,7 +1,7 @@
 "use client";
 
 import { Modal, useOverlayState } from "@heroui/react";
-import type { ReactNode } from "react";
+import { useCallback, type ReactNode } from "react";
 
 interface ControlledModalProps {
   open: boolean;
@@ -9,16 +9,16 @@ interface ControlledModalProps {
   children: ReactNode;
 }
 
-/** Modal synced to parent `open`; unmounts when closed to avoid ghost overlays. */
+/** Controlled modal — stays mounted while closing so exit transitions can finish. */
 export function ControlledModal({ open, onClose, children }: ControlledModalProps) {
-  const state = useOverlayState({
-    isOpen: open,
-    onOpenChange: (isOpen) => {
+  const onOpenChange = useCallback(
+    (isOpen: boolean) => {
       if (!isOpen) onClose();
     },
-  });
+    [onClose],
+  );
 
-  if (!open) return null;
+  const state = useOverlayState({ isOpen: open, onOpenChange });
 
   return <Modal state={state}>{children}</Modal>;
 }
