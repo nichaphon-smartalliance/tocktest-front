@@ -161,7 +161,7 @@ export default function DocsContent({ repoId }: DocsContentProps) {
             <FileText size={48} className="opacity-20 mb-4" />
             <p className="text-muted mb-4">ยังไม่มี Project Docs</p>
             <Button variant="primary" onPress={startEdit}>
-              สร้าง Docs
+              สร้าง Docs 
             </Button>
           </div>
         ) : (

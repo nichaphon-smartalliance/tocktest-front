@@ -11,7 +11,16 @@ export interface QaSummaryResponse {
   failHighPriority: number;
   passRate: number;
   hasGithubToken: boolean;
+  capabilities: QaCapabilityResponse[];
+  nextMilestones: string[];
   recentRepos: QaRecentRepoResponse[];
+}
+
+export interface QaCapabilityResponse {
+  key: string;
+  label: string;
+  status: "live" | "partial" | "missing";
+  description: string;
 }
 
 export interface QaRecentRepoResponse {
