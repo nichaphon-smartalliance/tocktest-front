@@ -3,7 +3,8 @@
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import { Button, SearchField, Select, ListBox } from "@heroui/react";
-import { Plus, Bot } from "lucide-react";
+import { Plus, Bot, Download } from "lucide-react";
+import { getTestCasesExportUrl } from "@/lib/api/api-main";
 import FolderTree from "./FolderTree";
 import TestCaseTable from "./TestCaseTable";
 import AiGenerateModal from "./Modal/AiGenerateModal";
@@ -207,6 +208,21 @@ export default function TestCasesContent({ repoId }: TestCasesContentProps) {
           </Select>
 
           <div className="flex-1" />
+          <Button
+            variant="secondary"
+            size="sm"
+            onPress={() => {
+              const url = getTestCasesExportUrl(repoId, "playwright");
+              const a = document.createElement("a");
+              a.href = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4004") + url;
+              a.download = "";
+              a.click();
+            }}
+          aria-label="Export as Playwright .spec.ts"
+          >
+            <Download size={14} />
+            Export Playwright
+          </Button>
           <Button variant="secondary" onPress={() => setAiModalOpen(true)}>
             <Bot size={16} />
             สร้างด้วย AI

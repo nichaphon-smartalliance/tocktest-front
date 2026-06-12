@@ -18,9 +18,11 @@ import {
 } from "@heroui/react";
 import { message } from "@/lib/toast";
 import { getApiErrorMessage } from "@/lib/api-error";
-import { Trash2, Plus, User, Shield, Sliders, Github, Server, Bot, BotOff, Link2, Package, ChevronDown, ChevronUp, Download, Check } from "lucide-react";
+import { Trash2, Plus, User, Shield, Sliders, Github, Server, Bot, BotOff, Link2, Package, ChevronDown, ChevronUp, Download, Check, Webhook, RefreshCw } from "lucide-react";
 import { useGithubTokens } from "@/hooks/repository";
 import { useGithubAppSetup, useGithubAppInstallationRepositories, useJobStats, useRecentJobs } from "@/hooks/dashboard";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getWebhookEventsApi, replayWebhookEventApi, type WebhookEventResponse } from "@/lib/api/api-main";
 import { useUserProfile, useChangePassword, useUserSettings } from "@/hooks/user";
 import { useAiHealth } from "@/hooks/ai/useAiHealth";
 import type { GithubToken } from "@/types/app/repository";
@@ -34,6 +36,7 @@ const TABS: { key: AdminSettingsTab; label: string; icon: typeof User }[] = [
   { key: "security", label: "ความปลอดภัย", icon: Shield },
   { key: "preferences", label: "การตั้งค่า", icon: Sliders },
   { key: "integrations", label: "GitHub", icon: Github },
+  { key: "webhooks", label: "Webhooks", icon: Webhook },
   { key: "system", label: "ระบบ", icon: Server },
 ];
 
@@ -624,8 +627,121 @@ export default function AdminSettingsContent() {
         </div>
       )}
 
+      {tab === "webhooks" && <WebhookEventsPanel />}
+
       <AddTokenModal open={addTokenOpen} onClose={() => setAddTokenOpen(false)} />
     </div>
+  );
+}
+
+function WebhookEventsPanel() {
+  const qc = useQueryClient();
+  const [statusFilter, setStatusFilter] = useState<string>("");
+
+  const { data: events, isLoading } = useQuery({
+    queryKey: ["webhook-events", statusFilter],
+    queryFn: () => getWebhookEventsApi({ limit: 50, status: statusFilter || undefined }).then((r) => r.data?.data ?? []),
+    staleTime: 10_000,
+  });
+
+  const replayMutation = useMutation({
+    mutationFn: (eventId: string) => replayWebhookEventApi(eventId),
+    onSuccess: () => {
+      message.success("Webhook replayed");
+      void qc.invalidateQueries({ queryKey: ["webhook-events"] });
+    },
+    onError: (err) => message.error(getApiErrorMessage(err, "Replay failed")),
+  });
+
+  const statusColor = (status: string): "success" | "danger" | "warning" | "accent" => {
+    if (status === "processed") return "success";
+    if (status === "failed") return "danger";
+    if (status === "replaying") return "accent";
+    return "warning";
+  };
+
+  return (
+    <Card className="rounded-xl">
+      <Card.Header className="px-5 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+        <div>
+          <Card.Title className="text-base font-semibold m-0">Webhook Events</Card.Title>
+          <p className="text-xs text-muted mt-0.5">View and replay GitHub webhook events</p>
+        </div>
+        <div className="flex gap-2 items-center">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="text-xs border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1.5 bg-transparent"
+          >
+            <option value="">All statuses</option>
+            <option value="received">received</option>
+            <option value="processed">processed</option>
+            <option value="failed">failed</option>
+          </select>
+          <button
+            type="button"
+            onClick={() => void qc.invalidateQueries({ queryKey: ["webhook-events"] })}
+            className="text-muted hover:text-primary transition-colors"
+          >
+            <RefreshCw size={14} />
+          </button>
+        </div>
+      </Card.Header>
+      <Card.Content className="p-0">
+        {isLoading ? (
+          <div className="flex justify-center py-8"><Spinner /></div>
+        ) : !events?.length ? (
+          <div className="px-5 py-6 text-sm text-muted">No webhook events found.</div>
+        ) : (
+          <Table>
+            <Table.ScrollContainer>
+              <Table.Content aria-label="Webhook events">
+                <Table.Header>
+                  <Table.Column isRowHeader>Event</Table.Column>
+                  <Table.Column>Repository</Table.Column>
+                  <Table.Column>Status</Table.Column>
+                  <Table.Column>Received</Table.Column>
+                  <Table.Column className="w-16" />
+                </Table.Header>
+                <Table.Body>
+                  {events.map((ev: WebhookEventResponse) => (
+                    <Table.Row key={ev.id} id={ev.id}>
+                      <Table.Cell>
+                        <span className="font-mono text-xs">{ev.event}{ev.action ? `.${ev.action}` : ""}</span>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <span className="text-xs text-muted">{ev.repoFullName ?? "—"}</span>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Chip size="sm" variant="soft" color={statusColor(ev.status)}>
+                          <Chip.Label>{ev.status}</Chip.Label>
+                        </Chip>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <span className="text-xs text-muted">{dayjs(ev.createdAt).format("DD/MM HH:mm:ss")}</span>
+                      </Table.Cell>
+                      <Table.Cell>
+                        {ev.status === "failed" && (
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            isDisabled={replayMutation.isPending}
+                            onPress={() => replayMutation.mutate(ev.id)}
+                          >
+                            <RefreshCw size={12} />
+                            Replay
+                          </Button>
+                        )}
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
+        )}
+      </Card.Content>
+    </Card>
   );
 }
 

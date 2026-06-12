@@ -15,6 +15,9 @@ import {
   Ban,
   Sparkles,
   ChevronRight,
+  MessageSquare,
+  Terminal,
+  ScanEye,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { Chip, Spinner } from "@heroui/react";
@@ -36,6 +39,9 @@ const MAIN_NAV = [
 const WORKSPACE_LINKS = [
   { suffix: "test-cases", icon: BugPlay, label: "Test Cases" },
   { suffix: "analysis", icon: GitCommitHorizontal, label: "Analysis" },
+  { suffix: "sandbox", icon: Terminal, label: "Sandbox" },
+  { suffix: "visual", icon: ScanEye, label: "Visual QA" },
+  { suffix: "chat", icon: MessageSquare, label: "QA Chat" },
   { suffix: "docs", icon: BookOpen, label: "Docs" },
   { suffix: "settings", icon: Settings, label: "Repo Settings" },
 ] as const;
