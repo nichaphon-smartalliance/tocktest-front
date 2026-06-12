@@ -122,7 +122,7 @@ export default function TestCaseModal({
 
   const handleOk = async () => {
     if (!title.trim()) {
-      message.warning("กรุณากรอกชื่อ");
+      message.warning("กรุณากรอกชื่อ test case");
       return;
     }
     const values: TestCaseFormValues = {
