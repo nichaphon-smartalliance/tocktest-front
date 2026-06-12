@@ -3,9 +3,6 @@
 import {
   LayoutDashboard,
   Settings,
-  BugPlay,
-  GitCommitHorizontal,
-  BookOpen,
   Github,
   Bot,
   BotOff,
@@ -15,9 +12,6 @@ import {
   Ban,
   Sparkles,
   ChevronRight,
-  MessageSquare,
-  Terminal,
-  ScanEye,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { Chip, Spinner } from "@heroui/react";
@@ -26,7 +20,6 @@ import type { QaSummaryResponse } from "@/types/api/main/dashboard";
 import { useQaSummary } from "@/hooks/dashboard";
 import { useRecentRepos } from "@/hooks/common/useRecentRepos";
 import { useAiHealth } from "@/hooks/ai/useAiHealth";
-import { useRepository } from "@/hooks/repository";
 
 const EXPANDED_W = 260;
 const COLLAPSED_W = 64;
@@ -36,15 +29,6 @@ const MAIN_NAV = [
   { key: "/settings", icon: Settings, label: "การตั้งค่า" },
 ] as const;
 
-const WORKSPACE_LINKS = [
-  { suffix: "test-cases", icon: BugPlay, label: "Test Cases" },
-  { suffix: "analysis", icon: GitCommitHorizontal, label: "Analysis" },
-  { suffix: "sandbox", icon: Terminal, label: "Sandbox" },
-  { suffix: "visual", icon: ScanEye, label: "Visual QA" },
-  { suffix: "chat", icon: MessageSquare, label: "QA Chat" },
-  { suffix: "docs", icon: BookOpen, label: "Docs" },
-  { suffix: "settings", icon: Settings, label: "Repo Settings" },
-] as const;
 
 function SectionLabel({ children, collapsed }: { children: string; collapsed: boolean }) {
   if (collapsed) return null;
@@ -184,45 +168,6 @@ function RecentRepoList({
   );
 }
 
-function WorkspaceNav({ repoId, collapsed }: { repoId: string; collapsed: boolean }) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const { repository } = useRepository(repoId);
-
-  if (collapsed) return null;
-
-  const shortName = repository?.fullName?.split("/").pop() ?? "Repository";
-
-  return (
-    <>
-      <SectionLabel collapsed={collapsed}>กำลังทำงาน</SectionLabel>
-      <div className="mx-2 mb-2 rounded-lg border border-indigo-200 dark:border-indigo-800/60 bg-indigo-500/5 px-2.5 py-2">
-        <p className="text-xs font-semibold truncate m-0 text-indigo-700 dark:text-indigo-300">{shortName}</p>
-        <div className="mt-1.5 flex flex-col gap-0.5">
-          {WORKSPACE_LINKS.map(({ suffix, icon: Icon, label }) => {
-            const href = `/repos/${repoId}/${suffix}`;
-            const active = pathname.endsWith(suffix);
-            return (
-              <button
-                key={suffix}
-                type="button"
-                onClick={() => router.push(href)}
-                className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-xs cursor-pointer transition-colors ${
-                  active
-                    ? "bg-indigo-500/15 font-medium text-indigo-600 dark:text-indigo-400"
-                    : "text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800/60"
-                }`}
-              >
-                <Icon size={13} />
-                {label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    </>
-  );
-}
 
 interface SidebarProps {
   collapsed: boolean;
@@ -301,8 +246,6 @@ export default function Sidebar({ collapsed, session }: SidebarProps) {
         ) : (
           <QaSnapshot summary={summary} collapsed={collapsed} />
         )}
-
-        {activeRepoId && <WorkspaceNav repoId={activeRepoId} collapsed={collapsed} />}
 
         <RecentRepoList
           summary={summary}
