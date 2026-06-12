@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Card,
   Button,
@@ -12,14 +12,14 @@ import {
   Switch,
   Spinner,
 } from "@heroui/react";
-import { message } from "@/lib/toast";
-import { Trash2, Plus } from "lucide-react";
-import { useGithubTokens } from "@/hooks/repository";
-import { useRepoSettings } from "@/hooks/settings";
-import type { GithubToken } from "@/types/app/repository";
+import dayjs from "dayjs";
+import { Plus, Trash2 } from "lucide-react";
 import { AddTokenModal } from "@/components/partials/Dashboard/Modal";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import dayjs from "dayjs";
+import { useGithubTokens } from "@/hooks/repository";
+import { useRepoSettings } from "@/hooks/settings";
+import { message } from "@/lib/toast";
+import type { GithubToken } from "@/types/app/repository";
 
 interface SettingsContentProps {
   repoId: string;
@@ -32,40 +32,43 @@ export default function SettingsContent({ repoId }: SettingsContentProps) {
 
   const [defaultBranch, setDefaultBranch] = useState("");
   const [autoAnalyzeOnPush, setAutoAnalyzeOnPush] = useState(false);
+  const [aiOfflineMode, setAiOfflineMode] = useState(false);
+  const [docsAutoSync, setDocsAutoSync] = useState(false);
 
   useEffect(() => {
-    if (settings) {
-      setDefaultBranch(settings.defaultBranch ?? "");
-      setAutoAnalyzeOnPush(settings.autoAnalyzeOnPush ?? false);
-    }
+    if (!settings) return;
+    setDefaultBranch(settings.defaultBranch ?? "");
+    setAutoAnalyzeOnPush(settings.autoAnalyzeOnPush ?? false);
+    setAiOfflineMode(settings.aiOfflineMode ?? false);
+    setDocsAutoSync(settings.docsAutoSync ?? false);
   }, [settings]);
 
   const handleDeleteToken = async (id: string) => {
     try {
       await deleteToken(id);
-      message.success("ลบ Token สำเร็จ");
+      message.success("Token removed");
     } catch {
-      message.error("ลบ Token ไม่สำเร็จ");
+      message.error("Failed to remove token");
     }
   };
 
   const handleSaveSettings = async () => {
     try {
-      await update({ defaultBranch, autoAnalyzeOnPush });
-      message.success("บันทึกการตั้งค่าสำเร็จ");
+      await update({ defaultBranch, autoAnalyzeOnPush, aiOfflineMode, docsAutoSync });
+      message.success("Repository settings saved");
     } catch {
-      message.error("บันทึกไม่สำเร็จ");
+      message.error("Failed to save repository settings");
     }
   };
 
   return (
-    <div className="max-w-[700px]">
+    <div className="max-w-[760px]">
       <Card className="mb-4 rounded-lg">
         <Card.Header className="flex items-center justify-between px-4 py-3">
           <Card.Title className="text-base font-semibold m-0">GitHub Tokens</Card.Title>
           <Button size="sm" variant="secondary" onPress={() => setAddTokenOpen(true)}>
             <Plus size={14} />
-            เพิ่ม Token
+            Add token
           </Button>
         </Card.Header>
         <Card.Content className="p-0">
@@ -74,16 +77,16 @@ export default function SettingsContent({ repoId }: SettingsContentProps) {
               <Spinner />
             </div>
           ) : tokens.length === 0 ? (
-            <p className="text-center text-muted py-8 text-sm">ยังไม่มี GitHub Token</p>
+            <p className="text-center text-muted py-8 text-sm">No GitHub token connected yet.</p>
           ) : (
             <Table>
               <Table.ScrollContainer>
                 <Table.Content aria-label="GitHub tokens">
                   <Table.Header>
-                    <Table.Column isRowHeader>ชื่อ</Table.Column>
-                    <Table.Column>สถานะ</Table.Column>
-                    <Table.Column>เพิ่มเมื่อ</Table.Column>
-                    <Table.Column>วันหมดอายุ</Table.Column>
+                    <Table.Column isRowHeader>Label</Table.Column>
+                    <Table.Column>Status</Table.Column>
+                    <Table.Column>Created</Table.Column>
+                    <Table.Column>Expires</Table.Column>
                     <Table.Column className="w-12" />
                   </Table.Header>
                   <Table.Body>
@@ -93,18 +96,14 @@ export default function SettingsContent({ repoId }: SettingsContentProps) {
                           <span className="font-semibold">{record.label}</span>
                         </Table.Cell>
                         <Table.Cell>
-                          <Chip
-                            size="sm"
-                            variant="soft"
-                            color={record.isActive ? "success" : "danger"}
-                          >
-                            <Chip.Label>{record.isActive ? "ใช้งานได้" : "ไม่ได้ใช้งาน"}</Chip.Label>
+                          <Chip size="sm" variant="soft" color={record.isActive ? "success" : "danger"}>
+                            <Chip.Label>{record.isActive ? "Active" : "Inactive"}</Chip.Label>
                           </Chip>
                         </Table.Cell>
                         <Table.Cell>{dayjs(record.createdAt).format("DD/MM/YYYY")}</Table.Cell>
                         <Table.Cell>
                           {!record.expiresAt ? (
-                            <span className="text-muted">ไม่มีกำหนด</span>
+                            <span className="text-muted">No expiry</span>
                           ) : (
                             <Chip
                               size="sm"
@@ -113,19 +112,19 @@ export default function SettingsContent({ repoId }: SettingsContentProps) {
                             >
                               <Chip.Label>
                                 {dayjs(record.expiresAt).format("DD/MM/YYYY")}
-                                {dayjs(record.expiresAt).isBefore(dayjs()) && " (หมดอายุแล้ว)"}
+                                {dayjs(record.expiresAt).isBefore(dayjs()) ? " (expired)" : ""}
                               </Chip.Label>
                             </Chip>
                           )}
                         </Table.Cell>
                         <Table.Cell>
                           <ConfirmDialog
-                            title="ลบ Token นี้?"
-                            confirmLabel="ลบ"
+                            title="Remove this token?"
+                            confirmLabel="Remove"
                             confirmVariant="danger"
                             onConfirm={() => handleDeleteToken(record.id)}
                             trigger={
-                              <Button variant="ghost" isIconOnly size="sm" aria-label="ลบ Token">
+                              <Button variant="ghost" isIconOnly size="sm" aria-label="Remove token">
                                 <Trash2 size={14} className="text-red-500" />
                               </Button>
                             }
@@ -143,7 +142,7 @@ export default function SettingsContent({ repoId }: SettingsContentProps) {
 
       <Card className="rounded-lg">
         <Card.Header className="px-4 py-3">
-          <Card.Title className="text-base font-semibold m-0">ตั้งค่า Repository</Card.Title>
+          <Card.Title className="text-base font-semibold m-0">Repository Settings</Card.Title>
         </Card.Header>
         <Card.Content className="px-4 pb-4 flex flex-col gap-4">
           {isLoading ? (
@@ -157,18 +156,44 @@ export default function SettingsContent({ repoId }: SettingsContentProps) {
                 </InputGroup>
               </TextField>
 
-              <Switch
-                isSelected={autoAnalyzeOnPush}
-                onChange={(selected) => setAutoAnalyzeOnPush(selected)}
-              >
+              <Switch isSelected={autoAnalyzeOnPush} onChange={setAutoAnalyzeOnPush}>
                 <Switch.Control>
                   <Switch.Thumb />
                 </Switch.Control>
-                <Switch.Content>วิเคราะห์ commit อัตโนมัติเมื่อมี push</Switch.Content>
+                <Switch.Content>
+                  Auto analyze on push
+                  <span className="block text-xs text-muted mt-1">
+                    Queue commit analysis when new pushes arrive for this repository.
+                  </span>
+                </Switch.Content>
+              </Switch>
+
+              <Switch isSelected={aiOfflineMode} onChange={setAiOfflineMode}>
+                <Switch.Control>
+                  <Switch.Thumb />
+                </Switch.Control>
+                <Switch.Content>
+                  AI Offline Mode
+                  <span className="block text-xs text-muted mt-1">
+                    Block AI requests in the UI and force backend workflows to short-circuit safely.
+                  </span>
+                </Switch.Content>
+              </Switch>
+
+              <Switch isSelected={docsAutoSync} onChange={setDocsAutoSync}>
+                <Switch.Control>
+                  <Switch.Thumb />
+                </Switch.Control>
+                <Switch.Content>
+                  Docs Auto Sync
+                  <span className="block text-xs text-muted mt-1">
+                    Keep project docs refreshed when source files change without starting duplicate jobs.
+                  </span>
+                </Switch.Content>
               </Switch>
 
               <Button variant="primary" isDisabled={isUpdating} onPress={handleSaveSettings}>
-                {isUpdating ? "กำลังบันทึก..." : "บันทึกการตั้งค่า"}
+                {isUpdating ? "Saving..." : "Save settings"}
               </Button>
             </>
           )}

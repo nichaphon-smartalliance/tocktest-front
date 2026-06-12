@@ -23,10 +23,6 @@ export interface GithubToken {
   createdAt: string;
 }
 
-export interface AddTokenFormValues {
-  label: string;
-  token: string;
-}
 
 export interface RepoFilterParams {
   search?: string;

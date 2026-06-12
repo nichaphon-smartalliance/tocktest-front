@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 const STORAGE_KEY = "tock:recent-repos";
 const MAX = 5;
@@ -29,20 +29,7 @@ export function useRecentRepos() {
     setRecent(readStorage());
   }, []);
 
-  const addRecent = useCallback((id: string, fullName: string) => {
-    setRecent((prev) => {
-      const next = [{ id, fullName, visitedAt: Date.now() }, ...prev.filter((r) => r.id !== id)].slice(
-        0,
-        MAX,
-      );
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      } catch {}
-      return next;
-    });
-  }, []);
-
-  return { recent, addRecent };
+  return { recent };
 }
 
 /** Call from repo layout when repository is loaded */

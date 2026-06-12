@@ -258,10 +258,10 @@ export default function Sidebar({ collapsed, session }: SidebarProps) {
       <div className="shrink-0 border-t border-gray-200 dark:border-gray-700 px-3 py-3">
         {!collapsed && (
           <div className="flex flex-wrap gap-1.5 mb-3">
-            <Chip size="sm" variant="soft" color={aiAvailable ? "success" : "warning"}>
+            <Chip size="sm" variant="soft" color={aiAvailable === true ? "success" : aiAvailable === false ? "warning" : "accent"}>
               <Chip.Label className="text-[10px] flex items-center gap-1">
-                {aiAvailable ? <Bot size={10} /> : <BotOff size={10} />}
-                AI {aiAvailable ? "online" : "offline"}
+                {aiAvailable === false ? <BotOff size={10} /> : <Bot size={10} />}
+                AI {aiAvailable === true ? "online" : aiAvailable === false ? "offline" : "..."}
               </Chip.Label>
             </Chip>
             <Chip size="sm" variant="soft" color={summary?.hasGithubToken ? "success" : "danger"}>

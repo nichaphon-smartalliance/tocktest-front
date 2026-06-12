@@ -43,6 +43,5 @@ export const useTestCaseList = (repoId: string, params?: TestCaseFilterParams) =
     update: updateMutation.mutateAsync,
     isUpdating: updateMutation.isPending,
     remove: deleteMutation.mutateAsync,
-    isDeleting: deleteMutation.isPending,
   };
 };

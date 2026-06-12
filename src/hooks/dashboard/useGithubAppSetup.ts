@@ -14,13 +14,13 @@ export const GITHUB_APP_INSTALLATIONS_QUERY_KEY = ["githubAppInstallations"] as 
 export const GITHUB_APP_INSTALLATION_REPOS_QUERY_KEY = ["githubAppInstallationRepos"] as const;
 
 export const useGithubAppSetup = () => {
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: GITHUB_APP_SETUP_QUERY_KEY,
     queryFn: getGithubAppSetup,
     staleTime: 60_000,
   });
 
-  const { data: installations, isLoading: installationsLoading, refetch: refetchInstallations } = useQuery({
+  const { data: installations, isLoading: installationsLoading } = useQuery({
     queryKey: GITHUB_APP_INSTALLATIONS_QUERY_KEY,
     queryFn: getGithubAppInstallations,
     enabled: !!data?.configured,
@@ -34,10 +34,8 @@ export const useGithubAppSetup = () => {
   return {
     setup: data,
     isLoading,
-    refetch,
     installations: installations ?? [],
     installationsLoading,
-    refetchInstallations,
     installApp,
   };
 };

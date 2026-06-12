@@ -1,4 +1,4 @@
-import type { Repository, GithubToken } from "@/types/app/repository";
+import type { Repository, GithubToken, RepoFilterParams } from "@/types/app/repository";
 import {
   getRepositoriesApi,
   getRepositoryApi,
@@ -6,7 +6,6 @@ import {
   getGithubTokensApi,
   createGithubTokenApi,
   deleteGithubTokenApi,
-  testGithubTokenApi,
   getGithubOAuthConnectUrlApi,
 } from "@/lib/api/api-main";
 import type { GithubTokenResponse } from "@/types/api/main/repository";
@@ -16,7 +15,7 @@ const mapGithubToken = (token: GithubTokenResponse): GithubToken => ({
   expiresAt: token.expiresAt ?? null,
 });
 
-export const getRepositories = async (params?: Record<string, unknown>): Promise<{ items: Repository[]; total: number }> => {
+export const getRepositories = async (params?: RepoFilterParams): Promise<{ items: Repository[]; total: number }> => {
   const res = await getRepositoriesApi(params);
   const data = res.data?.data;
   return { items: data?.content ?? [], total: data?.totalElements ?? 0 };
@@ -39,16 +38,12 @@ export const getGithubTokens = async (): Promise<GithubToken[]> => {
 
 export const createGithubToken = async (label: string, token: string): Promise<GithubToken> => {
   const res = await createGithubTokenApi({ label, token });
-  return mapGithubToken(res.data?.data);
+  if (!res.data?.data) throw new Error("Invalid response from server");
+  return mapGithubToken(res.data.data);
 };
 
 export const deleteGithubToken = async (id: string): Promise<void> => {
   await deleteGithubTokenApi(id);
-};
-
-export const testGithubToken = async (id: string): Promise<boolean> => {
-  const res = await testGithubTokenApi(id);
-  return res.data?.data?.valid ?? false;
 };
 
 export const getGithubOAuthConnectUrl = async (): Promise<string> => {

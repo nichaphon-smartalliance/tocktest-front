@@ -21,9 +21,7 @@ export const useAiGenerateTestCases = (repoId: string) => {
   return {
     generate: generateMutation.mutateAsync,
     isGenerating: generateMutation.isPending,
-    generatedPreviews: generateMutation.data ?? [],
     save: saveMutation.mutateAsync,
     isSaving: saveMutation.isPending,
-    reset: generateMutation.reset,
   };
 };

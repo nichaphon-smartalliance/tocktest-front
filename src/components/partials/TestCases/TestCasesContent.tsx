@@ -239,7 +239,6 @@ export default function TestCasesContent({ repoId }: TestCasesContentProps) {
       <TestCaseModal
         open={modalOpen}
         mode={modalMode}
-        repoId={repoId}
         folderId={selectedFolderId}
         data={editTarget}
         onClose={() => setModalOpen(false)}

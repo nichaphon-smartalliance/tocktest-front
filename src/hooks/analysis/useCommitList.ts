@@ -75,11 +75,9 @@ export const useCommitList = (repoId: string, params?: AnalysisFilterParams) => 
     commits: data?.items ?? [],
     total: data?.total ?? 0,
     isLoading,
-    refetch,
     branches: branches ?? [],
     branchesLoading,
     analyze: analyzeMutation.mutateAsync,
-    isAnalyzing: analyzeMutation.isPending,
     getWhatToTest: whatToTestMutation.mutateAsync,
     whatToTestResult: whatToTestMutation.data,
     isLoadingWhatToTest: whatToTestMutation.isPending,
@@ -87,7 +85,6 @@ export const useCommitList = (repoId: string, params?: AnalysisFilterParams) => 
     pullRequestReviewResult: pullRequestReviewMutation.data,
     isReviewingPullRequest: pullRequestReviewMutation.isPending,
     reviewAndCommentPullRequest: pullRequestReviewCommentMutation.mutateAsync,
-    pullRequestReviewCommentResult: pullRequestReviewCommentMutation.data,
     isPostingPullRequestReview: pullRequestReviewCommentMutation.isPending,
   };
 };

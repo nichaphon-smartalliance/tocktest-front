@@ -8,7 +8,7 @@ export const getRepoSettings = async (repoId: string) => {
 
 type UpdateRepoSettingsBody = Pick<
   RepoSettingsResponse,
-  "defaultBranch" | "autoAnalyzeOnPush" | "aiProvider" | "aiModel"
+  "defaultBranch" | "autoAnalyzeOnPush" | "aiProvider" | "aiModel" | "aiOfflineMode" | "docsAutoSync"
 >;
 
 export const updateRepoSettings = async (repoId: string, body: Partial<UpdateRepoSettingsBody>) => {

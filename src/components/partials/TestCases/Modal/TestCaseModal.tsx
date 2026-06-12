@@ -78,7 +78,6 @@ function TagInput({
 interface TestCaseModalProps {
   open: boolean;
   mode: ModalMode;
-  repoId: string;
   folderId?: string | null;
   data?: TestCase | null;
   onClose: () => void;

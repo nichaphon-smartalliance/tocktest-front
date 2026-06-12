@@ -9,7 +9,8 @@ export const useQaSummary = () => {
   const { data, isLoading, refetch } = useQuery({
     queryKey: QA_SUMMARY_QUERY_KEY,
     queryFn: getQaSummary,
-    staleTime: 60_000,
+    staleTime: 10_000,
+    refetchInterval: 15_000,
   });
 
   return { summary: data, isLoading, refetch };

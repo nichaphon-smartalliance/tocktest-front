@@ -18,6 +18,7 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/th";
 import { useCommitList } from "@/hooks/analysis";
+import { useRepoSettings } from "@/hooks/settings";
 import type { CommitItem, RiskLevel } from "@/types/app/analysis";
 
 dayjs.extend(relativeTime);
@@ -39,6 +40,7 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
   const [analyzingIds, setAnalyzingIds] = useState<Set<string>>(new Set());
   const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
   const [pullRequestNumber, setPullRequestNumber] = useState("");
+  const { settings } = useRepoSettings(repoId);
 
   const {
     commits,
@@ -85,6 +87,10 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
   };
 
   const handleAnalyze = async (commitSha: string) => {
+    if (settings?.aiOfflineMode) {
+      message.warning("AI offline mode is enabled for this repository");
+      return;
+    }
     setAnalyzingIds((prev) => new Set(prev).add(commitSha));
     try {
       const result = await analyze(commitSha);
@@ -105,6 +111,10 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
   };
 
   const handleWhatToTest = async () => {
+    if (settings?.aiOfflineMode) {
+      message.warning("AI offline mode is enabled for this repository");
+      return;
+    }
     if (selectedShas.length === 0) {
       message.warning("กรุณาเลือก commit ที่ต้องการวิเคราะห์");
       return;
@@ -122,6 +132,10 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
   };
 
   const handlePullRequestReview = async () => {
+    if (settings?.aiOfflineMode) {
+      message.warning("AI offline mode is enabled for this repository");
+      return;
+    }
     const prNumber = Number(pullRequestNumber);
     if (!Number.isInteger(prNumber) || prNumber <= 0) {
       message.warning("Please enter a valid pull request number");
@@ -141,6 +155,10 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
   };
 
   const handlePostPullRequestReview = async () => {
+    if (settings?.aiOfflineMode) {
+      message.warning("AI offline mode is enabled for this repository");
+      return;
+    }
     const prNumber = Number(pullRequestNumber);
     if (!Number.isInteger(prNumber) || prNumber <= 0) {
       message.warning("Please enter a valid pull request number");
@@ -173,7 +191,7 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
     const analyzeBtn = (label?: string) => (
       <button
         type="button"
-        disabled={isAnalyzing}
+        disabled={isAnalyzing || settings?.aiOfflineMode}
         onClick={(e) => {
           e.stopPropagation();
           handleAnalyze(record.commitSha);
@@ -198,7 +216,7 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
         </Chip>
         <button
           type="button"
-          disabled={isAnalyzing}
+          disabled={isAnalyzing || settings?.aiOfflineMode}
           title="วิเคราะห์อีกครั้ง"
           onClick={(e) => {
             e.stopPropagation();
@@ -215,6 +233,17 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
 
   return (
     <div className="flex flex-col gap-4">
+      {settings?.aiOfflineMode && (
+        <Alert status="warning">
+          <Alert.Indicator />
+          <Alert.Content>
+            <Alert.Title>AI offline mode</Alert.Title>
+            <Alert.Description>
+              Analysis actions that would call AI are blocked locally for this repository until the toggle is turned off.
+            </Alert.Description>
+          </Alert.Content>
+        </Alert>
+      )}
       <Card>
         <Card.Content className="flex flex-wrap items-center gap-3 p-4">
           <GitBranch className="size-5 text-sky-500 shrink-0" />
@@ -264,7 +293,7 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
             />
             <button
               type="button"
-              disabled={isReviewingPullRequest}
+              disabled={isReviewingPullRequest || settings?.aiOfflineMode}
               onClick={handlePullRequestReview}
               className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white cursor-pointer hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
@@ -273,7 +302,7 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
             </button>
             <button
               type="button"
-              disabled={isPostingPullRequestReview}
+              disabled={isPostingPullRequestReview || settings?.aiOfflineMode}
               onClick={handlePostPullRequestReview}
               className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white cursor-pointer hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
@@ -324,7 +353,7 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
             </div>
             <button
               type="button"
-              disabled={selectedShas.length === 0 || isLoadingWhatToTest}
+              disabled={selectedShas.length === 0 || isLoadingWhatToTest || settings?.aiOfflineMode}
               onClick={handleWhatToTest}
               className="inline-flex items-center gap-2 rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white cursor-pointer hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
             >

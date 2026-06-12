@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getTestCaseFolders, createFolder, updateFolder, deleteFolder } from "@/services/testCase.service";
+import { getTestCaseFolders, createFolder, deleteFolder } from "@/services/testCase.service";
 
 export const FOLDERS_QUERY_KEY = ["testCaseFolders"] as const;
 
@@ -21,12 +21,6 @@ export const useTestCaseFolders = (repoId: string) => {
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
   });
 
-  const updateMutation = useMutation({
-    mutationFn: ({ folderId, name }: { folderId: string; name: string }) =>
-      updateFolder(repoId, folderId, name),
-    onSuccess: () => qc.invalidateQueries({ queryKey: key }),
-  });
-
   const deleteMutation = useMutation({
     mutationFn: (folderId: string) => deleteFolder(repoId, folderId),
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
@@ -36,7 +30,6 @@ export const useTestCaseFolders = (repoId: string) => {
     folders: data ?? [],
     isLoading,
     createFolder: createMutation.mutateAsync,
-    updateFolder: updateMutation.mutateAsync,
     deleteFolder: deleteMutation.mutateAsync,
   };
 };

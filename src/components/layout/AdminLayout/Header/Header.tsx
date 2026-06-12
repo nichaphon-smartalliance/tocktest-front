@@ -32,7 +32,7 @@ export default function Header({ collapsed, onToggle, session }: HeaderProps) {
       </div>
 
       <div className="flex items-center gap-2">
-        {!aiAvailable && (
+        {aiAvailable === false && (
           <span title="AI server ไม่พร้อมใช้งาน — ฟีเจอร์ AI จะใช้ไม่ได้ชั่วคราว">
             <Chip color="warning" size="sm" variant="soft">
               <Chip.Label className="flex items-center gap-1">

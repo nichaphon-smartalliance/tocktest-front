@@ -527,15 +527,15 @@ export default function AdminSettingsContent() {
             <Card.Content className="px-5 py-4 flex flex-col gap-3">
               <div className="flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-3">
                 <div className="flex items-center gap-2">
-                  {aiAvailable ? (
-                    <Bot size={18} className="text-indigo-500" />
-                  ) : (
+                  {aiAvailable === false ? (
                     <BotOff size={18} className="text-amber-500" />
+                  ) : (
+                    <Bot size={18} className="text-indigo-500" />
                   )}
                   <span className="text-sm font-medium">AI Service</span>
                 </div>
-                <Chip size="sm" variant="soft" color={aiAvailable ? "success" : "warning"}>
-                  <Chip.Label>{aiAvailable ? "พร้อมใช้งาน" : "offline"}</Chip.Label>
+                <Chip size="sm" variant="soft" color={aiAvailable === true ? "success" : aiAvailable === false ? "warning" : "accent"}>
+                  <Chip.Label>{aiAvailable === true ? "พร้อมใช้งาน" : aiAvailable === false ? "offline" : "กำลังตรวจสอบ..."}</Chip.Label>
                 </Chip>
               </div>
               <div className="flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-3">
@@ -614,7 +614,7 @@ export default function AdminSettingsContent() {
             </Card.Content>
           </Card>
 
-          {!aiAvailable && (
+          {aiAvailable === false && (
             <Alert status="warning">
               <Alert.Indicator />
               <Alert.Content>

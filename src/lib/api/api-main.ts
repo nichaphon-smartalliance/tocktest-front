@@ -1,4 +1,5 @@
 import type { ApiResponse, PageObject } from "@/types/api/main/common";
+import type { RepoFilterParams } from "@/types/app/repository";
 import type { RepositoryResponse, GithubTokenResponse, SyncRepositoriesResponse } from "@/types/api/main/repository";
 import type {
   TestCaseFolderResponse,
@@ -7,7 +8,7 @@ import type {
   AiGenerateResponse,
 } from "@/types/api/main/testCase";
 import type { CommitResponse, AiAnalysisResponse, PullRequestReviewResponse, WhatToTestResponse } from "@/types/api/main/analysis";
-import type { ProjectDocResponse, DocVersionResponse } from "@/types/api/main/docs";
+import type { ProjectDocResponse, DocVersionResponse, DocStatusResponse } from "@/types/api/main/docs";
 import type { RepoSettingsResponse } from "@/types/api/main/settings";
 import type { UserProfileResponse, UserSettingsResponse, UpdateUserSettingsRequest } from "@/types/api/main/user";
 import type {
@@ -21,7 +22,7 @@ import type {
 import { mainClient } from "./client";
 
 // ── Repositories ──────────────────────────────────────────────────────────
-export const getRepositoriesApi = (params?: Record<string, unknown>) =>
+export const getRepositoriesApi = (params?: RepoFilterParams) =>
   mainClient.get<ApiResponse<PageObject<RepositoryResponse>>>("/api/v1/repositories", { params });
 
 export const getRepositoryApi = (id: string) =>
@@ -66,9 +67,6 @@ export const deleteFolderApi = (repoId: string, folderId: string) =>
 export const getTestCasesApi = (repoId: string, params?: Record<string, unknown>) =>
   mainClient.get<ApiResponse<PageObject<TestCaseResponse>>>(`/api/v1/repositories/${repoId}/test-cases`, { params });
 
-export const getTestCaseApi = (repoId: string, testCaseId: string) =>
-  mainClient.get<ApiResponse<TestCaseResponse>>(`/api/v1/repositories/${repoId}/test-cases/${testCaseId}`);
-
 export const createTestCaseApi = (repoId: string, body: Partial<TestCaseResponse>) =>
   mainClient.post<ApiResponse<TestCaseResponse>>(`/api/v1/repositories/${repoId}/test-cases`, body);
 
@@ -109,14 +107,23 @@ export const reviewAndCommentPullRequestApi = (repoId: string, pullRequestNumber
 export const getProjectDocApi = (repoId: string) =>
   mainClient.get<ApiResponse<ProjectDocResponse>>(`/api/v1/repositories/${repoId}/docs`);
 
+export const getDocStatusApi = (repoId: string) =>
+  mainClient.get<ApiResponse<DocStatusResponse>>(`/api/v1/repositories/${repoId}/docs/status`);
+
 export const updateProjectDocApi = (repoId: string, content: string) =>
   mainClient.put<ApiResponse<ProjectDocResponse>>(`/api/v1/repositories/${repoId}/docs`, { content });
 
 export const getDocVersionsApi = (repoId: string) =>
   mainClient.get<ApiResponse<DocVersionResponse[]>>(`/api/v1/repositories/${repoId}/docs/versions`);
 
+export const generateDocApi = (repoId: string) =>
+  mainClient.post<ApiResponse<DocStatusResponse>>(`/api/v1/repositories/${repoId}/docs/gen`);
+
+export const refreshDocApi = (repoId: string) =>
+  mainClient.post<ApiResponse<DocStatusResponse>>(`/api/v1/repositories/${repoId}/docs/refresh`);
+
 export const autoUpdateDocApi = (repoId: string) =>
-  mainClient.post<ApiResponse<ProjectDocResponse>>(`/api/v1/repositories/${repoId}/docs/auto-update`);
+  mainClient.post<ApiResponse<DocStatusResponse>>(`/api/v1/repositories/${repoId}/docs/auto-update`);
 
 export const deleteProjectDocApi = (repoId: string) =>
   mainClient.delete<ApiResponse<void>>(`/api/v1/repositories/${repoId}/docs`);
@@ -186,14 +193,23 @@ export const chatWithRepoApi = (
 export const getSandboxStatusApi = (repoId: string) =>
   mainClient.get<ApiResponse<{ available: boolean }>>(`/api/v1/repositories/${repoId}/sandbox/status`);
 
-export const runTestsInSandboxApi = (repoId: string, body: { fileContent: string; framework?: 'cypress' }) =>
+export const runTestsInSandboxApi = (repoId: string, body: { fileContent: string; framework?: 'cypress'; name?: string }) =>
   mainClient.post<ApiResponse<SandboxRunResponse>>(`/api/v1/repositories/${repoId}/sandbox/run`, body, { timeout: 10_000 });
 
-export const listSandboxRunsApi = (repoId: string) =>
-  mainClient.get<ApiResponse<SandboxRunResponse[]>>(`/api/v1/repositories/${repoId}/sandbox/runs`);
+export const listSandboxRunsApi = (repoId: string, params?: { search?: string; limit?: number }) =>
+  mainClient.get<ApiResponse<SandboxRunResponse[]>>(`/api/v1/repositories/${repoId}/sandbox/runs`, { params });
 
 export const getSandboxRunApi = (repoId: string, runId: string) =>
   mainClient.get<ApiResponse<SandboxRunResponse>>(`/api/v1/repositories/${repoId}/sandbox/runs/${runId}`);
+
+export const renameSandboxRunApi = (repoId: string, runId: string, name: string) =>
+  mainClient.patch<ApiResponse<SandboxRunResponse>>(`/api/v1/repositories/${repoId}/sandbox/runs/${runId}`, { name });
+
+export const deleteSandboxRunApi = (repoId: string, runId: string) =>
+  mainClient.delete<ApiResponse<{ deleted: boolean }>>(`/api/v1/repositories/${repoId}/sandbox/runs/${runId}`);
+
+export const clearSandboxRunsApi = (repoId: string) =>
+  mainClient.delete<ApiResponse<{ cleared: boolean }>>(`/api/v1/repositories/${repoId}/sandbox/runs`);
 
 // ── Webhook Events ────────────────────────────────────────────────────────
 export const getWebhookEventsApi = (params?: { limit?: number; status?: string }) =>
@@ -207,6 +223,8 @@ export interface SandboxRunResponse {
   id: string;
   repoId: string;
   framework: string;
+  name: string;
+  fileContent: string;
   status: string;
   output: string | null;
   exitCode: number | null;
