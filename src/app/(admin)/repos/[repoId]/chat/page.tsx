@@ -1,9 +1,5 @@
-import dynamic from "next/dynamic";
-
-const ChatContent = dynamic(
-  () => import("@/components/partials/Chat/ChatContent"),
-  { ssr: false },
-);
+import { ClientOnly } from "@/components/ui/ClientOnly";
+import ChatContent from "@/components/partials/Chat/ChatContent";
 
 interface Props {
   params: Promise<{ repoId: string }>;
@@ -11,5 +7,9 @@ interface Props {
 
 export default async function ChatPage({ params }: Props) {
   const { repoId } = await params;
-  return <ChatContent repoId={repoId} />;
+  return (
+    <ClientOnly>
+      <ChatContent repoId={repoId} />
+    </ClientOnly>
+  );
 }

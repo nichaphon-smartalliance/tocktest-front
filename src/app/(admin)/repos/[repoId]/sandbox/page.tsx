@@ -1,9 +1,5 @@
-import dynamic from "next/dynamic";
-
-const SandboxContent = dynamic(
-  () => import("@/components/partials/Sandbox/SandboxContent"),
-  { ssr: false },
-);
+import { ClientOnly } from "@/components/ui/ClientOnly";
+import SandboxContent from "@/components/partials/Sandbox/SandboxContent";
 
 interface Props {
   params: Promise<{ repoId: string }>;
@@ -11,5 +7,9 @@ interface Props {
 
 export default async function SandboxPage({ params }: Props) {
   const { repoId } = await params;
-  return <SandboxContent repoId={repoId} />;
+  return (
+    <ClientOnly>
+      <SandboxContent repoId={repoId} />
+    </ClientOnly>
+  );
 }
