@@ -18,9 +18,9 @@ import {
 } from "@heroui/react";
 import { message } from "@/lib/toast";
 import { getApiErrorMessage } from "@/lib/api-error";
-import { Trash2, Plus, User, Shield, Sliders, Github, Server, Bot, BotOff, Link2, Package } from "lucide-react";
+import { Trash2, Plus, User, Shield, Sliders, Github, Server, Bot, BotOff, Link2, Package, ChevronDown, ChevronUp, Download, Check } from "lucide-react";
 import { useGithubTokens } from "@/hooks/repository";
-import { useGithubAppSetup, useJobStats, useRecentJobs } from "@/hooks/dashboard";
+import { useGithubAppSetup, useGithubAppInstallationRepositories, useJobStats, useRecentJobs } from "@/hooks/dashboard";
 import { useUserProfile, useChangePassword, useUserSettings } from "@/hooks/user";
 import { useAiHealth } from "@/hooks/ai/useAiHealth";
 import type { GithubToken } from "@/types/app/repository";
@@ -68,10 +68,12 @@ export default function AdminSettingsContent() {
   const { data: jobStats } = useJobStats();
   const { data: recentJobs } = useRecentJobs();
   const { aiAvailable } = useAiHealth();
+  const [expandedInstallationId, setExpandedInstallationId] = useState<string | null>(null);
 
   useEffect(() => {
     const githubStatus = searchParams.get("github");
     const githubAppStatus = searchParams.get("github_app");
+    const installationId = searchParams.get("installation_id");
     if (githubStatus === "connected") {
       message.success("เชื่อมต่อบัญชี GitHub สำเร็จ");
     } else if (githubStatus === "error") {
@@ -81,6 +83,9 @@ export default function AdminSettingsContent() {
       message.success("ติดตั้ง GitHub App สำเร็จ");
     } else if (githubAppStatus === "error") {
       message.error("ติดตั้ง GitHub App ไม่สำเร็จ กรุณาลองใหม่");
+    }
+    if (installationId) {
+      setExpandedInstallationId(installationId);
     }
     if (githubStatus || githubAppStatus) {
       setTab("integrations");
@@ -391,22 +396,39 @@ export default function AdminSettingsContent() {
                     </Button>
                   ) : (
                     <div className="flex flex-col gap-2">
-                      {installations.map((inst) => (
-                        <div
-                          key={inst.id}
-                          className="flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-3"
-                        >
-                          <div className="flex items-center gap-2">
-                            <Package size={18} className="text-emerald-500" />
-                            <span className="text-sm font-medium">
-                              {inst.accountLogin ?? `Installation #${inst.installationId}`}
-                            </span>
+                      {installations.map((inst) => {
+                        const isExpanded = expandedInstallationId === inst.installationId;
+                        return (
+                          <div
+                            key={inst.id}
+                            className="rounded-lg border border-gray-200 dark:border-gray-700"
+                          >
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setExpandedInstallationId(isExpanded ? null : inst.installationId)
+                              }
+                              className="flex w-full items-center justify-between px-4 py-3 text-left"
+                            >
+                              <div className="flex items-center gap-2">
+                                <Package size={18} className="text-emerald-500" />
+                                <span className="text-sm font-medium">
+                                  {inst.accountLogin ?? `Installation #${inst.installationId}`}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Chip size="sm" variant="soft" color={inst.suspendedAt ? "danger" : "success"}>
+                                  <Chip.Label>{inst.suspendedAt ? "ถูกระงับ" : "ใช้งานได้"}</Chip.Label>
+                                </Chip>
+                                {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                              </div>
+                            </button>
+                            {isExpanded && (
+                              <InstallationRepositoryPanel installationId={inst.installationId} />
+                            )}
                           </div>
-                          <Chip size="sm" variant="soft" color={inst.suspendedAt ? "danger" : "success"}>
-                            <Chip.Label>{inst.suspendedAt ? "ถูกระงับ" : "ใช้งานได้"}</Chip.Label>
-                          </Chip>
-                        </div>
-                      ))}
+                        );
+                      })}
                       <Button size="sm" variant="secondary" onPress={() => void installApp()}>
                         <Plus size={14} />
                         จัดการ / เพิ่ม repository
@@ -603,6 +625,74 @@ export default function AdminSettingsContent() {
       )}
 
       <AddTokenModal open={addTokenOpen} onClose={() => setAddTokenOpen(false)} />
+    </div>
+  );
+}
+
+function InstallationRepositoryPanel({ installationId }: { installationId: string }) {
+  const { repositories, isLoading, importRepository, isImporting } =
+    useGithubAppInstallationRepositories(installationId);
+  const [importingFullName, setImportingFullName] = useState<string | null>(null);
+
+  const handleImport = async (fullName: string) => {
+    setImportingFullName(fullName);
+    try {
+      await importRepository(fullName);
+      message.success(`นำเข้า ${fullName} สำเร็จ`);
+    } catch (error) {
+      message.error(getApiErrorMessage(error, `นำเข้า ${fullName} ไม่สำเร็จ`));
+    } finally {
+      setImportingFullName(null);
+    }
+  };
+
+  return (
+    <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-3">
+      {isLoading ? (
+        <div className="flex items-center justify-center py-4">
+          <Spinner size="sm" />
+        </div>
+      ) : repositories.length === 0 ? (
+        <p className="text-xs text-muted">ไม่พบ repository สำหรับ installation นี้</p>
+      ) : (
+        <div className="flex flex-col gap-2">
+          {repositories.map((repo) => (
+            <div
+              key={repo.githubRepoId}
+              className="flex items-center justify-between rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2"
+            >
+              <div className="flex flex-col">
+                <span className="text-sm font-medium">{repo.fullName}</span>
+                <span className="text-xs text-muted">
+                  {repo.private ? "Private" : "Public"} · {repo.defaultBranch}
+                </span>
+              </div>
+              {repo.tracked ? (
+                <Chip size="sm" variant="soft" color="success">
+                  <Chip.Label className="flex items-center gap-1">
+                    <Check size={12} />
+                    เพิ่มแล้ว
+                  </Chip.Label>
+                </Chip>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  isDisabled={isImporting}
+                  onPress={() => void handleImport(repo.fullName)}
+                >
+                  {isImporting && importingFullName === repo.fullName ? (
+                    <Spinner size="sm" />
+                  ) : (
+                    <Download size={14} />
+                  )}
+                  นำเข้า
+                </Button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

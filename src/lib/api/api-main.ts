@@ -15,6 +15,7 @@ import type {
   BackgroundJobStatsResponse,
   GithubAppSetupResponse,
   GithubAppInstallationResponse,
+  GithubAppInstallationRepositoryResponse,
   QaSummaryResponse,
 } from "@/types/api/main/dashboard";
 import { mainClient } from "./client";
@@ -163,3 +164,14 @@ export const getGithubAppInstallUrlApi = () =>
 
 export const getGithubAppInstallationsApi = () =>
   mainClient.get<ApiResponse<GithubAppInstallationResponse[]>>("/api/v1/github-app/installations");
+
+export const getGithubAppInstallationRepositoriesApi = (installationId: string) =>
+  mainClient.get<ApiResponse<GithubAppInstallationRepositoryResponse[]>>(
+    `/api/v1/github-app/installations/${installationId}/repositories`,
+  );
+
+export const importGithubAppInstallationRepositoryApi = (installationId: string, fullName: string) =>
+  mainClient.post<ApiResponse<{ imported: boolean; fullName: string }>>(
+    `/api/v1/github-app/installations/${installationId}/repositories/import`,
+    { fullName },
+  );

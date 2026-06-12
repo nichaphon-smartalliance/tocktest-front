@@ -1,10 +1,17 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { getGithubAppSetup, getGithubAppInstallUrl, getGithubAppInstallations } from "@/services/dashboard.service";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  getGithubAppSetup,
+  getGithubAppInstallUrl,
+  getGithubAppInstallations,
+  getGithubAppInstallationRepositories,
+  importGithubAppInstallationRepository,
+} from "@/services/dashboard.service";
 
 export const GITHUB_APP_SETUP_QUERY_KEY = ["githubAppSetup"] as const;
 export const GITHUB_APP_INSTALLATIONS_QUERY_KEY = ["githubAppInstallations"] as const;
+export const GITHUB_APP_INSTALLATION_REPOS_QUERY_KEY = ["githubAppInstallationRepos"] as const;
 
 export const useGithubAppSetup = () => {
   const { data, isLoading, refetch } = useQuery({
@@ -32,5 +39,32 @@ export const useGithubAppSetup = () => {
     installationsLoading,
     refetchInstallations,
     installApp,
+  };
+};
+
+export const useGithubAppInstallationRepositories = (installationId: string | null) => {
+  const qc = useQueryClient();
+
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: [...GITHUB_APP_INSTALLATION_REPOS_QUERY_KEY, installationId],
+    queryFn: () => getGithubAppInstallationRepositories(installationId as string),
+    enabled: !!installationId,
+  });
+
+  const importMutation = useMutation({
+    mutationFn: (fullName: string) =>
+      importGithubAppInstallationRepository(installationId as string, fullName),
+    onSuccess: () => {
+      void refetch();
+      void qc.invalidateQueries({ queryKey: ["repositoryList"] });
+    },
+  });
+
+  return {
+    repositories: data ?? [],
+    isLoading,
+    refetch,
+    importRepository: importMutation.mutateAsync,
+    isImporting: importMutation.isPending,
   };
 };

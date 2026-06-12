@@ -42,6 +42,17 @@ export interface GithubAppInstallationResponse {
   createdAt: string;
 }
 
+export interface GithubAppInstallationRepositoryResponse {
+  githubRepoId: number;
+  fullName: string;
+  name: string;
+  private: boolean;
+  htmlUrl: string;
+  defaultBranch: string;
+  tracked: boolean;
+  repositoryId: string | null;
+}
+
 export interface BackgroundJobStatsResponse {
   pending: number;
   processing: number;

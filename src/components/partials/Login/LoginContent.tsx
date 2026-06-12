@@ -10,7 +10,7 @@ import {
   InputGroup,
   Spinner,
 } from "@heroui/react";
-import { FlaskConical, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { FlaskConical, Mail, Lock, Eye, EyeOff, Github } from "lucide-react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
@@ -19,8 +19,15 @@ export default function LoginContent() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [githubLoading, setGithubLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+
+  const onGithubSignIn = () => {
+    setGithubLoading(true);
+    setError(null);
+    signIn("github", { callbackUrl: "/dashboard" });
+  };
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,6 +119,24 @@ export default function LoginContent() {
               {loading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
             </Button>
           </form>
+
+          <div className="my-5 flex items-center gap-3">
+            <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
+            <span className="text-xs text-muted">หรือ</span>
+            <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            fullWidth
+            isDisabled={githubLoading}
+            onClick={onGithubSignIn}
+            className="h-11 font-semibold"
+          >
+            {githubLoading ? <Spinner size="sm" color="current" /> : <Github size={18} />}
+            เข้าสู่ระบบด้วย GitHub
+          </Button>
         </Card.Content>
       </Card>
     </div>
