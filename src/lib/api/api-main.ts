@@ -10,7 +10,13 @@ import type { CommitResponse, AiAnalysisResponse, PullRequestReviewResponse, Wha
 import type { ProjectDocResponse, DocVersionResponse } from "@/types/api/main/docs";
 import type { RepoSettingsResponse } from "@/types/api/main/settings";
 import type { UserProfileResponse, UserSettingsResponse, UpdateUserSettingsRequest } from "@/types/api/main/user";
-import type { GithubAppSetupResponse, GithubAppInstallationResponse, QaSummaryResponse } from "@/types/api/main/dashboard";
+import type {
+  BackgroundJobResponse,
+  BackgroundJobStatsResponse,
+  GithubAppSetupResponse,
+  GithubAppInstallationResponse,
+  QaSummaryResponse,
+} from "@/types/api/main/dashboard";
 import { mainClient } from "./client";
 
 // ── Repositories ──────────────────────────────────────────────────────────
@@ -142,9 +148,12 @@ export const getQaSummaryApi = () =>
   mainClient.get<ApiResponse<QaSummaryResponse>>("/api/v1/dashboard/qa-summary");
 
 export const getJobStatsApi = () =>
-  mainClient.get<ApiResponse<{ pending: number; processing: number; completed: number; failed: number }>>(
+  mainClient.get<ApiResponse<BackgroundJobStatsResponse>>(
     "/api/v1/jobs/stats",
   );
+
+export const getRecentJobsApi = () =>
+  mainClient.get<ApiResponse<BackgroundJobResponse[]>>("/api/v1/jobs/recent");
 
 export const getGithubAppSetupApi = () =>
   mainClient.get<ApiResponse<GithubAppSetupResponse>>("/api/v1/github-app/setup");

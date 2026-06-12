@@ -2,6 +2,7 @@ import {
   getGithubAppSetupApi,
   getGithubAppInstallUrlApi,
   getGithubAppInstallationsApi,
+  getRecentJobsApi,
   getQaSummaryApi,
 } from "@/lib/api/api-main";
 
@@ -22,5 +23,10 @@ export const getGithubAppInstallUrl = async (): Promise<string> => {
 
 export const getGithubAppInstallations = async () => {
   const res = await getGithubAppInstallationsApi();
+  return res.data?.data ?? [];
+};
+
+export const getRecentJobs = async () => {
+  const res = await getRecentJobsApi();
   return res.data?.data ?? [];
 };

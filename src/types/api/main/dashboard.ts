@@ -42,6 +42,26 @@ export interface GithubAppInstallationResponse {
   createdAt: string;
 }
 
+export interface BackgroundJobStatsResponse {
+  pending: number;
+  processing: number;
+  completed: number;
+  failed: number;
+}
+
+export interface BackgroundJobResponse {
+  id: string;
+  type: string;
+  status: "pending" | "processing" | "completed" | "failed";
+  attempts: number;
+  maxAttempts: number;
+  scheduledAt: string;
+  startedAt: string | null;
+  completedAt: string | null;
+  lastError: string | null;
+  createdAt: string;
+}
+
 export interface QaRecentRepoResponse {
   id: string;
   fullName: string;

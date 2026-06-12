@@ -20,7 +20,7 @@ import { message } from "@/lib/toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { Trash2, Plus, User, Shield, Sliders, Github, Server, Bot, BotOff, Link2, Package } from "lucide-react";
 import { useGithubTokens } from "@/hooks/repository";
-import { useGithubAppSetup } from "@/hooks/dashboard/useGithubAppSetup";
+import { useGithubAppSetup, useJobStats, useRecentJobs } from "@/hooks/dashboard";
 import { useUserProfile, useChangePassword, useUserSettings } from "@/hooks/user";
 import { useAiHealth } from "@/hooks/ai/useAiHealth";
 import type { GithubToken } from "@/types/app/repository";
@@ -65,6 +65,8 @@ export default function AdminSettingsContent() {
     useUserSettings();
   const { tokens, isLoading: tokensLoading, deleteToken, connectGithub } = useGithubTokens();
   const { setup: githubAppSetup, installations, installApp } = useGithubAppSetup();
+  const { data: jobStats } = useJobStats();
+  const { data: recentJobs } = useRecentJobs();
   const { aiAvailable } = useAiHealth();
 
   useEffect(() => {
@@ -517,6 +519,73 @@ export default function AdminSettingsContent() {
                   <Chip.Label>{process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4004"}</Chip.Label>
                 </Chip>
               </div>
+              {jobStats && (
+                <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                  {[
+                    { label: "Pending", value: jobStats.pending, color: "text-amber-600" },
+                    { label: "Processing", value: jobStats.processing, color: "text-sky-600" },
+                    { label: "Completed", value: jobStats.completed, color: "text-emerald-600" },
+                    { label: "Failed", value: jobStats.failed, color: "text-rose-600" },
+                  ].map((item) => (
+                    <div key={item.label} className="rounded-lg border border-gray-200 px-4 py-3 dark:border-gray-700">
+                      <p className={`m-0 text-lg font-semibold ${item.color}`}>{item.value}</p>
+                      <p className="m-0 text-xs text-muted">{item.label}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card.Content>
+          </Card>
+
+          <Card className="rounded-xl">
+            <Card.Header className="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
+              <Card.Title className="text-base font-semibold m-0">Recent automation jobs</Card.Title>
+            </Card.Header>
+            <Card.Content className="p-0">
+              {!recentJobs?.length ? (
+                <div className="px-5 py-6 text-sm text-muted">No background jobs have run yet.</div>
+              ) : (
+                <Table>
+                  <Table.ScrollContainer>
+                    <Table.Content aria-label="Recent background jobs">
+                      <Table.Header>
+                        <Table.Column isRowHeader>Type</Table.Column>
+                        <Table.Column>Status</Table.Column>
+                        <Table.Column>Attempts</Table.Column>
+                        <Table.Column>Created</Table.Column>
+                      </Table.Header>
+                      <Table.Body>
+                        {recentJobs.slice(0, 8).map((job) => (
+                          <Table.Row key={job.id} id={job.id}>
+                            <Table.Cell>
+                              <span className="font-medium">{job.type}</span>
+                            </Table.Cell>
+                            <Table.Cell>
+                              <Chip
+                                size="sm"
+                                variant="soft"
+                                color={
+                                  job.status === "completed"
+                                    ? "success"
+                                    : job.status === "failed"
+                                      ? "danger"
+                                      : job.status === "processing"
+                                        ? "accent"
+                                        : "warning"
+                                }
+                              >
+                                <Chip.Label>{job.status}</Chip.Label>
+                              </Chip>
+                            </Table.Cell>
+                            <Table.Cell>{job.attempts}/{job.maxAttempts}</Table.Cell>
+                            <Table.Cell>{dayjs(job.createdAt).format("DD/MM HH:mm")}</Table.Cell>
+                          </Table.Row>
+                        ))}
+                      </Table.Body>
+                    </Table.Content>
+                  </Table.ScrollContainer>
+                </Table>
+              )}
             </Card.Content>
           </Card>
 
