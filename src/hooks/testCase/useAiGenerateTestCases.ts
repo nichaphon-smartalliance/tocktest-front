@@ -5,6 +5,7 @@ import { aiGenerateTestCases, bulkSaveTestCases } from "@/services/testCase.serv
 import type { AiGenerateRequest } from "@/types/api/main/testCase";
 import type { GeneratedTestCasePreview } from "@/types/app/testCase";
 import { TEST_CASE_LIST_QUERY_KEY } from "./useTestCaseList";
+import { QA_SUMMARY_QUERY_KEY } from "@/hooks/dashboard/useQaSummary";
 
 export const useAiGenerateTestCases = (repoId: string) => {
   const qc = useQueryClient();
@@ -15,7 +16,10 @@ export const useAiGenerateTestCases = (repoId: string) => {
 
   const saveMutation = useMutation({
     mutationFn: (previews: GeneratedTestCasePreview[]) => bulkSaveTestCases(repoId, previews),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...TEST_CASE_LIST_QUERY_KEY, repoId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [...TEST_CASE_LIST_QUERY_KEY, repoId] });
+      qc.invalidateQueries({ queryKey: QA_SUMMARY_QUERY_KEY });
+    },
   });
 
   return {
