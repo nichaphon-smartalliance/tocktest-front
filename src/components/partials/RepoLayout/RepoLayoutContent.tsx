@@ -3,7 +3,7 @@
 import { Breadcrumbs, Chip } from "@heroui/react";
 import { useRouter, usePathname } from "next/navigation";
 import { Lock, Globe } from "lucide-react";
-import { BugPlay, GitCommitHorizontal, BookOpen, Settings, Terminal, ScanEye, MessageSquare } from "lucide-react";
+import { BugPlay, GitCommitHorizontal, BookOpen, Settings, Terminal, MessageSquare } from "lucide-react";
 import { useRepository } from "@/hooks/repository";
 import { trackRecentRepo } from "@/hooks/common/useRecentRepos";
 import { useEffect } from "react";
@@ -17,7 +17,6 @@ const TAB_ITEMS = [
   { key: "test-cases", label: "Test Cases", icon: BugPlay },
   { key: "analysis", label: "Analysis", icon: GitCommitHorizontal },
   { key: "sandbox", label: "Sandbox", icon: Terminal },
-  { key: "visual", label: "Visual QA", icon: ScanEye },
   { key: "chat", label: "QA Chat", icon: MessageSquare },
   { key: "docs", label: "Docs", icon: BookOpen },
   { key: "settings", label: "Settings", icon: Settings },

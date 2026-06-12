@@ -176,13 +176,6 @@ export const importGithubAppInstallationRepositoryApi = (installationId: string,
     { fullName },
   );
 
-// ── Test Export ───────────────────────────────────────────────────────────
-export const getTestCasesExportUrl = (repoId: string, ids?: string[]) => {
-  const params = new URLSearchParams({ framework: 'cypress' });
-  if (ids?.length) params.set('ids', ids.join(','));
-  return `/api/v1/repositories/${repoId}/test-cases/export?${params.toString()}`;
-};
-
 // ── QA Chatbot ────────────────────────────────────────────────────────────
 export const chatWithRepoApi = (
   repoId: string,
@@ -201,25 +194,6 @@ export const listSandboxRunsApi = (repoId: string) =>
 
 export const getSandboxRunApi = (repoId: string, runId: string) =>
   mainClient.get<ApiResponse<SandboxRunResponse>>(`/api/v1/repositories/${repoId}/sandbox/runs/${runId}`);
-
-// ── Visual Regression ─────────────────────────────────────────────────────
-export const createVisualBaselineApi = (repoId: string, body: CreateBaselineRequest) =>
-  mainClient.post<ApiResponse<VisualBaselineResponse>>(`/api/v1/repositories/${repoId}/visual/baselines`, body);
-
-export const listVisualBaselinesApi = (repoId: string) =>
-  mainClient.get<ApiResponse<VisualBaselineResponse[]>>(`/api/v1/repositories/${repoId}/visual/baselines`);
-
-export const deleteVisualBaselineApi = (repoId: string, baselineId: string) =>
-  mainClient.delete<ApiResponse<void>>(`/api/v1/repositories/${repoId}/visual/baselines/${baselineId}`);
-
-export const compareVisualApi = (repoId: string, body: CompareRequest) =>
-  mainClient.post<ApiResponse<VisualComparisonResponse>>(`/api/v1/repositories/${repoId}/visual/compare`, body);
-
-export const listVisualComparisonsApi = (repoId: string, baselineId?: string) =>
-  mainClient.get<ApiResponse<VisualComparisonResponse[]>>(
-    `/api/v1/repositories/${repoId}/visual/comparisons`,
-    { params: baselineId ? { baselineId } : undefined },
-  );
 
 // ── Webhook Events ────────────────────────────────────────────────────────
 export const getWebhookEventsApi = (params?: { limit?: number; status?: string }) =>
@@ -243,46 +217,6 @@ export interface SandboxRunResponse {
   updatedAt: string;
 }
 
-export interface VisualBaselineResponse {
-  id: string;
-  repoId: string;
-  name: string;
-  url: string;
-  viewport: string;
-  width: number | null;
-  height: number | null;
-  screenshotData?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface VisualComparisonResponse {
-  id: string;
-  baselineId: string;
-  diffScore: number | null;
-  diffPixels: number | null;
-  totalPixels: number | null;
-  diffData: string | null;
-  status: string;
-  threshold: number;
-  aiAnalysis: string | null;
-  createdAt: string;
-}
-
-export interface CreateBaselineRequest {
-  name: string;
-  url: string;
-  screenshotData: string;
-  viewport?: string;
-  width?: number;
-  height?: number;
-}
-
-export interface CompareRequest {
-  baselineId: string;
-  screenshotData: string;
-  threshold?: number;
-}
 
 export interface WebhookEventResponse {
   id: string;
