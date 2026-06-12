@@ -1,4 +1,9 @@
-import { AnalysisContent } from "@/components/partials/Analysis";
+import dynamic from "next/dynamic";
+
+const AnalysisContent = dynamic(
+  () => import("@/components/partials/Analysis/AnalysisContent"),
+  { ssr: false },
+);
 
 export default async function AnalysisPage({
   params,

@@ -1,4 +1,9 @@
-import { SettingsContent } from "@/components/partials/Settings";
+import dynamic from "next/dynamic";
+
+const SettingsContent = dynamic(
+  () => import("@/components/partials/Settings/SettingsContent"),
+  { ssr: false },
+);
 
 export default async function SettingsPage({
   params,
