@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { Button, SearchField, Spinner } from "@heroui/react";
 import { message } from "@/lib/toast";
-import { Plus, RefreshCw, Github, CheckCircle2, AlertTriangle, CircleDashed, ExternalLink } from "lucide-react";
+import { Plus, RefreshCw, Github } from "lucide-react";
 import { useRepositoryList } from "@/hooks/repository";
 import { useGithubTokens } from "@/hooks/repository";
-import { useGithubAppSetup, useJobStats, useQaSummary } from "@/hooks/dashboard";
+import { useGithubAppSetup } from "@/hooks/dashboard";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import RepoCard from "./RepoCard";
 import { AddTokenModal } from "./Modal";
@@ -18,9 +18,7 @@ export default function DashboardContent() {
   const { repositories, total, isLoading, refetch } = useRepositoryList({ search: debouncedSearch || undefined });
   const privateCount = repositories.filter((r) => r.isPrivate).length;
   const { syncRepositories, isSyncing } = useGithubTokens();
-  const { summary } = useQaSummary();
   const { setup } = useGithubAppSetup();
-  const { data: jobStats } = useJobStats();
 
   const handleSync = async () => {
     try {
@@ -31,14 +29,6 @@ export default function DashboardContent() {
       message.error("ซิงค์ไม่สำเร็จ กรุณาตรวจสอบ GitHub Token");
     }
   };
-
-  const capabilityCounts = (summary?.capabilities ?? []).reduce(
-    (acc, item) => {
-      acc[item.status] += 1;
-      return acc;
-    },
-    { live: 0, partial: 0, missing: 0 } as Record<"live" | "partial" | "missing", number>
-  );
 
   return (
     <div>
@@ -77,122 +67,12 @@ export default function DashboardContent() {
         </div>
       </div>
 
-      {summary && (
-        <div className="mb-6 grid gap-4 xl:grid-cols-[1.7fr_1fr]">
-          <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-            <div className="mb-4 flex items-start justify-between gap-3">
-              <div>
-                <h2 className="m-0 text-base font-semibold">Platform readiness</h2>
-                <p className="m-0 mt-1 text-sm text-muted">
-                  This compares the product vision we discussed with what is actually wired into the app today.
-                </p>
-              </div>
-              <div className="flex gap-2 text-xs">
-                <span className="rounded-full bg-emerald-50 px-3 py-1 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
-                  Live {capabilityCounts.live}
-                </span>
-                <span className="rounded-full bg-amber-50 px-3 py-1 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
-                  Partial {capabilityCounts.partial}
-                </span>
-                <span className="rounded-full bg-rose-50 px-3 py-1 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300">
-                  Missing {capabilityCounts.missing}
-                </span>
-              </div>
-            </div>
-
-            <div className="grid gap-3 md:grid-cols-2">
-              {summary.capabilities.map((item) => {
-                const tone =
-                  item.status === "live"
-                    ? "border-emerald-200 bg-emerald-50/70 dark:border-emerald-800 dark:bg-emerald-500/10"
-                    : item.status === "partial"
-                      ? "border-amber-200 bg-amber-50/70 dark:border-amber-800 dark:bg-amber-500/10"
-                      : "border-rose-200 bg-rose-50/70 dark:border-rose-800 dark:bg-rose-500/10";
-
-                return (
-                  <div key={item.key} className={`rounded-xl border p-4 ${tone}`}>
-                    <div className="mb-2 flex items-center gap-2">
-                      {item.status === "live" ? (
-                        <CheckCircle2 size={16} className="text-emerald-600" />
-                      ) : item.status === "partial" ? (
-                        <AlertTriangle size={16} className="text-amber-600" />
-                      ) : (
-                        <CircleDashed size={16} className="text-rose-600" />
-                      )}
-                      <p className="m-0 text-sm font-semibold">{item.label}</p>
-                    </div>
-                    <p className="m-0 text-xs leading-5 text-muted">{item.description}</p>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-
-          <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-            <h2 className="m-0 text-base font-semibold">What to build next</h2>
-            <p className="m-0 mt-1 text-sm text-muted">
-              Highest-value additions based on the features still missing from the platform.
-            </p>
-
-            {jobStats && (
-              <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4 text-center text-xs">
-                {[
-                  { label: "คิวรอ", value: jobStats.pending, tone: "text-amber-600" },
-                  { label: "กำลังทำ", value: jobStats.processing, tone: "text-sky-600" },
-                  { label: "สำเร็จ", value: jobStats.completed, tone: "text-emerald-600" },
-                  { label: "ล้มเหลว", value: jobStats.failed, tone: "text-rose-600" },
-                ].map((s) => (
-                  <div key={s.label} className="rounded-lg border border-gray-200 px-2 py-2 dark:border-gray-700">
-                    <p className={`m-0 text-lg font-bold ${s.tone}`}>{s.value}</p>
-                    <p className="m-0 text-muted">{s.label}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {setup && (
-              <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-800/60">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="m-0 text-sm font-semibold">GitHub App setup</p>
-                    <p className="m-0 mt-1 text-xs text-muted">
-                      App ID: {setup.appIdConfigured ? "configured" : "missing"} · Private key: {setup.privateKeyConfigured ? "configured" : "missing"} · Webhook secret: {setup.webhookSecretConfigured ? "configured" : "missing"}
-                    </p>
-                  </div>
-                  {setup.configured ? (
-                    <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
-                      Ready
-                    </span>
-                  ) : (
-                    <span className="rounded-full bg-amber-50 px-3 py-1 text-xs text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
-                      Needs config
-                    </span>
-                  )}
-                </div>
-
-                {setup.installUrl && (
-                  <a
-                    href={setup.installUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-sky-700 hover:text-sky-800 dark:text-sky-300 dark:hover:text-sky-200"
-                  >
-                    Open GitHub App install link
-                    <ExternalLink size={14} />
-                  </a>
-                )}
-              </div>
-            )}
-
-            <div className="mt-4 space-y-3">
-              {(summary.nextMilestones ?? []).map((step, index) => (
-                <div key={step} className="rounded-xl border border-dashed border-gray-200 px-4 py-3 dark:border-gray-700">
-                  <p className="m-0 text-xs font-semibold uppercase tracking-[0.12em] text-muted">Step {index + 1}</p>
-                  <p className="m-0 mt-1 text-sm leading-6">{step}</p>
-                </div>
-              ))}
-            </div>
-          </section>
+      {setup && !setup.configured && (
+        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm dark:border-amber-800 dark:bg-amber-500/10">
+          <span className="font-semibold text-amber-700 dark:text-amber-300">GitHub App ยังไม่ได้ตั้งค่า</span>
+          <span className="ml-2 text-amber-600 dark:text-amber-400 text-xs">
+            ไปที่ Settings → GitHub เพื่อกำหนด App ID, Private Key และ Webhook Secret
+          </span>
         </div>
       )}
 
