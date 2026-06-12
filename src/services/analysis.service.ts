@@ -1,5 +1,5 @@
 import type { CommitItem, AnalysisFilterParams } from "@/types/app/analysis";
-import { getCommitsApi, analyzeCommitApi, getWhatToTestApi, reviewPullRequestApi } from "@/lib/api/api-main";
+import { getCommitsApi, analyzeCommitApi, getWhatToTestApi, reviewPullRequestApi, reviewAndCommentPullRequestApi } from "@/lib/api/api-main";
 import { getRepositoryBranchesApi } from "@/lib/api/api-main";
 
 export const getCommits = async (repoId: string, params?: AnalysisFilterParams): Promise<{ items: CommitItem[]; total: number }> => {
@@ -20,6 +20,11 @@ export const getWhatToTest = async (repoId: string, commitShas: string[]) => {
 
 export const reviewPullRequest = async (repoId: string, pullRequestNumber: number) => {
   const res = await reviewPullRequestApi(repoId, pullRequestNumber);
+  return res.data?.data;
+};
+
+export const reviewAndCommentPullRequest = async (repoId: string, pullRequestNumber: number) => {
+  const res = await reviewAndCommentPullRequestApi(repoId, pullRequestNumber);
   return res.data?.data;
 };
 

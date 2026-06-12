@@ -11,7 +11,7 @@ import {
   Spinner,
   Input,
 } from "@heroui/react";
-import { Bot, GitBranch, Zap, GitPullRequest } from "lucide-react";
+import { Bot, GitBranch, Zap, GitPullRequest, Send } from "lucide-react";
 import { message } from "@/lib/toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import dayjs from "dayjs";
@@ -53,6 +53,8 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
     reviewPullRequest,
     pullRequestReviewResult,
     isReviewingPullRequest,
+    reviewAndCommentPullRequest,
+    isPostingPullRequestReview,
   } = useCommitList(repoId, { pageSize: 30, branch: selectedBranch ?? undefined });
 
   useEffect(() => {
@@ -135,6 +137,21 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
       );
     } catch (error) {
       message.error(getApiErrorMessage(error, "PR review failed. Please check the GitHub token and PR number."));
+    }
+  };
+
+  const handlePostPullRequestReview = async () => {
+    const prNumber = Number(pullRequestNumber);
+    if (!Number.isInteger(prNumber) || prNumber <= 0) {
+      message.warning("Please enter a valid pull request number");
+      return;
+    }
+
+    try {
+      await reviewAndCommentPullRequest(prNumber);
+      message.success("Posted AI review comment to the pull request");
+    } catch (error) {
+      message.error(getApiErrorMessage(error, "Failed to post the review to GitHub."));
     }
   };
 
@@ -253,6 +270,15 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
             >
               {isReviewingPullRequest ? <Spinner size="sm" color="current" /> : <Bot size={16} />}
               Review PR
+            </button>
+            <button
+              type="button"
+              disabled={isPostingPullRequestReview}
+              onClick={handlePostPullRequestReview}
+              className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white cursor-pointer hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isPostingPullRequestReview ? <Spinner size="sm" color="current" /> : <Send size={16} />}
+              Post to GitHub
             </button>
           </div>
 

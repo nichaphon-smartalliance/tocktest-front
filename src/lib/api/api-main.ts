@@ -95,6 +95,9 @@ export const getWhatToTestApi = (repoId: string, commitShas: string[]) =>
 export const reviewPullRequestApi = (repoId: string, pullRequestNumber: number) =>
   mainClient.post<ApiResponse<PullRequestReviewResponse>>(`/api/v1/repositories/${repoId}/pull-requests/${pullRequestNumber}/review`);
 
+export const reviewAndCommentPullRequestApi = (repoId: string, pullRequestNumber: number) =>
+  mainClient.post<ApiResponse<PullRequestReviewResponse>>(`/api/v1/repositories/${repoId}/pull-requests/${pullRequestNumber}/review/comment`);
+
 // ── Project Docs ──────────────────────────────────────────────────────────
 export const getProjectDocApi = (repoId: string) =>
   mainClient.get<ApiResponse<ProjectDocResponse>>(`/api/v1/repositories/${repoId}/docs`);
