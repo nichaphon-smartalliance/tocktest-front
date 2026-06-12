@@ -34,7 +34,7 @@ const patchCommitAfterAnalyze = (
 export const useCommitList = (repoId: string, params?: AnalysisFilterParams) => {
   const qc = useQueryClient();
 
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: [...COMMIT_LIST_QUERY_KEY, repoId, params],
     queryFn: () => getCommits(repoId, params),
     enabled: !!repoId,

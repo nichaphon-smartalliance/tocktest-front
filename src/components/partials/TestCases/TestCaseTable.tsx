@@ -176,19 +176,23 @@ export default function TestCaseTable({
                       <Pagination.PreviousIcon />
                     </Pagination.Previous>
                   </Pagination.Item>
-                  {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
-                    const p = i + 1;
-                    return (
-                      <Pagination.Item key={p}>
-                        <Pagination.Link
-                          isActive={p === page}
-                          onPress={() => onPageChange(p, pageSize)}
-                        >
-                          {p}
-                        </Pagination.Link>
-                      </Pagination.Item>
-                    );
-                  })}
+                  {(() => {
+                    const start = Math.max(1, page - 3);
+                    const end = Math.min(totalPages, page + 3);
+                    return Array.from({ length: end - start + 1 }, (_, i) => {
+                      const p = start + i;
+                      return (
+                        <Pagination.Item key={p}>
+                          <Pagination.Link
+                            isActive={p === page}
+                            onPress={() => onPageChange(p, pageSize)}
+                          >
+                            {p}
+                          </Pagination.Link>
+                        </Pagination.Item>
+                      );
+                    });
+                  })()}
                   <Pagination.Item>
                     <Pagination.Next
                       isDisabled={page >= totalPages}

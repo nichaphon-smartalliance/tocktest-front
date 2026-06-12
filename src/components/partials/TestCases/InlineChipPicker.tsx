@@ -39,8 +39,8 @@ export function InlineChipPicker<T extends string>({
   const [displayValue, setDisplayValue] = useState(value);
 
   useEffect(() => {
-    setDisplayValue(value);
-  }, [value]);
+    if (!loading) setDisplayValue(value);
+  }, [value, loading]);
 
   const current = options.find((o) => o.value === displayValue) ?? options[0];
 

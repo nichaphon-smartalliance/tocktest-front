@@ -12,5 +12,5 @@ export const useAiHealth = () => {
     staleTime: 5 * 60_000,
     retry: false,
   });
-  return { aiAvailable: data?.available ?? true };
+  return { aiAvailable: data?.available ?? false };
 };

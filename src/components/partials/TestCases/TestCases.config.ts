@@ -39,6 +39,3 @@ export const PRIORITY_CONFIG: Record<PriorityLevel, { label: string; color: Chip
   high: { label: "สูง", color: "warning" },
   critical: { label: "วิกฤต", color: "danger" },
 };
-
-export const TEST_CASE_STORAGE_KEY = "test-case-filters";
-export const DEFAULT_TC_FILTERS = { search: "", status: "", testType: "", priority: "" };
