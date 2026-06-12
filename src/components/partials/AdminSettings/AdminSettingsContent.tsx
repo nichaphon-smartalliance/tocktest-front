@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Card,
   Button,
@@ -17,8 +18,9 @@ import {
 } from "@heroui/react";
 import { message } from "@/lib/toast";
 import { getApiErrorMessage } from "@/lib/api-error";
-import { Trash2, Plus, User, Shield, Sliders, Github, Server, Bot, BotOff } from "lucide-react";
+import { Trash2, Plus, User, Shield, Sliders, Github, Server, Bot, BotOff, Link2, Package } from "lucide-react";
 import { useGithubTokens } from "@/hooks/repository";
+import { useGithubAppSetup } from "@/hooks/dashboard/useGithubAppSetup";
 import { useUserProfile, useChangePassword, useUserSettings } from "@/hooks/user";
 import { useAiHealth } from "@/hooks/ai/useAiHealth";
 import type { GithubToken } from "@/types/app/repository";
@@ -54,13 +56,36 @@ const ROLE_LABELS: Record<string, string> = {
 export default function AdminSettingsContent() {
   const [tab, setTab] = useState<AdminSettingsTab>("profile");
   const [addTokenOpen, setAddTokenOpen] = useState(false);
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   const { profile, isLoading: profileLoading, updateProfile, isUpdating: profileUpdating } = useUserProfile();
   const { changePassword, isChanging } = useChangePassword();
   const { settings, isLoading: settingsLoading, update: updateSettings, isUpdating: settingsUpdating } =
     useUserSettings();
-  const { tokens, isLoading: tokensLoading, deleteToken } = useGithubTokens();
+  const { tokens, isLoading: tokensLoading, deleteToken, connectGithub } = useGithubTokens();
+  const { setup: githubAppSetup, installations, installApp } = useGithubAppSetup();
   const { aiAvailable } = useAiHealth();
+
+  useEffect(() => {
+    const githubStatus = searchParams.get("github");
+    const githubAppStatus = searchParams.get("github_app");
+    if (githubStatus === "connected") {
+      message.success("เชื่อมต่อบัญชี GitHub สำเร็จ");
+    } else if (githubStatus === "error") {
+      message.error("เชื่อมต่อบัญชี GitHub ไม่สำเร็จ กรุณาลองใหม่");
+    }
+    if (githubAppStatus === "install" || githubAppStatus === "update") {
+      message.success("ติดตั้ง GitHub App สำเร็จ");
+    } else if (githubAppStatus === "error") {
+      message.error("ติดตั้ง GitHub App ไม่สำเร็จ กรุณาลองใหม่");
+    }
+    if (githubStatus || githubAppStatus) {
+      setTab("integrations");
+      router.replace("/settings");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [name, setName] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
@@ -301,6 +326,96 @@ export default function AdminSettingsContent() {
             )}
           </Card.Content>
         </Card>
+      )}
+
+      {tab === "integrations" && (
+        <div className="flex flex-col gap-4 mb-4">
+          <Card className="rounded-xl">
+            <Card.Header className="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
+              <div>
+                <Card.Title className="text-base font-semibold m-0">เชื่อมต่อบัญชี GitHub</Card.Title>
+                <p className="text-xs text-muted mt-0.5">
+                  เข้าสู่ระบบด้วยบัญชี GitHub แทนการกรอก Personal Access Token เอง
+                </p>
+              </div>
+            </Card.Header>
+            <Card.Content className="px-5 py-4 flex flex-col gap-3">
+              {tokens.some((t) => t.provider === "oauth") ? (
+                <div className="flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <Github size={18} className="text-emerald-500" />
+                    <span className="text-sm font-medium">
+                      เชื่อมต่อแล้วกับ @{tokens.find((t) => t.provider === "oauth")?.githubLogin}
+                    </span>
+                  </div>
+                  <Chip size="sm" variant="soft" color="success">
+                    <Chip.Label>เชื่อมต่อแล้ว</Chip.Label>
+                  </Chip>
+                </div>
+              ) : (
+                <Button variant="primary" onPress={() => void connectGithub()}>
+                  <Link2 size={14} />
+                  เชื่อมต่อด้วย GitHub
+                </Button>
+              )}
+            </Card.Content>
+          </Card>
+
+          <Card className="rounded-xl">
+            <Card.Header className="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
+              <div>
+                <Card.Title className="text-base font-semibold m-0">GitHub App & Webhooks</Card.Title>
+                <p className="text-xs text-muted mt-0.5">
+                  ติดตั้ง GitHub App เพื่อรับ webhook และเขียน comment/status กลับไปที่ PR อัตโนมัติ
+                </p>
+              </div>
+            </Card.Header>
+            <Card.Content className="px-5 py-4 flex flex-col gap-3">
+              {!githubAppSetup?.configured ? (
+                <Alert status="warning">
+                  <Alert.Indicator />
+                  <Alert.Content>
+                    <Alert.Description>
+                      GitHub App ยังไม่ได้ตั้งค่าบนเซิร์ฟเวอร์ (ต้องระบุ GITHUB_APP_ID, PRIVATE_KEY และ WEBHOOK_SECRET)
+                    </Alert.Description>
+                  </Alert.Content>
+                </Alert>
+              ) : (
+                <>
+                  {installations.length === 0 ? (
+                    <Button variant="primary" onPress={() => void installApp()}>
+                      <Package size={14} />
+                      ติดตั้ง GitHub App
+                    </Button>
+                  ) : (
+                    <div className="flex flex-col gap-2">
+                      {installations.map((inst) => (
+                        <div
+                          key={inst.id}
+                          className="flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-3"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Package size={18} className="text-emerald-500" />
+                            <span className="text-sm font-medium">
+                              {inst.accountLogin ?? `Installation #${inst.installationId}`}
+                            </span>
+                          </div>
+                          <Chip size="sm" variant="soft" color={inst.suspendedAt ? "danger" : "success"}>
+                            <Chip.Label>{inst.suspendedAt ? "ถูกระงับ" : "ใช้งานได้"}</Chip.Label>
+                          </Chip>
+                        </div>
+                      ))}
+                      <Button size="sm" variant="secondary" onPress={() => void installApp()}>
+                        <Plus size={14} />
+                        จัดการ / เพิ่ม repository
+                      </Button>
+                    </div>
+                  )}
+                </>
+              )}
+            </Card.Content>
+          </Card>
+        </div>
       )}
 
       {tab === "integrations" && (

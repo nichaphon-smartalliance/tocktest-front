@@ -14,6 +14,8 @@ export interface Repository {
 export interface GithubToken {
   id: string;
   label: string;
+  provider: string;
+  githubLogin: string | null;
   scopes: string[];
   isActive: boolean;
   lastTestedAt: string | null;

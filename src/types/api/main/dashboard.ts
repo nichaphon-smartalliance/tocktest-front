@@ -32,6 +32,16 @@ export interface GithubAppSetupResponse {
   webhookSecretConfigured: boolean;
 }
 
+export interface GithubAppInstallationResponse {
+  id: string;
+  installationId: string;
+  accountLogin: string | null;
+  accountType: string | null;
+  repositorySelection: string | null;
+  suspendedAt: string | null;
+  createdAt: string;
+}
+
 export interface QaRecentRepoResponse {
   id: string;
   fullName: string;

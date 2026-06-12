@@ -10,7 +10,7 @@ import type { CommitResponse, AiAnalysisResponse, PullRequestReviewResponse, Wha
 import type { ProjectDocResponse, DocVersionResponse } from "@/types/api/main/docs";
 import type { RepoSettingsResponse } from "@/types/api/main/settings";
 import type { UserProfileResponse, UserSettingsResponse, UpdateUserSettingsRequest } from "@/types/api/main/user";
-import type { GithubAppSetupResponse, QaSummaryResponse } from "@/types/api/main/dashboard";
+import type { GithubAppSetupResponse, GithubAppInstallationResponse, QaSummaryResponse } from "@/types/api/main/dashboard";
 import { mainClient } from "./client";
 
 // ── Repositories ──────────────────────────────────────────────────────────
@@ -38,6 +38,9 @@ export const deleteGithubTokenApi = (id: string) =>
 
 export const testGithubTokenApi = (id: string) =>
   mainClient.post<ApiResponse<{ valid: boolean }>>(`/api/v1/github-tokens/${id}/test`);
+
+export const getGithubOAuthConnectUrlApi = () =>
+  mainClient.get<ApiResponse<{ url: string }>>("/api/v1/github-tokens/oauth/connect-url");
 
 // ── Test Case Folders ─────────────────────────────────────────────────────
 export const getTestCaseFoldersApi = (repoId: string) =>
@@ -137,3 +140,9 @@ export const getQaSummaryApi = () =>
 
 export const getGithubAppSetupApi = () =>
   mainClient.get<ApiResponse<GithubAppSetupResponse>>("/api/v1/github-app/setup");
+
+export const getGithubAppInstallUrlApi = () =>
+  mainClient.get<ApiResponse<{ url: string }>>("/api/v1/github-app/install-url");
+
+export const getGithubAppInstallationsApi = () =>
+  mainClient.get<ApiResponse<GithubAppInstallationResponse[]>>("/api/v1/github-app/installations");

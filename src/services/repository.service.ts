@@ -7,6 +7,7 @@ import {
   createGithubTokenApi,
   deleteGithubTokenApi,
   testGithubTokenApi,
+  getGithubOAuthConnectUrlApi,
 } from "@/lib/api/api-main";
 import type { GithubTokenResponse } from "@/types/api/main/repository";
 
@@ -48,4 +49,9 @@ export const deleteGithubToken = async (id: string): Promise<void> => {
 export const testGithubToken = async (id: string): Promise<boolean> => {
   const res = await testGithubTokenApi(id);
   return res.data?.data?.valid ?? false;
+};
+
+export const getGithubOAuthConnectUrl = async (): Promise<string> => {
+  const res = await getGithubOAuthConnectUrlApi();
+  return res.data?.data?.url ?? "";
 };

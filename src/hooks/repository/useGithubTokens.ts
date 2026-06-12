@@ -1,7 +1,13 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getGithubTokens, createGithubToken, deleteGithubToken, syncRepositories } from "@/services/repository.service";
+import {
+  getGithubTokens,
+  createGithubToken,
+  deleteGithubToken,
+  syncRepositories,
+  getGithubOAuthConnectUrl,
+} from "@/services/repository.service";
 
 export const GITHUB_TOKENS_QUERY_KEY = ["githubTokens"] as const;
 
@@ -29,6 +35,11 @@ export const useGithubTokens = () => {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["repositoryList"] }),
   });
 
+  const connectGithub = async () => {
+    const url = await getGithubOAuthConnectUrl();
+    if (url) window.location.href = url;
+  };
+
   return {
     tokens: data ?? [],
     isLoading,
@@ -38,5 +49,6 @@ export const useGithubTokens = () => {
     isDeleting: deleteMutation.isPending,
     syncRepositories: syncMutation.mutateAsync,
     isSyncing: syncMutation.isPending,
+    connectGithub,
   };
 };
