@@ -212,16 +212,16 @@ export default function TestCasesContent({ repoId }: TestCasesContentProps) {
             variant="secondary"
             size="sm"
             onPress={() => {
-              const url = getTestCasesExportUrl(repoId, "playwright");
+              const url = getTestCasesExportUrl(repoId);
               const a = document.createElement("a");
               a.href = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4004") + url;
               a.download = "";
               a.click();
             }}
-          aria-label="Export as Playwright .spec.ts"
+            aria-label="Export as Cypress .cy.ts"
           >
             <Download size={14} />
-            Export Playwright
+            Export Cypress
           </Button>
           <Button variant="secondary" onPress={() => setAiModalOpen(true)}>
             <Bot size={16} />

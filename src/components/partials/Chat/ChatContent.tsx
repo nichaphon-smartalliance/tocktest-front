@@ -20,7 +20,7 @@ interface ChatContentProps {
 
 const STARTERS = [
   "What areas should I test first in this repo?",
-  "Generate a Playwright test for the login flow",
+  "Generate a Cypress test for the login flow",
   "What are the highest-risk recent changes?",
   "Suggest test cases for the most recent commits",
 ];

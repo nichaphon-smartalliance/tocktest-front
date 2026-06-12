@@ -177,8 +177,8 @@ export const importGithubAppInstallationRepositoryApi = (installationId: string,
   );
 
 // ── Test Export ───────────────────────────────────────────────────────────
-export const getTestCasesExportUrl = (repoId: string, framework: 'playwright' | 'cypress', ids?: string[]) => {
-  const params = new URLSearchParams({ framework });
+export const getTestCasesExportUrl = (repoId: string, ids?: string[]) => {
+  const params = new URLSearchParams({ framework: 'cypress' });
   if (ids?.length) params.set('ids', ids.join(','));
   return `/api/v1/repositories/${repoId}/test-cases/export?${params.toString()}`;
 };
@@ -193,7 +193,7 @@ export const chatWithRepoApi = (
 export const getSandboxStatusApi = (repoId: string) =>
   mainClient.get<ApiResponse<{ available: boolean }>>(`/api/v1/repositories/${repoId}/sandbox/status`);
 
-export const runTestsInSandboxApi = (repoId: string, body: { fileContent: string; framework?: 'playwright' | 'cypress' }) =>
+export const runTestsInSandboxApi = (repoId: string, body: { fileContent: string; framework?: 'cypress' }) =>
   mainClient.post<ApiResponse<SandboxRunResponse>>(`/api/v1/repositories/${repoId}/sandbox/run`, body, { timeout: 10_000 });
 
 export const listSandboxRunsApi = (repoId: string) =>

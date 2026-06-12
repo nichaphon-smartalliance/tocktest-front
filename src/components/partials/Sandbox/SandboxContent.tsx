@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, Button, Chip, Spinner, Alert, Select, ListBox, Label } from "@heroui/react";
+import { Card, Button, Chip, Spinner, Alert } from "@heroui/react";
 import { Play, RefreshCw, Terminal, Clock, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 import {
   getSandboxStatusApi,
@@ -14,14 +14,6 @@ import {
 import { message } from "@/lib/toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import dayjs from "dayjs";
-
-const PLAYWRIGHT_STARTER = `import { test, expect } from '@playwright/test';
-
-test('example test', async ({ page }) => {
-  await page.goto('https://example.com');
-  await expect(page).toHaveTitle(/Example Domain/);
-});
-`;
 
 const CYPRESS_STARTER = `describe('Example', () => {
   it('visits the homepage', () => {
@@ -47,8 +39,7 @@ function StatusIcon({ status }: { status: string }) {
 
 export default function SandboxContent({ repoId }: { repoId: string }) {
   const qc = useQueryClient();
-  const [framework, setFramework] = useState<"playwright" | "cypress">("playwright");
-  const [code, setCode] = useState(PLAYWRIGHT_STARTER);
+  const [code, setCode] = useState(CYPRESS_STARTER);
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
 
   const { data: statusData } = useQuery({
@@ -76,12 +67,9 @@ export default function SandboxContent({ repoId }: { repoId: string }) {
     },
   });
 
-  useEffect(() => {
-    setCode(framework === "playwright" ? PLAYWRIGHT_STARTER : CYPRESS_STARTER);
-  }, [framework]);
 
   const runMutation = useMutation({
-    mutationFn: () => runTestsInSandboxApi(repoId, { fileContent: code, framework }),
+    mutationFn: () => runTestsInSandboxApi(repoId, { fileContent: code, framework: 'cypress' }),
     onSuccess: (res) => {
       const run = res.data?.data;
       if (run) {
@@ -124,21 +112,7 @@ export default function SandboxContent({ repoId }: { repoId: string }) {
             <Card.Header className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
               <Card.Title className="text-sm font-semibold m-0">Test File</Card.Title>
               <div className="flex items-center gap-2">
-                <Select
-                  selectedKey={framework}
-                  onSelectionChange={(k) => k && setFramework(k as "playwright" | "cypress")}
-                >
-                  <Select.Trigger className="h-7 text-xs">
-                    <Select.Value />
-                    <Select.Indicator />
-                  </Select.Trigger>
-                  <Select.Popover>
-                    <ListBox>
-                      <ListBox.Item id="playwright" textValue="Playwright">Playwright<ListBox.ItemIndicator /></ListBox.Item>
-                      <ListBox.Item id="cypress" textValue="Cypress">Cypress<ListBox.ItemIndicator /></ListBox.Item>
-                    </ListBox>
-                  </Select.Popover>
-                </Select>
+                <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Cypress</span>
                 <Button
                   size="sm"
                   variant="primary"
