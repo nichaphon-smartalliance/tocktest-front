@@ -6,7 +6,7 @@ import { message } from "@/lib/toast";
 import { Plus, RefreshCw, Github, CheckCircle2, AlertTriangle, CircleDashed, ExternalLink } from "lucide-react";
 import { useRepositoryList } from "@/hooks/repository";
 import { useGithubTokens } from "@/hooks/repository";
-import { useGithubAppSetup, useQaSummary } from "@/hooks/dashboard";
+import { useGithubAppSetup, useJobStats, useQaSummary } from "@/hooks/dashboard";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import RepoCard from "./RepoCard";
 import { AddTokenModal } from "./Modal";
@@ -20,6 +20,7 @@ export default function DashboardContent() {
   const { syncRepositories, isSyncing } = useGithubTokens();
   const { summary } = useQaSummary();
   const { setup } = useGithubAppSetup();
+  const { data: jobStats } = useJobStats();
 
   const handleSync = async () => {
     try {
@@ -132,6 +133,22 @@ export default function DashboardContent() {
             <p className="m-0 mt-1 text-sm text-muted">
               Highest-value additions based on the features still missing from the platform.
             </p>
+
+            {jobStats && (
+              <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4 text-center text-xs">
+                {[
+                  { label: "คิวรอ", value: jobStats.pending, tone: "text-amber-600" },
+                  { label: "กำลังทำ", value: jobStats.processing, tone: "text-sky-600" },
+                  { label: "สำเร็จ", value: jobStats.completed, tone: "text-emerald-600" },
+                  { label: "ล้มเหลว", value: jobStats.failed, tone: "text-rose-600" },
+                ].map((s) => (
+                  <div key={s.label} className="rounded-lg border border-gray-200 px-2 py-2 dark:border-gray-700">
+                    <p className={`m-0 text-lg font-bold ${s.tone}`}>{s.value}</p>
+                    <p className="m-0 text-muted">{s.label}</p>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {setup && (
               <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-800/60">

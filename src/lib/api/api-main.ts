@@ -141,6 +141,11 @@ export const updateUserSettingsApi = (body: UpdateUserSettingsRequest) =>
 export const getQaSummaryApi = () =>
   mainClient.get<ApiResponse<QaSummaryResponse>>("/api/v1/dashboard/qa-summary");
 
+export const getJobStatsApi = () =>
+  mainClient.get<ApiResponse<{ pending: number; processing: number; completed: number; failed: number }>>(
+    "/api/v1/jobs/stats",
+  );
+
 export const getGithubAppSetupApi = () =>
   mainClient.get<ApiResponse<GithubAppSetupResponse>>("/api/v1/github-app/setup");
 
