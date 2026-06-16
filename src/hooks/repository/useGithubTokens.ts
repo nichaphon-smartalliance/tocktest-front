@@ -1,6 +1,8 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getApiErrorMessage } from "@/lib/api-error";
+import { message } from "@/lib/toast";
 import {
   getGithubTokens,
   createGithubToken,
@@ -36,8 +38,12 @@ export const useGithubTokens = () => {
   });
 
   const connectGithub = async () => {
-    const url = await getGithubOAuthConnectUrl();
-    if (url) window.location.href = url;
+    try {
+      const url = await getGithubOAuthConnectUrl();
+      if (url) window.location.href = url;
+    } catch (error) {
+      message.error(getApiErrorMessage(error, "Failed to connect GitHub."));
+    }
   };
 
   return {
