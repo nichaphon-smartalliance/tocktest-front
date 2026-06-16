@@ -1,20 +1,14 @@
 "use client";
 
-import {
-  Table,
-  Button,
-  Tooltip,
-  Spinner,
-  Pagination,
-} from "@heroui/react";
-import { message } from "@/lib/toast";
+import { memo, useMemo } from "react";
+import { Button, Pagination, Spinner, Table, Tooltip } from "@heroui/react";
 import { Pencil, Trash2, Bot } from "lucide-react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/th";
 import type { TestCase, TestStatus, TestType, PriorityLevel } from "@/types/app/testCase";
 import { STATUS_CONFIG, TYPE_CONFIG, PRIORITY_CONFIG } from "./TestCases.config";
-import { InlineChipPicker, configToChipOptions, CHIP_PICKER_WIDTH } from "./InlineChipPicker";
+import { CHIP_PICKER_WIDTH, configToChipOptions, InlineChipPicker } from "./InlineChipPicker";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 dayjs.extend(relativeTime);
@@ -35,6 +29,109 @@ interface TestCaseTableProps {
   onTypeChange: (id: string, testType: TestType) => Promise<void>;
 }
 
+interface TestCaseRowProps {
+  record: TestCase;
+  onEdit: (tc: TestCase) => void;
+  onDelete: (id: string) => void;
+  onStatusChange: (id: string, status: TestStatus) => Promise<void>;
+  onPriorityChange: (id: string, priority: PriorityLevel) => Promise<void>;
+  onTypeChange: (id: string, testType: TestType) => Promise<void>;
+}
+
+const STATUS_CHIP_OPTIONS = configToChipOptions(STATUS_CONFIG);
+const PRIORITY_CHIP_OPTIONS = configToChipOptions(PRIORITY_CONFIG);
+const TYPE_CHIP_OPTIONS = configToChipOptions(TYPE_CONFIG);
+
+const TestCaseRow = memo(function TestCaseRow({
+  record,
+  onEdit,
+  onDelete,
+  onStatusChange,
+  onPriorityChange,
+  onTypeChange,
+}: TestCaseRowProps) {
+  return (
+    <Table.Row id={record.id}>
+      <Table.Cell>
+        <div className="flex items-center gap-2">
+          {record.isAiGenerated && (
+            <Tooltip>
+              <Tooltip.Trigger>
+                <Bot size={12} className="text-indigo-500 shrink-0" />
+              </Tooltip.Trigger>
+              <Tooltip.Content>สร้างด้วย AI</Tooltip.Content>
+            </Tooltip>
+          )}
+          <span className="font-medium">{record.title}</span>
+        </div>
+      </Table.Cell>
+      <Table.Cell className="w-[130px]">
+        <InlineChipPicker
+          value={record.status}
+          options={STATUS_CHIP_OPTIONS}
+          chipWidth={CHIP_PICKER_WIDTH.status}
+          ariaLabel="เปลี่ยนสถานะ"
+          errorMsg="อัปเดตสถานะไม่สำเร็จ"
+          onChange={(status) => onStatusChange(record.id, status)}
+        />
+      </Table.Cell>
+      <Table.Cell className="w-[100px]">
+        <InlineChipPicker
+          value={record.priority}
+          options={PRIORITY_CHIP_OPTIONS}
+          chipWidth={CHIP_PICKER_WIDTH.priority}
+          ariaLabel="เปลี่ยนความสำคัญ"
+          errorMsg="อัปเดตความสำคัญไม่สำเร็จ"
+          onChange={(priority) => onPriorityChange(record.id, priority)}
+        />
+      </Table.Cell>
+      <Table.Cell className="w-[130px]">
+        <InlineChipPicker
+          value={record.testType}
+          options={TYPE_CHIP_OPTIONS}
+          chipWidth={CHIP_PICKER_WIDTH.type}
+          ariaLabel="เปลี่ยนประเภท"
+          errorMsg="อัปเดตประเภทไม่สำเร็จ"
+          onChange={(testType) => onTypeChange(record.id, testType)}
+        />
+      </Table.Cell>
+      <Table.Cell>
+        <Tooltip>
+          <Tooltip.Trigger>
+            <span className="text-xs text-muted">{dayjs(record.updatedAt).fromNow()}</span>
+          </Tooltip.Trigger>
+          <Tooltip.Content>{dayjs(record.updatedAt).format("DD/MM/YYYY HH:mm")}</Tooltip.Content>
+        </Tooltip>
+      </Table.Cell>
+      <Table.Cell>
+        <div className="flex gap-1">
+          <Button
+            variant="ghost"
+            isIconOnly
+            size="sm"
+            aria-label="แก้ไข"
+            className="text-[var(--text-primary)]"
+            onPress={() => onEdit(record)}
+          >
+            <Pencil size={14} />
+          </Button>
+          <ConfirmDialog
+            title="ลบ test case นี้?"
+            confirmLabel="ลบ"
+            confirmVariant="danger"
+            onConfirm={() => onDelete(record.id)}
+            trigger={
+              <Button variant="ghost" isIconOnly size="sm" aria-label="ลบ test case">
+                <Trash2 size={14} className="text-red-500" />
+              </Button>
+            }
+          />
+        </div>
+      </Table.Cell>
+    </Table.Row>
+  );
+});
+
 export default function TestCaseTable({
   testCases,
   total,
@@ -49,6 +146,11 @@ export default function TestCaseTable({
   onTypeChange,
 }: TestCaseTableProps) {
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const paginationItems = useMemo(() => {
+    const start = Math.max(1, page - 3);
+    const end = Math.min(totalPages, page + 3);
+    return Array.from({ length: end - start + 1 }, (_, index) => start + index);
+  }, [page, totalPages]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
@@ -77,88 +179,15 @@ export default function TestCaseTable({
               </Table.Header>
               <Table.Body>
                 {testCases.map((record) => (
-                  <Table.Row key={record.id} id={record.id}>
-                    <Table.Cell>
-                      <div className="flex items-center gap-2">
-                        {record.isAiGenerated && (
-                          <Tooltip>
-                            <Tooltip.Trigger>
-                              <Bot size={12} className="text-indigo-500 shrink-0" />
-                            </Tooltip.Trigger>
-                            <Tooltip.Content>สร้างด้วย AI</Tooltip.Content>
-                          </Tooltip>
-                        )}
-                        <span className="font-medium">{record.title}</span>
-                      </div>
-                    </Table.Cell>
-                    <Table.Cell className="w-[130px]">
-                      <InlineChipPicker
-                        value={record.status}
-                        options={configToChipOptions(STATUS_CONFIG)}
-                        chipWidth={CHIP_PICKER_WIDTH.status}
-                        ariaLabel="เปลี่ยนสถานะ"
-                        errorMsg="อัปเดตสถานะไม่สำเร็จ"
-                        onChange={(status) => onStatusChange(record.id, status)}
-                      />
-                    </Table.Cell>
-                    <Table.Cell className="w-[100px]">
-                      <InlineChipPicker
-                        value={record.priority}
-                        options={configToChipOptions(PRIORITY_CONFIG)}
-                        chipWidth={CHIP_PICKER_WIDTH.priority}
-                        ariaLabel="เปลี่ยนความสำคัญ"
-                        errorMsg="อัปเดตความสำคัญไม่สำเร็จ"
-                        onChange={(priority) => onPriorityChange(record.id, priority)}
-                      />
-                    </Table.Cell>
-                    <Table.Cell className="w-[130px]">
-                      <InlineChipPicker
-                        value={record.testType}
-                        options={configToChipOptions(TYPE_CONFIG)}
-                        chipWidth={CHIP_PICKER_WIDTH.type}
-                        ariaLabel="เปลี่ยนประเภท"
-                        errorMsg="อัปเดตประเภทไม่สำเร็จ"
-                        onChange={(testType) => onTypeChange(record.id, testType)}
-                      />
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Tooltip>
-                        <Tooltip.Trigger>
-                          <span className="text-xs text-muted">
-                            {dayjs(record.updatedAt).fromNow()}
-                          </span>
-                        </Tooltip.Trigger>
-                        <Tooltip.Content>
-                          {dayjs(record.updatedAt).format("DD/MM/YYYY HH:mm")}
-                        </Tooltip.Content>
-                      </Tooltip>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <div className="flex gap-1">
-                        <Button
-                          variant="ghost"
-                          isIconOnly
-                          size="sm"
-                          aria-label="แก้ไข"
-                          className="text-[var(--text-primary)]"
-                          onPress={() => onEdit(record)}
-                        >
-                          <Pencil size={14} />
-                        </Button>
-                        <ConfirmDialog
-                          title="ลบ test case นี้?"
-                          confirmLabel="ลบ"
-                          confirmVariant="danger"
-                          onConfirm={() => onDelete(record.id)}
-                          trigger={
-                            <Button variant="ghost" isIconOnly size="sm" aria-label="ลบ test case">
-                              <Trash2 size={14} className="text-red-500" />
-                            </Button>
-                          }
-                        />
-                      </div>
-                    </Table.Cell>
-                  </Table.Row>
+                  <TestCaseRow
+                    key={record.id}
+                    record={record}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                    onStatusChange={onStatusChange}
+                    onPriorityChange={onPriorityChange}
+                    onTypeChange={onTypeChange}
+                  />
                 ))}
               </Table.Body>
             </Table.Content>
@@ -176,23 +205,16 @@ export default function TestCaseTable({
                       <Pagination.PreviousIcon />
                     </Pagination.Previous>
                   </Pagination.Item>
-                  {(() => {
-                    const start = Math.max(1, page - 3);
-                    const end = Math.min(totalPages, page + 3);
-                    return Array.from({ length: end - start + 1 }, (_, i) => {
-                      const p = start + i;
-                      return (
-                        <Pagination.Item key={p}>
-                          <Pagination.Link
-                            isActive={p === page}
-                            onPress={() => onPageChange(p, pageSize)}
-                          >
-                            {p}
-                          </Pagination.Link>
-                        </Pagination.Item>
-                      );
-                    });
-                  })()}
+                  {paginationItems.map((pageNumber) => (
+                    <Pagination.Item key={pageNumber}>
+                      <Pagination.Link
+                        isActive={pageNumber === page}
+                        onPress={() => onPageChange(pageNumber, pageSize)}
+                      >
+                        {pageNumber}
+                      </Pagination.Link>
+                    </Pagination.Item>
+                  ))}
                   <Pagination.Item>
                     <Pagination.Next
                       isDisabled={page >= totalPages}

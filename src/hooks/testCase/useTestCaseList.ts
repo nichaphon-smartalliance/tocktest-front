@@ -1,12 +1,31 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getTestCases, createTestCase, updateTestCase, deleteTestCase } from "@/services/testCase.service";
-import type { TestCaseFormValues, TestCaseFilterParams } from "@/types/app/testCase";
+import type { TestCase, TestCaseFilterParams, TestCaseFormValues } from "@/types/app/testCase";
 import type { QaSummaryResponse } from "@/types/api/main/dashboard";
 import { QA_SUMMARY_QUERY_KEY } from "@/hooks/dashboard/useQaSummary";
 
 export const TEST_CASE_LIST_QUERY_KEY = ["testCaseList"] as const;
+
+type TestCaseListResponse = Awaited<ReturnType<typeof getTestCases>>;
+
+const updateTestCaseListItem = (
+  data: TestCaseListResponse | undefined,
+  id: string,
+  updater: (item: TestCase) => TestCase,
+) => {
+  if (!data?.items?.length) return data;
+
+  let changed = false;
+  const items = data.items.map((item) => {
+    if (item.id !== id) return item;
+    changed = true;
+    return updater(item);
+  });
+
+  return changed ? { ...data, items } : data;
+};
 
 const adjustQaSummaryForStatusChange = (
   summary: QaSummaryResponse | null | undefined,
@@ -49,8 +68,25 @@ export const useTestCaseList = (repoId: string, params?: TestCaseFilterParams) =
     mutationFn: ({ id, values }: { id: string; values: Partial<TestCaseFormValues> }) =>
       updateTestCase(repoId, id, values),
     onMutate: async ({ id, values }) => {
-      const current = qc.getQueryData<Awaited<ReturnType<typeof getTestCases>>>(key);
-      const previous = current?.items?.find((item) => item.id === id);
+      await qc.cancelQueries({ queryKey: [...TEST_CASE_LIST_QUERY_KEY, repoId] });
+
+      const queryEntries = qc.getQueriesData<TestCaseListResponse>({
+        queryKey: [...TEST_CASE_LIST_QUERY_KEY, repoId],
+      });
+      const previousQueries = queryEntries.map(([queryKey, data]) => [queryKey, data] as const);
+
+      let previous: TestCase | undefined;
+      for (const [, data] of queryEntries) {
+        const match = data?.items?.find((item) => item.id === id);
+        if (match) {
+          previous = match;
+          break;
+        }
+      }
+
+      qc.setQueriesData<TestCaseListResponse>({ queryKey: [...TEST_CASE_LIST_QUERY_KEY, repoId] }, (current) =>
+        updateTestCaseListItem(current, id, (item) => ({ ...item, ...values })),
+      );
 
       if (previous?.status && values.status && previous.status !== values.status) {
         qc.setQueryData<QaSummaryResponse | null>(QA_SUMMARY_QUERY_KEY, (summary) =>
@@ -58,14 +94,26 @@ export const useTestCaseList = (repoId: string, params?: TestCaseFilterParams) =
         );
       }
 
-      return { previousStatus: previous?.status };
+      return { previousQueries, previousStatus: previous?.status };
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: [...TEST_CASE_LIST_QUERY_KEY, repoId] });
+    onSuccess: (updated) => {
+      qc.setQueriesData<TestCaseListResponse>({ queryKey: [...TEST_CASE_LIST_QUERY_KEY, repoId] }, (current) =>
+        updateTestCaseListItem(current, updated.id, () => updated),
+      );
       qc.invalidateQueries({ queryKey: QA_SUMMARY_QUERY_KEY });
     },
-    onError: (_error, _vars, context) => {
-      if (!context?.previousStatus) return;
+    onError: (_error, vars, context) => {
+      context?.previousQueries.forEach(([queryKey, data]) => {
+        qc.setQueryData(queryKey, data);
+      });
+
+      const nextStatus = vars.values.status;
+      if (context?.previousStatus && nextStatus && context.previousStatus !== nextStatus) {
+        qc.setQueryData<QaSummaryResponse | null>(QA_SUMMARY_QUERY_KEY, (summary) =>
+          adjustQaSummaryForStatusChange(summary, nextStatus, context.previousStatus),
+        );
+      }
+
       qc.invalidateQueries({ queryKey: QA_SUMMARY_QUERY_KEY });
     },
   });

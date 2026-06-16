@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Popover, ListBox, Spinner } from "@heroui/react";
+import { memo, useEffect, useMemo, useState } from "react";
+import { ListBox, Popover, Spinner } from "@heroui/react";
 import { ChevronDown } from "lucide-react";
 import { message } from "@/lib/toast";
 import { CHIP_DOT_CLASS, CHIP_SOFT_CLASS } from "./TestCases.config";
@@ -26,7 +26,7 @@ interface InlineChipPickerProps<T extends string> {
   onChange: (value: T) => Promise<void>;
 }
 
-export function InlineChipPicker<T extends string>({
+function InlineChipPickerComponent<T extends string>({
   value,
   options,
   ariaLabel,
@@ -42,21 +42,26 @@ export function InlineChipPicker<T extends string>({
     if (!loading) setDisplayValue(value);
   }, [value, loading]);
 
-  const current = options.find((o) => o.value === displayValue) ?? options[0];
+  const current = useMemo(
+    () => options.find((option) => option.value === displayValue) ?? options[0],
+    [displayValue, options],
+  );
 
   const handleSelect = async (next: T) => {
     if (next === displayValue) {
       setOpen(false);
       return;
     }
-    const prev = displayValue;
+
+    const previous = displayValue;
     setDisplayValue(next);
     setOpen(false);
     setLoading(true);
+
     try {
       await onChange(next);
     } catch {
-      setDisplayValue(prev);
+      setDisplayValue(previous);
       message.error(errorMsg);
     } finally {
       setLoading(false);
@@ -89,10 +94,10 @@ export function InlineChipPicker<T extends string>({
             }}
             aria-label={ariaLabel}
           >
-            {options.map((opt) => (
-              <ListBox.Item key={opt.value} id={opt.value} textValue={opt.label}>
-                <span className={`size-2 shrink-0 rounded-full ${dotClass(opt.color)}`} aria-hidden />
-                <span className="text-sm">{opt.label}</span>
+            {options.map((option) => (
+              <ListBox.Item key={option.value} id={option.value} textValue={option.label}>
+                <span className={`size-2 shrink-0 rounded-full ${dotClass(option.color)}`} aria-hidden />
+                <span className="text-sm">{option.label}</span>
                 <ListBox.ItemIndicator />
               </ListBox.Item>
             ))}
@@ -102,6 +107,8 @@ export function InlineChipPicker<T extends string>({
     </Popover>
   );
 }
+
+export const InlineChipPicker = memo(InlineChipPickerComponent) as typeof InlineChipPickerComponent;
 
 export function configToChipOptions<T extends string>(
   config: Record<T, { label: string; color?: ChipColor }>,
@@ -113,7 +120,6 @@ export function configToChipOptions<T extends string>(
   }));
 }
 
-/** Fixed chip widths — prevents table columns shifting when labels differ in length */
 export const CHIP_PICKER_WIDTH = {
   status: "w-[6.75rem]",
   priority: "w-[4.25rem]",
