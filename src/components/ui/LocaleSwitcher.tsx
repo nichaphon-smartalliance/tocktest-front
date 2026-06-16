@@ -3,7 +3,7 @@
 import { useTransition } from "react";
 import { useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
-import { Dropdown, Button } from "@heroui/react";
+import { Dropdown } from "@heroui/react";
 import { Languages } from "lucide-react";
 import { locales, localeNames, type Locale } from "@/i18n/config";
 import { setUserLocale } from "@/i18n/locale";
@@ -24,15 +24,14 @@ export function LocaleSwitcher() {
   return (
     <Dropdown>
       <Dropdown.Trigger>
-        <Button
-          variant="ghost"
-          isIconOnly
-          isDisabled={isPending}
+        <div
           aria-label="Change language"
-          className="text-[var(--text-primary)]"
+          className={`flex h-9 w-9 items-center justify-center rounded-lg cursor-pointer text-[var(--text-primary)] hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${
+            isPending ? "opacity-50 pointer-events-none" : ""
+          }`}
         >
           <Languages size={18} />
-        </Button>
+        </div>
       </Dropdown.Trigger>
       <Dropdown.Popover placement="bottom end">
         <Dropdown.Menu
