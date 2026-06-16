@@ -22,6 +22,7 @@ export const authOptions: AuthOptions = {
           const res = await axios.post(
             `${process.env.BACKEND_URL}/api/v1/auth/login`,
             { email: credentials.email, password: credentials.password },
+            { timeout: 8000 },
           );
           const { accessToken, user } = res.data?.data ?? {};
           if (accessToken && user) {
