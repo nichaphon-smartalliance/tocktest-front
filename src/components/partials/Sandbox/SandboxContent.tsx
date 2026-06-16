@@ -314,12 +314,12 @@ export default function SandboxContent({ repoId }: { repoId: string }) {
                       <StatusIcon status={run.status} />
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-medium truncate">{run.name}</div>
-                        <div className="text-[11px] text-muted">
+                        <div className="text-xs text-muted">
                           {dayjs(run.createdAt).format("DD/MM HH:mm")} · {run.framework}
                         </div>
                       </div>
                       {run.durationMs ? (
-                        <span className="text-[10px] text-muted shrink-0">{(run.durationMs / 1000).toFixed(1)}s</span>
+                        <span className="text-xs text-muted shrink-0">{(run.durationMs / 1000).toFixed(1)}s</span>
                       ) : null}
                     </button>
                     <div className="mt-2 flex items-center gap-2 text-xs">

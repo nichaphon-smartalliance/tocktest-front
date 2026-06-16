@@ -1,0 +1,55 @@
+{
+  "common": {
+    "appName": "TockTest",
+    "tagline": "AI-First QA Platform"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "settings": "Settings"
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "signingIn": "Signing in...",
+    "signInWithGithub": "Sign in with GitHub",
+    "email": "Email",
+    "password": "Password",
+    "emailRequired": "Please enter your email",
+    "passwordRequired": "Please enter your password",
+    "invalidCredentials": "Incorrect email or password",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "or": "or"
+  },
+  "header": {
+    "toggleSidebar": "Toggle sidebar",
+    "toggleTheme": "Toggle theme",
+    "aiOffline": "AI offline",
+    "aiOfflineTooltip": "AI server unavailable — AI features are temporarily disabled",
+    "logout": "Log out"
+  },
+  "sidebar": {
+    "main": "Main",
+    "recentRepos": "Recent repos",
+    "viewAll": "View all →",
+    "qaOverview": "QA overview",
+    "noTestCases": "No test cases yet",
+    "noTestCasesHint": "Sync a repo, then start creating test cases",
+    "cases": "{count} cases",
+    "fail": "{count} fail",
+    "passRate": "Pass rate {rate}%",
+    "failImportant": "{count} critical fail",
+    "aiOnline": "AI online",
+    "aiOffline": "AI offline",
+    "aiUnknown": "AI ...",
+    "githubOk": "GitHub OK",
+    "githubNoToken": "GitHub no token",
+    "admin": "Admin",
+    "aiQaPlatform": "AI QA Platform",
+    "status": {
+      "pass": "Pass",
+      "fail": "Fail",
+      "blocked": "Blocked",
+      "notTested": "Not tested"
+    }
+  }
+}

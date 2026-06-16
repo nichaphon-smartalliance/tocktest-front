@@ -1,0 +1,55 @@
+{
+  "common": {
+    "appName": "TockTest",
+    "tagline": "AI-First QA Platform"
+  },
+  "nav": {
+    "dashboard": "แดชบอร์ด",
+    "settings": "การตั้งค่า"
+  },
+  "auth": {
+    "signIn": "เข้าสู่ระบบ",
+    "signingIn": "กำลังเข้าสู่ระบบ...",
+    "signInWithGithub": "เข้าสู่ระบบด้วย GitHub",
+    "email": "อีเมล",
+    "password": "รหัสผ่าน",
+    "emailRequired": "กรุณากรอกอีเมล",
+    "passwordRequired": "กรุณากรอกรหัสผ่าน",
+    "invalidCredentials": "อีเมลหรือรหัสผ่านไม่ถูกต้อง",
+    "showPassword": "แสดงรหัสผ่าน",
+    "hidePassword": "ซ่อนรหัสผ่าน",
+    "or": "หรือ"
+  },
+  "header": {
+    "toggleSidebar": "สลับแถบเมนู",
+    "toggleTheme": "สลับธีม",
+    "aiOffline": "AI offline",
+    "aiOfflineTooltip": "AI server ไม่พร้อมใช้งาน — ฟีเจอร์ AI จะใช้ไม่ได้ชั่วคราว",
+    "logout": "ออกจากระบบ"
+  },
+  "sidebar": {
+    "main": "หลัก",
+    "recentRepos": "Repos ล่าสุด",
+    "viewAll": "ดูทั้งหมด →",
+    "qaOverview": "ภาพรวม QA",
+    "noTestCases": "ยังไม่มี test case",
+    "noTestCasesHint": "ซิงค์ repo แล้วเริ่มสร้าง test case",
+    "cases": "{count} cases",
+    "fail": "{count} fail",
+    "passRate": "Pass rate {rate}%",
+    "failImportant": "{count} fail สำคัญ",
+    "aiOnline": "AI online",
+    "aiOffline": "AI offline",
+    "aiUnknown": "AI ...",
+    "githubOk": "GitHub OK",
+    "githubNoToken": "GitHub ไม่มี token",
+    "admin": "Admin",
+    "aiQaPlatform": "AI QA Platform",
+    "status": {
+      "pass": "ผ่าน",
+      "fail": "ไม่ผ่าน",
+      "blocked": "ติดขัด",
+      "notTested": "รอทดสอบ"
+    }
+  }
+}

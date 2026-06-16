@@ -342,7 +342,7 @@ export default function DocsContent({ repoId }: DocsContentProps) {
                   }`}
                 />
                 <div className="font-medium text-sm">v{version.version}</div>
-                <div className="text-[11px] opacity-60">{dayjs(version.updatedAt).format("DD/MM/YYYY HH:mm")}</div>
+                <div className="text-xs opacity-70">{dayjs(version.updatedAt).format("DD/MM/YYYY HH:mm")}</div>
               </div>
             ))}
           </div>

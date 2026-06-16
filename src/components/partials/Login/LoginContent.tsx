@@ -13,9 +13,12 @@ import {
 import { FlaskConical, Mail, Lock, Eye, EyeOff, Github } from "lucide-react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 export default function LoginContent() {
   const router = useRouter();
+  const t = useTranslations("auth");
+  const tCommon = useTranslations("common");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -32,11 +35,11 @@ export default function LoginContent() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) {
-      setError("กรุณากรอกอีเมล");
+      setError(t("emailRequired"));
       return;
     }
     if (!password) {
-      setError("กรุณากรอกรหัสผ่าน");
+      setError(t("passwordRequired"));
       return;
     }
     setLoading(true);
@@ -50,7 +53,7 @@ export default function LoginContent() {
     if (result?.ok) {
       router.push("/dashboard");
     } else {
-      setError("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
+      setError(t("invalidCredentials"));
     }
   };
 
@@ -61,12 +64,12 @@ export default function LoginContent() {
           <FlaskConical size={48} className="text-indigo-500" />
         </div>
         <h1 className="text-2xl font-bold text-indigo-500 m-0">TockTest</h1>
-        <p className="text-sm text-muted mt-1">AI-First QA Platform</p>
+        <p className="text-sm text-muted mt-1">{tCommon("tagline")}</p>
       </div>
 
       <Card className="rounded-2xl shadow-lg">
         <Card.Content className="p-8">
-          <h2 className="text-lg font-semibold text-center mb-6">เข้าสู่ระบบ</h2>
+          <h2 className="text-lg font-semibold text-center mb-6">{t("signIn")}</h2>
 
           {error && (
             <Alert status="danger" className="mb-5">
@@ -79,7 +82,7 @@ export default function LoginContent() {
 
           <form onSubmit={onSubmit} className="flex flex-col gap-4">
             <TextField value={email} onChange={setEmail} isRequired>
-              <Label>อีเมล</Label>
+              <Label>{t("email")}</Label>
               <InputGroup>
                 <InputGroup.Prefix>
                   <Mail size={16} className="opacity-40" />
@@ -89,7 +92,7 @@ export default function LoginContent() {
             </TextField>
 
             <TextField value={password} onChange={setPassword} isRequired>
-              <Label>รหัสผ่าน</Label>
+              <Label>{t("password")}</Label>
               <InputGroup>
                 <InputGroup.Prefix>
                   <Lock size={16} className="opacity-40" />
@@ -99,7 +102,7 @@ export default function LoginContent() {
                   <button
                     type="button"
                     onClick={() => setShowPassword((v) => !v)}
-                    aria-label={showPassword ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"}
+                    aria-label={showPassword ? t("hidePassword") : t("showPassword")}
                     className="cursor-pointer opacity-40 hover:opacity-70 transition-opacity"
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -116,13 +119,13 @@ export default function LoginContent() {
               className="h-11 font-semibold mt-2"
             >
               {loading && <Spinner size="sm" color="current" />}
-              {loading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
+              {loading ? t("signingIn") : t("signIn")}
             </Button>
           </form>
 
           <div className="my-5 flex items-center gap-3">
             <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
-            <span className="text-xs text-muted">หรือ</span>
+            <span className="text-xs text-muted">{t("or")}</span>
             <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
           </div>
 
@@ -135,7 +138,7 @@ export default function LoginContent() {
             className="h-11 font-semibold"
           >
             {githubLoading ? <Spinner size="sm" color="current" /> : <Github size={18} />}
-            เข้าสู่ระบบด้วย GitHub
+            {t("signInWithGithub")}
           </Button>
         </Card.Content>
       </Card>

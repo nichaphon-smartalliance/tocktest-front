@@ -2,6 +2,8 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { Toast, I18nProvider } from "@heroui/react";
+import { useLocale } from "next-intl";
+import { localeToBcp47, type Locale } from "@/i18n/config";
 
 type ThemeMode = "light" | "dark";
 
@@ -17,6 +19,7 @@ const ThemeContext = createContext<ThemeContextValue>({
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mode, setMode] = useState<ThemeMode>("light");
+  const locale = useLocale() as Locale;
 
   useEffect(() => {
     const saved = (localStorage.getItem("tocktest-theme") as ThemeMode) || "light";
@@ -32,7 +35,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <I18nProvider locale="th-TH">
+    <I18nProvider locale={localeToBcp47[locale] ?? "th-TH"}>
       <ThemeContext.Provider value={{ mode, toggle }}>
         {children}
         <Toast.Provider placement="top end" />

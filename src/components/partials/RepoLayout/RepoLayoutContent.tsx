@@ -57,7 +57,7 @@ export default function RepoLayoutContent({ repoId, children }: RepoLayoutConten
                   variant="soft"
                   color={repository.isPrivate ? undefined : "success"}
                 >
-                  <Chip.Label className="flex items-center gap-1 text-[11px]">
+                  <Chip.Label className="flex items-center gap-1 text-xs">
                     {repository.isPrivate ? <Lock size={10} /> : <Globe size={10} />}
                     {repository.isPrivate ? "Private" : "Public"}
                   </Chip.Label>

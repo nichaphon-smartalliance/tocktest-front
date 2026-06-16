@@ -4,8 +4,10 @@ import { Button, Dropdown, Avatar, Chip } from "@heroui/react";
 import { PanelLeftClose, PanelLeftOpen, LogOut, Sun, Moon, BotOff, Settings } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useTheme } from "@/context/theme/ThemeProvider";
 import { BackButton } from "@/components/ui/BackButton";
+import { LocaleSwitcher } from "@/components/ui/LocaleSwitcher";
 import { useAiHealth } from "@/hooks/ai/useAiHealth";
 import type { ClientSession } from "@/types/app/session";
 
@@ -20,12 +22,14 @@ export default function Header({ collapsed, onToggle, session }: HeaderProps) {
   const router = useRouter();
   const { mode, toggle } = useTheme();
   const { aiAvailable } = useAiHealth();
+  const t = useTranslations("header");
+  const tNav = useTranslations("nav");
   const showBack = pathname.startsWith("/repos/");
 
   return (
     <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-gray-200 bg-[var(--bg-sider)] px-4 dark:border-gray-700">
       <div className="flex items-center gap-2">
-        <Button variant="ghost" isIconOnly onPress={onToggle} aria-label="Toggle sidebar" className="text-[var(--text-primary)]">
+        <Button variant="ghost" isIconOnly onPress={onToggle} aria-label={t("toggleSidebar")} className="text-[var(--text-primary)]">
           {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
         </Button>
         {showBack && <BackButton fallbackHref="/dashboard" />}
@@ -33,16 +37,17 @@ export default function Header({ collapsed, onToggle, session }: HeaderProps) {
 
       <div className="flex items-center gap-2">
         {aiAvailable === false && (
-          <span title="AI server ไม่พร้อมใช้งาน — ฟีเจอร์ AI จะใช้ไม่ได้ชั่วคราว">
+          <span title={t("aiOfflineTooltip")}>
             <Chip color="warning" size="sm" variant="soft">
               <Chip.Label className="flex items-center gap-1">
                 <BotOff size={12} />
-                AI offline
+                {t("aiOffline")}
               </Chip.Label>
             </Chip>
           </span>
         )}
-        <Button variant="ghost" isIconOnly onPress={toggle} aria-label="Toggle theme" className="text-[var(--text-primary)]">
+        <LocaleSwitcher />
+        <Button variant="ghost" isIconOnly onPress={toggle} aria-label={t("toggleTheme")} className="text-[var(--text-primary)]">
           {mode === "dark" ? <Sun size={18} /> : <Moon size={18} />}
         </Button>
 
@@ -62,13 +67,13 @@ export default function Header({ collapsed, onToggle, session }: HeaderProps) {
                 if (key === "logout") signOut({ callbackUrl: "/login" });
               }}
             >
-              <Dropdown.Item id="settings" textValue="การตั้งค่า">
+              <Dropdown.Item id="settings" textValue={tNav("settings")}>
                 <Settings size={14} />
-                การตั้งค่า
+                {tNav("settings")}
               </Dropdown.Item>
-              <Dropdown.Item id="logout" textValue="ออกจากระบบ">
+              <Dropdown.Item id="logout" textValue={t("logout")}>
                 <LogOut size={14} />
-                ออกจากระบบ
+                {t("logout")}
               </Dropdown.Item>
             </Dropdown.Menu>
           </Dropdown.Popover>
