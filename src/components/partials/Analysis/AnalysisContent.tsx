@@ -422,7 +422,7 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
                         aria-label="Select all"
                         checked={allSelected}
                         onChange={toggleAll}
-                        className="size-4 cursor-pointer accent-sky-600"
+                        className="size-4 cursor-pointer appearance-auto accent-sky-600"
                       />
                     </Table.Column>
                     <Table.Column isRowHeader>Commit</Table.Column>
@@ -440,7 +440,7 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
                             aria-label={`Select ${record.commitSha.slice(0, 7)}`}
                             checked={selected.has(record.commitSha)}
                             onChange={() => toggleOne(record.commitSha)}
-                            className="size-4 cursor-pointer accent-sky-600"
+                            className="size-4 cursor-pointer appearance-auto accent-sky-600"
                           />
                         </Table.Cell>
                         <Table.Cell>
