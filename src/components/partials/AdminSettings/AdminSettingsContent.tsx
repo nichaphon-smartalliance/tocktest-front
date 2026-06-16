@@ -671,7 +671,7 @@ function WebhookEventsPanel() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="text-xs border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1.5 bg-transparent"
+            className="text-xs border border-black-200 dark:border-black-700 rounded-lg px-2 py-1.5 bg-transparent"
           >
             <option value="">All statuses</option>
             <option value="received">received</option>
