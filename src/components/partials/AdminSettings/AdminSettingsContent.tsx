@@ -541,7 +541,7 @@ export default function AdminSettingsContent() {
               <div className="flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-3">
                 <span className="text-sm font-medium">Backend API</span>
                 <Chip size="sm" variant="soft" color="success">
-                  <Chip.Label>{process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4004"}</Chip.Label>
+                  <Chip.Label>{process.env.NEXT_PUBLIC_API_URL ?? "http://192.168.33.65:4004"}</Chip.Label>
                 </Chip>
               </div>
               {jobStats && (
