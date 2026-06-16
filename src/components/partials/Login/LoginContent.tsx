@@ -134,7 +134,7 @@ export default function LoginContent() {
             variant="outline"
             fullWidth
             isDisabled={githubLoading}
-            onClick={onGithubSignIn}
+            onPress={onGithubSignIn}
             className="h-11 font-semibold"
           >
             {githubLoading ? <Spinner size="sm" color="current" /> : <Github size={18} />}
