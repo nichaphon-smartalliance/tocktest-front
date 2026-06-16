@@ -69,7 +69,7 @@ export default function ChatContent({ repoId, repoName }: ChatContentProps) {
   };
 
   return (
-    <div className="flex flex-col h-full max-w-3xl mx-auto">
+    <div className="flex flex-col h-full max-w-5xl mx-auto w-full">
       <div className="mb-4">
         <h1 className="text-xl font-semibold">QA Chatbot</h1>
         <p className="text-sm text-muted mt-0.5">
@@ -108,16 +108,16 @@ export default function ChatContent({ repoId, repoName }: ChatContentProps) {
                 {msg.role === "user" ? <User size={14} /> : <Bot size={14} />}
               </div>
               <div
-                className={`rounded-2xl px-3.5 py-2.5 text-sm max-w-[80%] ${
+                className={`rounded-2xl px-3.5 py-2.5 text-sm break-words ${
                   msg.role === "user"
-                    ? "bg-indigo-500 text-white rounded-tr-sm"
+                    ? "max-w-[80%] bg-indigo-500 text-white rounded-tr-sm"
                     : msg.error
-                    ? "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-tl-sm"
-                    : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-tl-sm"
+                    ? "max-w-[92%] bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-tl-sm"
+                    : "max-w-[92%] bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-tl-sm"
                 }`}
               >
                 {msg.role === "assistant" ? (
-                  <div className="prose prose-sm dark:prose-invert max-w-none [&>pre]:overflow-x-auto [&>pre]:text-xs">
+                  <div className="prose prose-sm dark:prose-invert max-w-none break-words [&_:not(pre)>code]:whitespace-pre-wrap [&_:not(pre)>code]:break-words [&>pre]:overflow-x-auto [&>pre]:text-xs">
                     <ReactMarkdown>{msg.content}</ReactMarkdown>
                   </div>
                 ) : (
