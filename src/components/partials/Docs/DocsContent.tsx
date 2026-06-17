@@ -6,8 +6,9 @@ import "dayjs/locale/th";
 import dynamic from "next/dynamic";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Bot, FileText, History, Pencil, RefreshCw, Save, Sparkles, Trash2, X } from "lucide-react";
+import { Bot, Code2, FileText, History, Pencil, RefreshCw, Save, Sparkles, Trash2, X } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { TiptapEditor } from "@/components/ui/TiptapEditor";
 import { useProjectDoc } from "@/hooks/docs";
 import { useRepoSettings } from "@/hooks/settings";
 import { getApiErrorMessage } from "@/lib/api-error";
@@ -23,6 +24,7 @@ export default function DocsContent({ repoId }: DocsContentProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState("");
   const [showHistory, setShowHistory] = useState(false);
+  const [showSource, setShowSource] = useState(false);
   const lastSyncedAtRef = useRef<string | null>(null);
   const locale = useLocale();
   const t = useTranslations("docs");
@@ -276,18 +278,36 @@ export default function DocsContent({ repoId }: DocsContentProps) {
             <Spinner size="lg" />
           </div>
         ) : isEditing ? (
-          <TextArea
-            value={editContent}
-            onChange={(event) => setEditContent(event.target.value)}
-            className="min-h-[500px] min-w-[100%] font-mono text-sm"
-            placeholder={t("editorPlaceholder")}
-          />
+          <div className="flex flex-col gap-3">
+            <TiptapEditor
+              value={editContent}
+              onChange={setEditContent}
+              placeholder={t("richEditorPlaceholder")}
+            />
+            <div>
+              <Button variant="secondary" size="sm" onPress={() => setShowSource((value) => !value)}>
+                <Code2 size={14} />
+                {showSource ? t("hideSource") : t("showSource")}
+              </Button>
+              {showSource && (
+                <TextArea
+                  value={editContent}
+                  onChange={(event) => setEditContent(event.target.value)}
+                  className="mt-2 min-h-[300px] min-w-[100%] font-mono text-sm"
+                  placeholder={t("editorPlaceholder")}
+                />
+              )}
+            </div>
+          </div>
         ) : !doc ? (
           <div className="flex flex-col items-center py-16 text-center">
             <FileText size={48} className="opacity-20 mb-4" />
             <p className="text-muted mb-4">{t("empty")}</p>
-            <Button variant="primary" onPress={() => void handleGenerate()}>
-              {t("generate")}
+            <Button variant="primary" onPress={() => {
+              setEditContent("");
+              setIsEditing(true);
+            }}>
+              {t2("createBtn")}
             </Button>
           </div>
         ) : (

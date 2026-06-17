@@ -213,3 +213,36 @@ select,
   font-size: 0.85em;
 }
 .markdown-body hr { margin: 1rem 0; border-color: var(--text-muted); opacity: 0.3; }
+.markdown-body img { max-width: 100%; height: auto; border-radius: 8px; margin: 0.5rem 0; }
+
+/* Tiptap editor (Docs page) */
+.tiptap-editor { white-space: pre-wrap; }
+.tiptap-editor:focus { outline: none; }
+.tiptap-editor p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--text-muted);
+  opacity: 0.7;
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+.tiptap-editor table { width: 100%; table-layout: fixed; }
+.tiptap-editor th, .tiptap-editor td { position: relative; min-width: 4rem; }
+.tiptap-editor th { background: var(--surface-overlay); font-weight: 600; }
+.tiptap-editor .selectedCell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(99, 102, 241, 0.18);
+  pointer-events: none;
+}
+.tiptap-editor .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: -2px;
+  width: 4px;
+  background: var(--accent-primary);
+  pointer-events: none;
+}
+.tiptap-editor img.ProseMirror-selectednode { outline: 2px solid var(--accent-primary); }
