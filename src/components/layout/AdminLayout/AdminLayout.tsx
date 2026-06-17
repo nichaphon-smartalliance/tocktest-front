@@ -23,7 +23,7 @@ export default function AdminLayoutShell({ children, session }: AdminLayoutShell
   }, []);
 
   return (
-    <div className="flex min-h-screen bg-[var(--bg-layout)]">
+    <div className="app-shell flex min-h-screen bg-[var(--bg-layout)]">
       <Sidebar collapsed={collapsed} session={session} />
       <div className="flex min-h-screen flex-1 flex-col min-w-0">
         <Header
@@ -31,7 +31,7 @@ export default function AdminLayoutShell({ children, session }: AdminLayoutShell
           onToggle={() => setCollapsed((c) => !c)}
           session={session}
         />
-        <main className="flex-1 p-4 md:p-6 min-h-[calc(100vh-64px)]">{children}</main>
+        <main className="flex-1 p-4 md:p-6 lg:p-7 min-h-[calc(100vh-64px)]">{children}</main>
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Modal,
   TextField,
@@ -23,6 +24,7 @@ function TagInput({
   onChange?: (v: string[]) => void;
   disabled?: boolean;
 }) {
+  const t = useTranslations("testCaseModal");
   const [input, setInput] = useState("");
 
   const addTag = () => {
@@ -46,7 +48,7 @@ function TagInput({
           {!disabled && (
             <button
               type="button"
-              onClick={() => onChange?.(value.filter((t) => t !== tag))}
+              onClick={() => onChange?.(value.filter((x) => x !== tag))}
               className="cursor-pointer text-gray-400 text-xs leading-none"
             >
               ×
@@ -67,7 +69,7 @@ function TagInput({
             }
           }}
           onBlur={addTag}
-          placeholder={value.length === 0 ? "พิมพ์แล้วกด Enter เพื่อเพิ่มแท็ก" : ""}
+          placeholder={value.length === 0 ? t("tagPlaceholder") : ""}
           className="border-none outline-none flex-1 min-w-[120px] text-sm bg-transparent py-0.5"
         />
       )}
@@ -96,6 +98,7 @@ export default function TestCaseModal({
   onUpdate,
   isLoading,
 }: TestCaseModalProps) {
+  const t = useTranslations("testCaseModal");
   const isView = mode === "view";
 
   const [title, setTitle] = useState("");
@@ -121,7 +124,7 @@ export default function TestCaseModal({
 
   const handleOk = async () => {
     if (!title.trim()) {
-      message.warning("กรุณากรอกชื่อ test case");
+      message.warning(t("titleRequired"));
       return;
     }
     const values: TestCaseFormValues = {
@@ -137,19 +140,19 @@ export default function TestCaseModal({
     try {
       if (mode === "edit" && data) {
         await onUpdate(data.id, values);
-        message.success("อัปเดต test case สำเร็จ");
+        message.success(t("updateSuccess"));
       } else {
         await onCreate(values);
-        message.success("สร้าง test case สำเร็จ");
+        message.success(t("createSuccess"));
       }
       onClose();
     } catch (error) {
-      message.error(getApiErrorMessage(error, "เกิดข้อผิดพลาด กรุณาลองใหม่"));
+      message.error(getApiErrorMessage(error, t("error")));
     }
   };
 
   const modalTitle =
-    mode === "create" ? "สร้าง Test Case ใหม่" : mode === "edit" ? "แก้ไข Test Case" : "รายละเอียด";
+    mode === "create" ? t("titleCreate") : mode === "edit" ? t("titleEdit") : t("titleView");
 
   return (
     <ControlledModal open={open} onClose={onClose}>
@@ -162,51 +165,51 @@ export default function TestCaseModal({
             </Modal.Header>
             <Modal.Body className="flex flex-col gap-4">
               <TextField value={title} onChange={setTitle} isRequired isDisabled={isView}>
-                <Label>ชื่อ Test Case</Label>
+                <Label>{t("nameLabel")}</Label>
                 <InputGroup>
-                  <InputGroup.Input placeholder="เช่น ทดสอบ login ด้วย email ที่ไม่ถูกต้อง" />
+                  <InputGroup.Input placeholder={t("namePlaceholder")} />
                 </InputGroup>
               </TextField>
 
               <div className="flex flex-col gap-1">
-                <Label>คำอธิบาย</Label>
+                <Label>{t("descLabel")}</Label>
                 <TextArea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   disabled={isView}
                   rows={3}
-                  placeholder="บรรยายสิ่งที่ต้องการทดสอบ..."
+                  placeholder={t("descPlaceholder")}
                 />
               </div>
 
               <div className="flex flex-col gap-1">
-                <Label>ผลลัพธ์ที่คาดหวัง</Label>
+                <Label>{t("expectedLabel")}</Label>
                 <TextArea
                   value={expectedResult}
                   onChange={(e) => setExpectedResult(e.target.value)}
                   disabled={isView}
                   rows={3}
-                  placeholder="ระบบควรแสดง..."
+                  placeholder={t("expectedPlaceholder")}
                 />
               </div>
 
               <div className="flex flex-col gap-1">
-                <Label>แท็ก</Label>
+                <Label>{t("tagsLabel")}</Label>
                 <TagInput value={tags} onChange={setTags} disabled={isView} />
               </div>
             </Modal.Body>
             <Modal.Footer>
               {isView ? (
                 <Button slot="close" variant="secondary">
-                  ปิด
+                  {t("close")}
                 </Button>
               ) : (
                 <>
                   <Button slot="close" variant="secondary">
-                    ยกเลิก
+                    {t("cancel")}
                   </Button>
                   <Button variant="primary" isDisabled={isLoading} onPress={handleOk}>
-                    {isLoading ? "กำลังบันทึก..." : "บันทึก"}
+                    {isLoading ? t("saving") : t("save")}
                   </Button>
                 </>
               )}

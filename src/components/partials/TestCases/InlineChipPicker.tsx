@@ -14,6 +14,12 @@ export type ChipOption<T extends string> = {
   color?: ChipColor;
 };
 
+export type ChipConfigOption<T extends string> = {
+  value: T;
+  labelKey: string;
+  color?: ChipColor;
+};
+
 const chipClass = (color?: ChipColor) => CHIP_SOFT_CLASS[color ?? "default"];
 const dotClass = (color?: ChipColor) => CHIP_DOT_CLASS[color ?? "default"];
 
@@ -111,11 +117,11 @@ function InlineChipPickerComponent<T extends string>({
 export const InlineChipPicker = memo(InlineChipPickerComponent) as typeof InlineChipPickerComponent;
 
 export function configToChipOptions<T extends string>(
-  config: Record<T, { label: string; color?: ChipColor }>,
-): ChipOption<T>[] {
+  config: Record<T, { labelKey: string; color?: ChipColor }>,
+): ChipConfigOption<T>[] {
   return (Object.keys(config) as T[]).map((key) => ({
     value: key,
-    label: config[key].label,
+    labelKey: config[key].labelKey,
     color: config[key].color,
   }));
 }

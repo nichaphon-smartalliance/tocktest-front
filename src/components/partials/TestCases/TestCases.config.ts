@@ -18,24 +18,25 @@ export const CHIP_DOT_CLASS: Record<NonNullable<ChipColor> | "default", string> 
   default: "bg-gray-400",
 };
 
-export const STATUS_CONFIG: Record<TestStatus, { label: string; color: ChipColor }> = {
-  pass: { label: "ผ่าน", color: "success" },
-  fail: { label: "ไม่ผ่าน", color: "danger" },
-  blocked: { label: "ติดขัด", color: "warning" },
-  not_tested: { label: "ยังไม่ทดสอบ", color: undefined },
+// labelKey points into the `testCases` i18n namespace; components translate at render time.
+export const STATUS_CONFIG: Record<TestStatus, { labelKey: string; color: ChipColor }> = {
+  pass: { labelKey: "status.pass", color: "success" },
+  fail: { labelKey: "status.fail", color: "danger" },
+  blocked: { labelKey: "status.blocked", color: "warning" },
+  not_tested: { labelKey: "status.notTested", color: undefined },
 };
 
-export const TYPE_CONFIG: Record<TestType, { label: string; color: ChipColor }> = {
-  manual: { label: "Manual", color: "accent" },
-  automated: { label: "Auto", color: "accent" },
-  ui: { label: "UI", color: "accent" },
-  api: { label: "API", color: "accent" },
-  integration: { label: "Integration", color: "accent" },
+export const TYPE_CONFIG: Record<TestType, { labelKey: string; color: ChipColor }> = {
+  manual: { labelKey: "type.manual", color: "accent" },
+  automated: { labelKey: "type.automated", color: "accent" },
+  ui: { labelKey: "type.ui", color: "accent" },
+  api: { labelKey: "type.api", color: "accent" },
+  integration: { labelKey: "type.integration", color: "accent" },
 };
 
-export const PRIORITY_CONFIG: Record<PriorityLevel, { label: string; color: ChipColor }> = {
-  low: { label: "ต่ำ", color: "success" },
-  medium: { label: "กลาง", color: "accent" },
-  high: { label: "สูง", color: "warning" },
-  critical: { label: "วิกฤต", color: "danger" },
+export const PRIORITY_CONFIG: Record<PriorityLevel, { labelKey: string; color: ChipColor }> = {
+  low: { labelKey: "priority.low", color: "success" },
+  medium: { labelKey: "priority.medium", color: "accent" },
+  high: { labelKey: "priority.high", color: "warning" },
+  critical: { labelKey: "priority.critical", color: "danger" },
 };

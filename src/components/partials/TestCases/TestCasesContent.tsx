@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
 import { Button, SearchField, Select, ListBox } from "@heroui/react";
 import { Plus, Bot } from "lucide-react";
@@ -17,29 +18,29 @@ import type { TestCase, ModalMode, TestCaseFormValues, TestStatus, TestType, Pri
 
 const ALL = "__all__";
 
-const STATUS_OPTIONS = [
-  { value: ALL, label: "ทุกสถานะ" },
-  { value: "not_tested", label: "ยังไม่ทดสอบ" },
-  { value: "pass", label: "ผ่าน" },
-  { value: "fail", label: "ไม่ผ่าน" },
-  { value: "blocked", label: "ติดขัด" },
+const STATUS_KEYS = [
+  { value: ALL, labelKey: "allStatus" },
+  { value: "not_tested", labelKey: "status.notTested" },
+  { value: "pass", labelKey: "status.pass" },
+  { value: "fail", labelKey: "status.fail" },
+  { value: "blocked", labelKey: "status.blocked" },
 ];
 
-const PRIORITY_OPTIONS = [
-  { value: ALL, label: "ทุกความสำคัญ" },
-  { value: "low", label: "ต่ำ" },
-  { value: "medium", label: "กลาง" },
-  { value: "high", label: "สูง" },
-  { value: "critical", label: "วิกฤต" },
+const PRIORITY_KEYS = [
+  { value: ALL, labelKey: "allPriority" },
+  { value: "low", labelKey: "priority.low" },
+  { value: "medium", labelKey: "priority.medium" },
+  { value: "high", labelKey: "priority.high" },
+  { value: "critical", labelKey: "priority.critical" },
 ];
 
-const TYPE_OPTIONS = [
-  { value: ALL, label: "ทุกประเภท" },
-  { value: "manual", label: "Manual" },
-  { value: "automated", label: "Automated" },
-  { value: "ui", label: "UI" },
-  { value: "api", label: "API" },
-  { value: "integration", label: "Integration" },
+const TYPE_KEYS = [
+  { value: ALL, labelKey: "allType" },
+  { value: "manual", labelKey: "type.manual" },
+  { value: "automated", labelKey: "type.automated" },
+  { value: "ui", labelKey: "type.ui" },
+  { value: "api", labelKey: "type.api" },
+  { value: "integration", labelKey: "type.integration" },
 ];
 
 interface TestCasesContentProps {
@@ -47,6 +48,10 @@ interface TestCasesContentProps {
 }
 
 export default function TestCasesContent({ repoId }: TestCasesContentProps) {
+  const t = useTranslations("testCases");
+  const STATUS_OPTIONS = STATUS_KEYS.map((o) => ({ value: o.value, label: t(o.labelKey) }));
+  const PRIORITY_OPTIONS = PRIORITY_KEYS.map((o) => ({ value: o.value, label: t(o.labelKey) }));
+  const TYPE_OPTIONS = TYPE_KEYS.map((o) => ({ value: o.value, label: t(o.labelKey) }));
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [aiModalOpen, setAiModalOpen] = useState(false);
@@ -94,9 +99,9 @@ export default function TestCasesContent({ repoId }: TestCasesContentProps) {
   const handleDelete = async (id: string) => {
     try {
       await remove(id);
-      message.success("ลบ test case สำเร็จ");
+      message.success(t("deleteSuccess"));
     } catch (error) {
-      message.error(getApiErrorMessage(error, "ลบไม่สำเร็จ"));
+      message.error(getApiErrorMessage(error, t("deleteError")));
     }
   };
 
@@ -116,7 +121,7 @@ export default function TestCasesContent({ repoId }: TestCasesContentProps) {
       <div className="flex-1 flex flex-col gap-3 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <SearchField
-            aria-label="ค้นหา test case"
+            aria-label={t("searchAria")}
             value={search}
             onChange={(v) => {
               setSearch(v);
@@ -126,13 +131,13 @@ export default function TestCasesContent({ repoId }: TestCasesContentProps) {
           >
             <SearchField.Group>
               <SearchField.SearchIcon />
-              <SearchField.Input placeholder="ค้นหา..." />
+              <SearchField.Input placeholder={t("searchPlaceholder")} />
               <SearchField.ClearButton />
             </SearchField.Group>
           </SearchField>
 
           <Select
-            placeholder="สถานะ"
+            placeholder={t("statusPlaceholder")}
             selectedKey={statusFilter ?? null}
             onSelectionChange={(key) => {
               setStatusFilter(key && key !== ALL ? (String(key) as TestStatus) : undefined);
@@ -157,7 +162,7 @@ export default function TestCasesContent({ repoId }: TestCasesContentProps) {
           </Select>
 
           <Select
-            placeholder="ความสำคัญ"
+            placeholder={t("priorityPlaceholder")}
             selectedKey={priorityFilter ?? null}
             onSelectionChange={(key) => {
               setPriorityFilter(key && key !== ALL ? (String(key) as PriorityLevel) : undefined);
@@ -182,7 +187,7 @@ export default function TestCasesContent({ repoId }: TestCasesContentProps) {
           </Select>
 
           <Select
-            placeholder="ประเภท"
+            placeholder={t("typePlaceholder")}
             selectedKey={typeFilter ?? null}
             onSelectionChange={(key) => {
               setTypeFilter(key && key !== ALL ? (String(key) as TestType) : undefined);
@@ -209,11 +214,11 @@ export default function TestCasesContent({ repoId }: TestCasesContentProps) {
           <div className="flex-1" />
           <Button variant="secondary" onPress={() => setAiModalOpen(true)}>
             <Bot size={16} />
-            สร้างด้วย AI
+            {t("aiGenerate")}
           </Button>
           <Button variant="primary" onPress={openCreate}>
             <Plus size={16} />
-            Test Case ใหม่
+            {t("newTestCase")}
           </Button>
         </div>
 

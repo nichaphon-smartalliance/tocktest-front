@@ -1,12 +1,12 @@
 "use client";
 
 import { Breadcrumbs, Chip } from "@heroui/react";
-import { useRouter, usePathname } from "next/navigation";
-import { Lock, Globe } from "lucide-react";
-import { BugPlay, GitCommitHorizontal, BookOpen, Settings, Terminal, MessageSquare } from "lucide-react";
-import { useRepository } from "@/hooks/repository";
-import { trackRecentRepo } from "@/hooks/common/useRecentRepos";
+import { BookOpen, BugPlay, GitCommitHorizontal, MessageSquare, Settings, Terminal, Globe, Lock } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useEffect } from "react";
+import { trackRecentRepo } from "@/hooks/common/useRecentRepos";
+import { useRepository } from "@/hooks/repository";
 
 interface RepoLayoutContentProps {
   repoId: string;
@@ -14,36 +14,38 @@ interface RepoLayoutContentProps {
 }
 
 const TAB_ITEMS = [
-  { key: "test-cases", label: "Test Cases", icon: BugPlay },
-  { key: "analysis", label: "Analysis", icon: GitCommitHorizontal },
-  { key: "sandbox", label: "Sandbox", icon: Terminal },
-  { key: "chat", label: "QA Chat", icon: MessageSquare },
-  { key: "docs", label: "Docs", icon: BookOpen },
-  { key: "settings", label: "Settings", icon: Settings },
-];
+  { key: "test-cases", labelKey: "testCases", icon: BugPlay },
+  { key: "analysis", labelKey: "analysis", icon: GitCommitHorizontal },
+  { key: "sandbox", labelKey: "sandbox", icon: Terminal },
+  { key: "chat", labelKey: "chat", icon: MessageSquare },
+  { key: "docs", labelKey: "docs", icon: BookOpen },
+  { key: "settings", labelKey: "settings", icon: Settings },
+] as const;
 
 export default function RepoLayoutContent({ repoId, children }: RepoLayoutContentProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { repository, isLoading } = useRepository(repoId);
+  const tTabs = useTranslations("repoTabs");
+  const tNav = useTranslations("nav");
 
   useEffect(() => {
     if (repository?.fullName) trackRecentRepo(repoId, repository.fullName);
   }, [repoId, repository?.fullName]);
 
-  const activeTab = TAB_ITEMS.find((t) => pathname.endsWith(t.key))?.key ?? "test-cases";
+  const activeTab = TAB_ITEMS.find((item) => pathname.endsWith(item.key))?.key ?? "test-cases";
 
   return (
     <div>
       <Breadcrumbs className="mb-3">
         <Breadcrumbs.Item
           href="#"
-          onClick={(e) => {
-            e.preventDefault();
+          onClick={(event) => {
+            event.preventDefault();
             router.push("/dashboard");
           }}
         >
-          แดชบอร์ด
+          {tNav("dashboard")}
         </Breadcrumbs.Item>
         <Breadcrumbs.Item>
           {isLoading ? (
@@ -52,14 +54,10 @@ export default function RepoLayoutContent({ repoId, children }: RepoLayoutConten
             <span className="flex items-center gap-1.5">
               {repository?.fullName}
               {repository && (
-                <Chip
-                  size="sm"
-                  variant="soft"
-                  color={repository.isPrivate ? undefined : "success"}
-                >
+                <Chip size="sm" variant="soft" color={repository.isPrivate ? undefined : "success"}>
                   <Chip.Label className="flex items-center gap-1 text-xs">
                     {repository.isPrivate ? <Lock size={10} /> : <Globe size={10} />}
-                    {repository.isPrivate ? "Private" : "Public"}
+                    {repository.isPrivate ? tTabs("private") : tTabs("public")}
                   </Chip.Label>
                 </Chip>
               )}
@@ -69,8 +67,9 @@ export default function RepoLayoutContent({ repoId, children }: RepoLayoutConten
       </Breadcrumbs>
 
       <nav className="flex gap-1 border-b border-gray-200 dark:border-gray-700 mb-0" aria-label="Repository sections">
-        {TAB_ITEMS.map(({ key, label, icon: Icon }) => {
+        {TAB_ITEMS.map(({ key, labelKey, icon: Icon }) => {
           const active = activeTab === key;
+
           return (
             <button
               key={key}
@@ -83,7 +82,7 @@ export default function RepoLayoutContent({ repoId, children }: RepoLayoutConten
               }`}
             >
               <Icon size={14} />
-              {label}
+              {tTabs(labelKey)}
             </button>
           );
         })}

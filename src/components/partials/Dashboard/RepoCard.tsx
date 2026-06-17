@@ -3,13 +3,13 @@
 import { Card, Chip } from "@heroui/react";
 import { Lock, Globe, Package, GitBranch, Clock } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/th";
 import type { Repository } from "@/types/app/repository";
 
 dayjs.extend(relativeTime);
-dayjs.locale("th");
 
 interface RepoCardProps {
   repo: Repository;
@@ -17,13 +17,16 @@ interface RepoCardProps {
 
 export default function RepoCard({ repo }: RepoCardProps) {
   const router = useRouter();
+  const t = useTranslations("repoCard");
+  const locale = useLocale();
+  const fromNow = (date: string) => dayjs(date).locale(locale).fromNow();
 
   return (
     <Card
       role="link"
       tabIndex={0}
-      aria-label={`เปิด ${repo.fullName}`}
-      className="h-full rounded-xl cursor-pointer hover:shadow-md transition-shadow focus-visible:outline-2 focus-visible:outline-indigo-500"
+      aria-label={t("openAria", { name: repo.fullName })}
+      className="surface-card surface-card-hover h-full rounded-2xl cursor-pointer focus-visible:outline-2 focus-visible:outline-indigo-500"
       onClick={() => router.push(`/repos/${repo.id}/test-cases`)}
       onKeyDown={(e: React.KeyboardEvent) => {
         if (e.key === "Enter" || e.key === " ") {
@@ -50,13 +53,13 @@ export default function RepoCard({ repo }: RepoCardProps) {
           >
             <Chip.Label className="flex items-center gap-1">
               {repo.isPrivate ? <Lock size={10} /> : <Globe size={10} />}
-              {repo.isPrivate ? "Private" : "Public"}
+              {repo.isPrivate ? t("private") : t("public")}
             </Chip.Label>
           </Chip>
         </div>
 
         <p className="text-xs text-muted mb-3 min-h-[36px] line-clamp-2">
-          {repo.description || "ไม่มีคำอธิบาย"}
+          {repo.description || t("noDescription")}
         </p>
 
         <div className="flex flex-col gap-1">
@@ -68,8 +71,8 @@ export default function RepoCard({ repo }: RepoCardProps) {
             <Clock size={12} />
             <span>
               {repo.lastSyncedAt
-                ? `ซิงค์ ${dayjs(repo.lastSyncedAt).fromNow()}`
-                : "ยังไม่ได้ซิงค์"}
+                ? t("syncedAgo", { time: fromNow(repo.lastSyncedAt) })
+                : t("notSynced")}
             </span>
           </div>
         </div>

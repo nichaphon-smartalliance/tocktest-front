@@ -1,14 +1,18 @@
 import type { Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
-import { getLocale, getMessages } from "next-intl/server";
+import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import { Providers } from "@/context/Providers";
 import { inter, notoSansThai } from "@/lib/fonts";
 import "@/app/globals.css";
 
-export const metadata: Metadata = {
-  title: "TockTest — AI-First QA Platform",
-  description: "ระบบทดสอบซอฟต์แวร์ด้วย AI",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("metadata");
+
+  return {
+    title: "TockTest - AI-First QA Platform",
+    description: t("description"),
+  };
+}
 
 export default async function RootLayout({
   children,
@@ -21,6 +25,17 @@ export default async function RootLayout({
   return (
     <html lang={locale} suppressHydrationWarning className={`${inter.variable} ${notoSansThai.variable}`}>
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(() => {
+              try {
+                const saved = localStorage.getItem("tocktest-theme");
+                const mode = saved === "dark" || saved === "light" ? saved : "light";
+                document.documentElement.setAttribute("data-theme", mode);
+              } catch {}
+            })();`,
+          }}
+        />
         <link href="/heroui.min.css" rel="stylesheet" />
       </head>
       <body>

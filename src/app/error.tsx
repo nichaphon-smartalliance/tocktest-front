@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
 import { Button } from "@heroui/react";
+import { useTranslations } from "next-intl";
+import { useEffect } from "react";
 
 export default function GlobalError({
   error,
@@ -10,22 +11,22 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const t = useTranslations("errorPage");
+
   useEffect(() => {
     if (process.env.NODE_ENV === "development") console.error(error);
   }, [error]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-6 text-center">
-      <h1 className="text-xl font-bold">เกิดข้อผิดพลาด</h1>
-      <p className="text-muted text-sm max-w-md">
-        ลองรีเฟรชหน้า หรือล้าง cache แล้วรัน dev server ใหม่
-      </p>
+      <h1 className="text-xl font-bold">{t("title")}</h1>
+      <p className="text-muted text-sm max-w-md">{t("desc")}</p>
       <div className="flex gap-2">
         <Button variant="secondary" onPress={() => (window.location.href = "/login")}>
-          ไปหน้า Login
+          {t("goLogin")}
         </Button>
         <Button variant="primary" onPress={reset}>
-          ลองอีกครั้ง
+          {t("retry")}
         </Button>
       </div>
     </div>

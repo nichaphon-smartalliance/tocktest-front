@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   AlertDialog,
   Button,
@@ -43,6 +44,7 @@ function FolderNode({
   onDelete: (id: string) => void;
   depth?: number;
 }) {
+  const t = useTranslations("testCases.folder");
   const [expanded, setExpanded] = useState(true);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const hasChildren = folder.children && folder.children.length > 0;
@@ -84,7 +86,7 @@ function FolderNode({
         </button>
         <Dropdown>
           <Dropdown.Trigger
-            aria-label="จัดการโฟลเดอร์"
+            aria-label={t("manage")}
             className="opacity-0 group-hover:opacity-100 min-w-6 h-6 inline-flex items-center justify-center rounded-md bg-transparent border-0 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 text-[var(--text-primary)]"
           >
             <MoreHorizontal size={14} />
@@ -96,8 +98,8 @@ function FolderNode({
               }}
               aria-label="Folder actions"
             >
-              <Dropdown.Item id="delete" textValue="ลบโฟลเดอร์" variant="danger">
-                ลบโฟลเดอร์
+              <Dropdown.Item id="delete" textValue={t("delete")} variant="danger">
+                {t("delete")}
               </Dropdown.Item>
             </Dropdown.Menu>
           </Dropdown.Popover>
@@ -108,11 +110,11 @@ function FolderNode({
               <AlertDialog.Dialog>
                 <AlertDialog.Header>
                   <AlertDialog.Icon status="danger" />
-                  <AlertDialog.Heading>ลบโฟลเดอร์นี้?</AlertDialog.Heading>
+                  <AlertDialog.Heading>{t("deleteConfirm")}</AlertDialog.Heading>
                 </AlertDialog.Header>
                 <AlertDialog.Footer>
                   <Button slot="close" variant="secondary">
-                    ยกเลิก
+                    {t("cancel")}
                   </Button>
                   <Button
                     slot="close"
@@ -121,7 +123,7 @@ function FolderNode({
                       void onDelete(folder.id);
                     }}
                   >
-                    ลบ
+                    {t("deleteBtn")}
                   </Button>
                 </AlertDialog.Footer>
               </AlertDialog.Dialog>
@@ -146,6 +148,7 @@ function FolderNode({
 }
 
 export default function FolderTree({ repoId, selectedFolderId, onSelectFolder }: FolderTreeProps) {
+  const t = useTranslations("testCases.folder");
   const { folders, isLoading, createFolder, deleteFolder } = useTestCaseFolders(repoId);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
@@ -159,11 +162,11 @@ export default function FolderTree({ repoId, selectedFolderId, onSelectFolder }:
     if (!newFolderName.trim()) return;
     try {
       await createFolder({ name: newFolderName.trim() });
-      message.success("สร้างโฟลเดอร์สำเร็จ");
+      message.success(t("createSuccess"));
       setNewFolderName("");
       closeCreateModal();
     } catch {
-      message.error("สร้างโฟลเดอร์ไม่สำเร็จ");
+      message.error(t("createError"));
     }
   };
 
@@ -171,21 +174,21 @@ export default function FolderTree({ repoId, selectedFolderId, onSelectFolder }:
     try {
       await deleteFolder(folderId);
       if (selectedFolderId === folderId) onSelectFolder(null);
-      message.success("ลบโฟลเดอร์สำเร็จ");
+      message.success(t("deleteSuccess"));
     } catch {
-      message.error("ลบโฟลเดอร์ไม่สำเร็จ");
+      message.error(t("deleteError"));
     }
   };
 
   return (
     <div className="py-2">
       <div className="flex items-center justify-between px-2 pb-2 mb-2 border-b border-gray-100 dark:border-gray-800">
-        <span className="font-semibold text-sm">โฟลเดอร์</span>
+        <span className="font-semibold text-sm">{t("title")}</span>
         <Button
           variant="ghost"
           isIconOnly
           size="sm"
-          aria-label="สร้างโฟลเดอร์"
+          aria-label={t("create")}
           className="text-[var(--text-primary)]"
           onPress={() => setCreateModalOpen(true)}
         >
@@ -203,7 +206,7 @@ export default function FolderTree({ repoId, selectedFolderId, onSelectFolder }:
         }`}
       >
         <FolderOpen size={14} className="opacity-50" />
-        ทั้งหมด
+        {t("all")}
       </button>
 
       {isLoading ? (
@@ -227,15 +230,15 @@ export default function FolderTree({ repoId, selectedFolderId, onSelectFolder }:
           <Modal.Container>
             <Modal.Dialog>
               <Modal.Header>
-                <Modal.Heading>สร้างโฟลเดอร์ใหม่</Modal.Heading>
+                <Modal.Heading>{t("createTitle")}</Modal.Heading>
                 <Modal.CloseTrigger />
               </Modal.Header>
               <Modal.Body>
                 <TextField value={newFolderName} onChange={setNewFolderName} autoFocus>
-                  <Label>ชื่อโฟลเดอร์</Label>
+                  <Label>{t("nameLabel")}</Label>
                   <InputGroup>
                     <InputGroup.Input
-                      placeholder="ชื่อโฟลเดอร์"
+                      placeholder={t("namePlaceholder")}
                       onKeyDown={(e) => {
                         if (e.key === "Enter") handleCreate();
                       }}
@@ -245,10 +248,10 @@ export default function FolderTree({ repoId, selectedFolderId, onSelectFolder }:
               </Modal.Body>
               <Modal.Footer>
                 <Button slot="close" variant="secondary">
-                  ยกเลิก
+                  {t("cancel")}
                 </Button>
                 <Button variant="primary" onPress={handleCreate}>
-                  สร้าง
+                  {t("createBtn")}
                 </Button>
               </Modal.Footer>
             </Modal.Dialog>

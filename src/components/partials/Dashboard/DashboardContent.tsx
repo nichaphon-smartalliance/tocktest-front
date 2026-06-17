@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button, SearchField, Spinner } from "@heroui/react";
 import { message } from "@/lib/toast";
 import { Plus, RefreshCw, Github } from "lucide-react";
@@ -11,6 +12,7 @@ import RepoCard from "./RepoCard";
 import { AddTokenModal } from "./Modal";
 
 export default function DashboardContent() {
+  const t = useTranslations("dashboard");
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search);
   const [tokenModalOpen, setTokenModalOpen] = useState(false);
@@ -22,31 +24,32 @@ export default function DashboardContent() {
   const handleSync = async () => {
     try {
       const result = await syncRepositories();
-      message.success(`ซิงค์สำเร็จ: ${result.synced} repositories`);
+      message.success(t("syncSuccess", { count: result.synced }));
       refetch();
     } catch {
-      message.error("ซิงค์ไม่สำเร็จ กรุณาตรวจสอบ GitHub Token");
+      message.error(t("syncError"));
     }
   };
 
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+      <div className="dashboard-hero rounded-[1.75rem] px-5 py-5 md:px-6 md:py-6 mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-[22px] font-bold m-0">แดชบอร์ด</h1>
-          <p className="m-0 text-muted text-sm">{total || repositories.length} repositories</p>
+          <h1 className="text-[22px] font-bold m-0">{t("title")}</h1>
+          <p className="m-0 text-muted text-sm">{t("repositories", { count: total || repositories.length })}</p>
         </div>
 
         <div className="flex flex-wrap gap-2">
           <SearchField
-            aria-label="ค้นหา repository"
+            aria-label={t("searchRepo")}
             value={search}
             onChange={setSearch}
             className="w-[220px]"
           >
             <SearchField.Group>
               <SearchField.SearchIcon />
-              <SearchField.Input placeholder="ค้นหา repository..." />
+              <SearchField.Input placeholder={t("searchRepoPlaceholder")} />
               <SearchField.ClearButton />
             </SearchField.Group>
           </SearchField>
@@ -58,19 +61,20 @@ export default function DashboardContent() {
             variant="primary"
             isDisabled={isSyncing}
             onPress={handleSync}
-            aria-label="ซิงค์ repositories จาก GitHub"
+            aria-label={t("syncAria")}
           >
             <RefreshCw size={16} className={isSyncing ? "animate-spin" : ""} />
-            ซิงค์
+            {t("sync")}
           </Button>
+        </div>
         </div>
       </div>
 
       {setup && !setup.configured && (
-        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm dark:border-amber-800 dark:bg-amber-500/10">
-          <span className="font-semibold text-amber-700 dark:text-amber-300">GitHub App ยังไม่ได้ตั้งค่า</span>
+        <div className="mb-4 rounded-2xl border border-amber-200/70 bg-amber-50/85 px-4 py-3 text-sm shadow-sm dark:border-amber-700/40 dark:bg-amber-500/10">
+          <span className="font-semibold text-amber-700 dark:text-amber-300">{t("appNotConfigured")}</span>
           <span className="ml-2 text-amber-600 dark:text-amber-400 text-xs">
-            ไปที่ Settings → GitHub เพื่อกำหนด App ID, Private Key และ Webhook Secret
+            {t("appConfigHint")}
           </span>
         </div>
       )}
@@ -80,27 +84,27 @@ export default function DashboardContent() {
           <Spinner size="lg" />
         </div>
       ) : repositories.length === 0 ? (
-        <div className="flex flex-col items-center py-20 text-center">
+        <div className="surface-card rounded-[1.75rem] flex flex-col items-center py-20 text-center px-6">
           <Github size={64} className="opacity-20 mb-4" />
-          <p className="font-medium mb-1">ยังไม่มี repository</p>
+          <p className="font-medium mb-1">{t("noRepos")}</p>
           <p className="text-sm text-muted mb-4">
-            เพิ่ม GitHub Token แล้วกด ซิงค์ เพื่อดึงข้อมูล
+            {t("noReposHint")}
           </p>
           <Button variant="secondary" onPress={() => setTokenModalOpen(true)}>
             <Plus size={16} />
-            เพิ่ม GitHub Token
+            {t("addToken")}
           </Button>
         </div>
       ) : (
         <>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
           {[
-            { label: "ทั้งหมด", value: total },
-            { label: "แสดงผล", value: repositories.length },
-            { label: "Public", value: repositories.length - privateCount },
-            { label: "Private", value: privateCount },
+            { label: t("statAll"), value: total },
+            { label: t("statShowing"), value: repositories.length },
+            { label: t("statPublic"), value: repositories.length - privateCount },
+            { label: t("statPrivate"), value: privateCount },
           ].map((s) => (
-            <div key={s.label} className="rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-3">
+            <div key={s.label} className="surface-card rounded-2xl px-4 py-3">
               <p className="text-xs text-muted m-0">{s.label}</p>
               <p className="text-xl font-bold m-0 mt-0.5">{s.value}</p>
             </div>

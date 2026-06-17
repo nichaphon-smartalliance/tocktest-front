@@ -1,35 +1,19 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import {
-  Table,
-  Card,
-  Alert,
-  Chip,
-  Select,
-  ListBox,
-  Spinner,
-  Input,
-} from "@heroui/react";
-import { Bot, GitBranch, Zap, GitPullRequest, Send } from "lucide-react";
-import { message } from "@/lib/toast";
-import { getApiErrorMessage } from "@/lib/api-error";
+import { Alert, Card, Chip, Input, ListBox, Select, Spinner, Table } from "@heroui/react";
 import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/th";
+import relativeTime from "dayjs/plugin/relativeTime";
+import { Bot, GitBranch, GitPullRequest, Send, Zap } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
+import { useEffect, useMemo, useState } from "react";
 import { useCommitList } from "@/hooks/analysis";
 import { useRepoSettings } from "@/hooks/settings";
+import { getApiErrorMessage } from "@/lib/api-error";
+import { message } from "@/lib/toast";
 import type { CommitItem, RiskLevel } from "@/types/app/analysis";
 
 dayjs.extend(relativeTime);
-dayjs.locale("th");
-
-const RISK_CONFIG: Record<RiskLevel, { color: "success" | "warning" | "danger" | "accent"; label: string }> = {
-  low: { color: "success", label: "ต่ำ" },
-  medium: { color: "warning", label: "กลาง" },
-  high: { color: "danger", label: "สูง" },
-  critical: { color: "danger", label: "วิกฤต" },
-};
 
 interface AnalysisContentProps {
   repoId: string;
@@ -40,7 +24,20 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
   const [analyzingIds, setAnalyzingIds] = useState<Set<string>>(new Set());
   const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
   const [pullRequestNumber, setPullRequestNumber] = useState("");
+  const locale = useLocale();
+  const t = useTranslations("analysis");
   const { settings } = useRepoSettings(repoId);
+
+  useEffect(() => {
+    dayjs.locale(locale);
+  }, [locale]);
+
+  const riskConfig: Record<RiskLevel, { color: "success" | "warning" | "danger" | "accent"; label: string }> = {
+    low: { color: "success", label: t("risk.low") },
+    medium: { color: "warning", label: t("risk.medium") },
+    high: { color: "danger", label: t("risk.high") },
+    critical: { color: "danger", label: t("risk.critical") },
+  };
 
   const {
     commits,
@@ -63,7 +60,6 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
     setSelected(new Set());
   }, [selectedBranch]);
 
-  // Auto-select first branch — avoids slow DB-only path and loads commits immediately
   useEffect(() => {
     if (!selectedBranch && branches.length > 0) {
       setSelectedBranch(branches[0].name);
@@ -71,7 +67,7 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
   }, [branches, selectedBranch]);
 
   const selectedShas = useMemo(() => Array.from(selected), [selected]);
-  const allSelected = commits.length > 0 && commits.every((c) => selected.has(c.commitSha));
+  const allSelected = commits.length > 0 && commits.every((commit) => selected.has(commit.commitSha));
 
   const toggleOne = (sha: string) => {
     setSelected((prev) => {
@@ -83,24 +79,22 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
   };
 
   const toggleAll = () => {
-    setSelected(allSelected ? new Set() : new Set(commits.map((c) => c.commitSha)));
+    setSelected(allSelected ? new Set() : new Set(commits.map((commit) => commit.commitSha)));
   };
 
   const handleAnalyze = async (commitSha: string) => {
     if (settings?.aiOfflineMode) {
-      message.warning("AI offline mode is enabled for this repository");
+      message.warning(t("offlineWarn"));
       return;
     }
+
     setAnalyzingIds((prev) => new Set(prev).add(commitSha));
+
     try {
       const result = await analyze(commitSha);
-      message.success(
-        result?.source === "heuristic"
-          ? "วิเคราะห์แบบ heuristic (AI offline)"
-          : "วิเคราะห์ commit สำเร็จ"
-      );
+      message.success(result?.source === "heuristic" ? t("toastHeuristic") : t("toastAnalyzeSuccess"));
     } catch (error) {
-      message.error(getApiErrorMessage(error, "วิเคราะห์ไม่สำเร็จ กรุณาตรวจสอบ GitHub Token"));
+      message.error(getApiErrorMessage(error, t("toastAnalyzeFail")));
     } finally {
       setAnalyzingIds((prev) => {
         const next = new Set(prev);
@@ -112,89 +106,84 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
 
   const handleWhatToTest = async () => {
     if (settings?.aiOfflineMode) {
-      message.warning("AI offline mode is enabled for this repository");
+      message.warning(t("offlineWarn"));
       return;
     }
     if (selectedShas.length === 0) {
-      message.warning("กรุณาเลือก commit ที่ต้องการวิเคราะห์");
+      message.warning(t("toastSelectCommit"));
       return;
     }
+
     try {
       const result = await getWhatToTest(selectedShas);
-      message.success(
-        result?.source === "heuristic"
-          ? "ได้คำแนะนำแบบ heuristic (AI offline)"
-          : "ได้คำแนะนำจาก AI สำเร็จ"
-      );
+      message.success(result?.source === "heuristic" ? t("toastHeuristicRecommend") : t("toastRecommendSuccess"));
     } catch (error) {
-      message.error(getApiErrorMessage(error, "เกิดข้อผิดพลาดในการเชื่อมต่อ AI service"));
+      message.error(getApiErrorMessage(error, t("toastAiServiceError")));
     }
   };
 
   const handlePullRequestReview = async () => {
     if (settings?.aiOfflineMode) {
-      message.warning("AI offline mode is enabled for this repository");
+      message.warning(t("offlineWarn"));
       return;
     }
+
     const prNumber = Number(pullRequestNumber);
     if (!Number.isInteger(prNumber) || prNumber <= 0) {
-      message.warning("Please enter a valid pull request number");
+      message.warning(t("toastInvalidPr"));
       return;
     }
 
     try {
       const result = await reviewPullRequest(prNumber);
-      message.success(
-        result?.source === "heuristic"
-          ? "PR review completed with fallback response"
-          : "PR review completed"
-      );
+      message.success(result?.source === "heuristic" ? t("toastPrFallback") : t("toastPrDone"));
     } catch (error) {
-      message.error(getApiErrorMessage(error, "PR review failed. Please check the GitHub token and PR number."));
+      message.error(getApiErrorMessage(error, t("toastPrFail")));
     }
   };
 
   const handlePostPullRequestReview = async () => {
     if (settings?.aiOfflineMode) {
-      message.warning("AI offline mode is enabled for this repository");
+      message.warning(t("offlineWarn"));
       return;
     }
+
     const prNumber = Number(pullRequestNumber);
     if (!Number.isInteger(prNumber) || prNumber <= 0) {
-      message.warning("Please enter a valid pull request number");
+      message.warning(t("toastInvalidPr"));
       return;
     }
 
     try {
       await reviewAndCommentPullRequest(prNumber);
-      message.success("Posted AI review comment to the pull request");
+      message.success(t("toastPrPosted"));
     } catch (error) {
-      message.error(getApiErrorMessage(error, "Failed to post the review to GitHub."));
+      message.error(getApiErrorMessage(error, t("toastPrPostFail")));
     }
   };
 
-  const renderRisk = (v: RiskLevel | null) =>
-    v && RISK_CONFIG[v] ? (
-      <Chip color={RISK_CONFIG[v].color} size="sm" variant="soft">
-        <Chip.Label>{RISK_CONFIG[v].label}</Chip.Label>
+  const renderRisk = (value: RiskLevel | null) =>
+    value && riskConfig[value] ? (
+      <Chip color={riskConfig[value].color} size="sm" variant="soft">
+        <Chip.Label>{riskConfig[value].label}</Chip.Label>
       </Chip>
     ) : (
       <Chip size="sm" variant="soft">
-        <Chip.Label>ยังไม่วิเคราะห์</Chip.Label>
+        <Chip.Label>{t("notAnalyzed")}</Chip.Label>
       </Chip>
     );
 
   const renderAction = (record: CommitItem) => {
-    const isAnalyzed = !!record.analyzedAt;
+    const isAnalyzed = Boolean(record.analyzedAt);
     const isAnalyzing = analyzingIds.has(record.commitSha);
 
     const analyzeBtn = (label?: string) => (
       <button
         type="button"
         disabled={isAnalyzing || settings?.aiOfflineMode}
-        onClick={(e) => {
-          e.stopPropagation();
-          handleAnalyze(record.commitSha);
+        onClick={(event) => {
+          event.stopPropagation();
+          void handleAnalyze(record.commitSha);
         }}
         className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-2.5 py-1.5 text-xs font-medium text-[var(--text-primary)] cursor-pointer hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:hover:bg-gray-800"
       >
@@ -203,29 +192,29 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
       </button>
     );
 
-    if (!isAnalyzed) return analyzeBtn("วิเคราะห์");
+    if (!isAnalyzed) return analyzeBtn(t("analyze"));
 
     const analyzedTitle = record.analyzedAt
-      ? `วิเคราะห์เมื่อ ${dayjs(record.analyzedAt).fromNow()}`
-      : "วิเคราะห์สำเร็จแล้ว";
+      ? t("analyzedAt", { time: dayjs(record.analyzedAt).fromNow() })
+      : t("analyzedDone");
 
     return (
       <div className="flex flex-col items-start gap-1.5 min-w-[100px]">
         <Chip color="success" size="sm" variant="soft" title={analyzedTitle}>
-          <Chip.Label>วิเคราะห์แล้ว</Chip.Label>
+          <Chip.Label>{t("analyzed")}</Chip.Label>
         </Chip>
         <button
           type="button"
           disabled={isAnalyzing || settings?.aiOfflineMode}
-          title="วิเคราะห์อีกครั้ง"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleAnalyze(record.commitSha);
+          title={t("reanalyzeTitle")}
+          onClick={(event) => {
+            event.stopPropagation();
+            void handleAnalyze(record.commitSha);
           }}
           className="inline-flex items-center gap-1 text-xs text-muted cursor-pointer hover:text-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isAnalyzing ? <Spinner size="sm" color="current" /> : <Bot size={12} />}
-          อีกครั้ง
+          {t("again")}
         </button>
       </div>
     );
@@ -237,23 +226,22 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
         <Alert status="warning">
           <Alert.Indicator />
           <Alert.Content>
-            <Alert.Title>AI offline mode</Alert.Title>
-            <Alert.Description>
-              Analysis actions that would call AI are blocked locally for this repository until the toggle is turned off.
-            </Alert.Description>
+            <Alert.Title>{t("offlineTitle")}</Alert.Title>
+            <Alert.Description>{t("offlineDesc")}</Alert.Description>
           </Alert.Content>
         </Alert>
       )}
+
       <Card>
         <Card.Content className="flex flex-wrap items-center gap-3 p-4">
           <GitBranch className="size-5 text-sky-500 shrink-0" />
           <div className="flex-1 min-w-[200px]">
-            <p className="font-semibold text-sm">เลือก Branch</p>
-            <p className="text-xs text-muted">ระบบจะดึง commits จาก branch นี้</p>
+            <p className="font-semibold text-sm">{t("selectBranch")}</p>
+            <p className="text-xs text-muted">{t("selectBranchDesc")}</p>
           </div>
           <Select
             className="min-w-[200px]"
-            placeholder="เลือก branch..."
+            placeholder={t("selectBranchPlaceholder")}
             selectedKey={selectedBranch}
             onSelectionChange={(key) => setSelectedBranch(key ? String(key) : null)}
             isDisabled={branchesLoading}
@@ -264,9 +252,9 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
             </Select.Trigger>
             <Select.Popover>
               <ListBox>
-                {(branches ?? []).map((b) => (
-                  <ListBox.Item key={b.name} id={b.name} textValue={b.name}>
-                    {b.name}
+                {(branches ?? []).map((branch) => (
+                  <ListBox.Item key={branch.name} id={branch.name} textValue={branch.name}>
+                    {branch.name}
                     <ListBox.ItemIndicator />
                   </ListBox.Item>
                 ))}
@@ -281,33 +269,33 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
           <div className="mb-4 flex flex-wrap items-center gap-3">
             <GitPullRequest className="size-5 text-emerald-500 shrink-0" />
             <div className="flex-1 min-w-[220px]">
-              <p className="font-semibold text-sm">Review a pull request</p>
-              <p className="text-xs text-muted">Fetch PR changes from GitHub and ask AI to return review findings.</p>
+              <p className="font-semibold text-sm">{t("reviewPrTitle")}</p>
+              <p className="text-xs text-muted">{t("reviewPrDesc")}</p>
             </div>
             <Input
-              aria-label="Pull request number"
+              aria-label={t("prNumberAria")}
               value={pullRequestNumber}
-              onChange={(e) => setPullRequestNumber(e.target.value)}
-              placeholder="PR #"
+              onChange={(event) => setPullRequestNumber(event.target.value)}
+              placeholder={t("prPlaceholder")}
               className="w-[120px]"
             />
             <button
               type="button"
               disabled={isReviewingPullRequest || settings?.aiOfflineMode}
-              onClick={handlePullRequestReview}
+              onClick={() => void handlePullRequestReview()}
               className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white cursor-pointer hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isReviewingPullRequest ? <Spinner size="sm" color="current" /> : <Bot size={16} />}
-              Review PR
+              {t("reviewPr")}
             </button>
             <button
               type="button"
               disabled={isPostingPullRequestReview || settings?.aiOfflineMode}
-              onClick={handlePostPullRequestReview}
+              onClick={() => void handlePostPullRequestReview()}
               className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white cursor-pointer hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isPostingPullRequestReview ? <Spinner size="sm" color="current" /> : <Send size={16} />}
-              Post to GitHub
+              {t("postToGithub")}
             </button>
           </div>
 
@@ -316,16 +304,15 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
               <Alert.Indicator />
               <Alert.Content>
                 <Alert.Title>
-                  PR review summary
-                  {" "}
-                  <Chip color={RISK_CONFIG[pullRequestReviewResult.riskLevel].color} size="sm" variant="soft">
-                    <Chip.Label>{RISK_CONFIG[pullRequestReviewResult.riskLevel].label}</Chip.Label>
+                  {t("prSummary")}{" "}
+                  <Chip color={riskConfig[pullRequestReviewResult.riskLevel].color} size="sm" variant="soft">
+                    <Chip.Label>{riskConfig[pullRequestReviewResult.riskLevel].label}</Chip.Label>
                   </Chip>
                 </Alert.Title>
                 <Alert.Description>
                   <p className="mb-2 text-sm">{pullRequestReviewResult.summary}</p>
                   <p className="mb-2 text-xs text-muted">
-                    Recommendation: <strong>{pullRequestReviewResult.mergeRecommendation}</strong>
+                    {t("recommendation")} <strong>{pullRequestReviewResult.mergeRecommendation}</strong>
                   </p>
                   {pullRequestReviewResult.findings?.length > 0 ? (
                     <ul className="mt-1 list-disc pl-5 text-sm">
@@ -338,7 +325,7 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
                       ))}
                     </ul>
                   ) : (
-                    <span className="text-sm text-muted">No concrete findings were returned.</span>
+                    <span className="text-sm text-muted">{t("noFindings")}</span>
                   )}
                 </Alert.Description>
               </Alert.Content>
@@ -348,17 +335,17 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
           <div className="flex flex-wrap items-center gap-3">
             <Zap className="size-5 text-indigo-500 shrink-0" />
             <div className="flex-1 min-w-[200px]">
-              <p className="font-semibold text-sm">ควรทดสอบอะไรหลังจาก commits เหล่านี้?</p>
-              <p className="text-xs text-muted">เลือก commit จากตารางแล้วถาม AI</p>
+              <p className="font-semibold text-sm">{t("whatToTest")}</p>
+              <p className="text-xs text-muted">{t("whatToTestDesc")}</p>
             </div>
             <button
               type="button"
               disabled={selectedShas.length === 0 || isLoadingWhatToTest || settings?.aiOfflineMode}
-              onClick={handleWhatToTest}
+              onClick={() => void handleWhatToTest()}
               className="inline-flex items-center gap-2 rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white cursor-pointer hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isLoadingWhatToTest ? <Spinner size="sm" color="current" /> : <Bot size={16} />}
-              ถาม AI ({selectedShas.length} commits)
+              {t("askAi", { count: selectedShas.length })}
             </button>
           </div>
 
@@ -366,22 +353,22 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
             <Alert status="accent" className="mt-3">
               <Alert.Indicator />
               <Alert.Content>
-                <Alert.Title>คำแนะนำจาก AI</Alert.Title>
+                <Alert.Title>{t("aiRecommend")}</Alert.Title>
                 <Alert.Description>
                   {whatToTestResult.recommendations?.length > 0 ? (
                     <ul className="mt-1 list-disc pl-5 text-sm">
-                      {whatToTestResult.recommendations.map((r, i) => (
-                        <li key={i} className="mb-1">
-                          {r}
+                      {whatToTestResult.recommendations.map((recommendation, index) => (
+                        <li key={index} className="mb-1">
+                          {recommendation}
                         </li>
                       ))}
                     </ul>
                   ) : (
-                    <span className="text-sm text-muted">ไม่มีคำแนะนำที่ระบุแน่ชัด</span>
+                    <span className="text-sm text-muted">{t("noRecommend")}</span>
                   )}
                   {whatToTestResult.reasoning && (
                     <p className="mt-2 text-xs text-muted">
-                      <strong>เหตุผล:</strong> {whatToTestResult.reasoning}
+                      <strong>{t("reasoning")}</strong> {whatToTestResult.reasoning}
                     </p>
                   )}
                 </Alert.Description>
@@ -400,16 +387,14 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
           ) : !selectedBranch ? (
             <div className="flex flex-col items-center py-16 text-center px-4">
               <GitBranch size={48} className="opacity-20 mb-4 text-sky-500" />
-              <p className="font-medium mb-1">เลือก branch เพื่อดู commits</p>
-              <p className="text-sm text-muted max-w-sm">
-                ใช้ตัวเลือก branch ด้านบน ระบบจะดึง commits จาก GitHub และแสดงความเสี่ยง / AI summary
-              </p>
+              <p className="font-medium mb-1">{t("selectBranchEmpty")}</p>
+              <p className="text-sm text-muted max-w-sm">{t("selectBranchEmptyDesc")}</p>
             </div>
           ) : commits.length === 0 ? (
             <div className="flex flex-col items-center py-16 text-center px-4">
               <GitBranch size={48} className="opacity-20 mb-4" />
-              <p className="font-medium mb-1">ไม่พบ commits ใน branch นี้</p>
-              <p className="text-sm text-muted">ลองเปลี่ยน branch หรือตรวจสอบ GitHub Token</p>
+              <p className="font-medium mb-1">{t("noCommits")}</p>
+              <p className="text-sm text-muted">{t("noCommitsDesc")}</p>
             </div>
           ) : (
             <Table>
@@ -425,10 +410,10 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
                         className="size-4 cursor-pointer appearance-auto accent-sky-600"
                       />
                     </Table.Column>
-                    <Table.Column isRowHeader>Commit</Table.Column>
-                    <Table.Column>การเปลี่ยนแปลง</Table.Column>
-                    <Table.Column>ความเสี่ยง</Table.Column>
-                    <Table.Column>AI Summary</Table.Column>
+                    <Table.Column isRowHeader>{t("colCommit")}</Table.Column>
+                    <Table.Column>{t("colChanges")}</Table.Column>
+                    <Table.Column>{t("colRisk")}</Table.Column>
+                    <Table.Column>{t("colSummary")}</Table.Column>
                     <Table.Column className="min-w-[110px] w-[110px]" />
                   </Table.Header>
                   <Table.Body>
@@ -445,14 +430,14 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
                         </Table.Cell>
                         <Table.Cell>
                           <div className="font-mono text-xs text-muted">{record.commitSha.slice(0, 7)}</div>
-                          <div className="font-medium text-sm">{record.commitMessage ?? "(no message)"}</div>
+                          <div className="font-medium text-sm">{record.commitMessage ?? t("noMessage")}</div>
                           <div className="text-xs text-muted">
-                            {record.authorName ?? "unknown"}
+                            {record.authorName ?? t("unknown")}
                             {record.committedAt ? ` · ${dayjs(record.committedAt).fromNow()}` : ""}
                           </div>
                         </Table.Cell>
                         <Table.Cell>
-                          <div className="text-xs">{record.filesChanged} ไฟล์</div>
+                          <div className="text-xs">{t("files", { count: record.filesChanged })}</div>
                           <div className="flex gap-1 text-xs">
                             <span className="text-green-600">+{record.additions}</span>
                             <span className="text-red-600">-{record.deletions}</span>
@@ -463,7 +448,7 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
                           {record.aiSummary ? (
                             <p className="text-xs line-clamp-2">{record.aiSummary}</p>
                           ) : (
-                            <span className="text-xs text-muted">ยังไม่มี AI summary</span>
+                            <span className="text-xs text-muted">{t("noSummary")}</span>
                           )}
                         </Table.Cell>
                         <Table.Cell>{renderAction(record)}</Table.Cell>
@@ -473,7 +458,7 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
                 </Table.Content>
               </Table.ScrollContainer>
               <Table.Footer>
-                <p className="px-4 py-2 text-xs text-muted">{total} commits</p>
+                <p className="px-4 py-2 text-xs text-muted">{t("totalCommits", { count: total })}</p>
               </Table.Footer>
             </Table>
           )}

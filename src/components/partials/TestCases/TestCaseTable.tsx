@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useMemo } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { Button, Pagination, Spinner, Table, Tooltip } from "@heroui/react";
 import { Pencil, Trash2, Bot } from "lucide-react";
 import dayjs from "dayjs";
@@ -12,7 +13,6 @@ import { CHIP_PICKER_WIDTH, configToChipOptions, InlineChipPicker } from "./Inli
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 dayjs.extend(relativeTime);
-dayjs.locale("th");
 
 interface TestCaseTableProps {
   repoId: string;
@@ -50,6 +50,20 @@ const TestCaseRow = memo(function TestCaseRow({
   onPriorityChange,
   onTypeChange,
 }: TestCaseRowProps) {
+  const t = useTranslations("testCases");
+  const locale = useLocale();
+  const statusOptions = useMemo(
+    () => STATUS_CHIP_OPTIONS.map((o) => ({ value: o.value, color: o.color, label: t(o.labelKey) })),
+    [t],
+  );
+  const priorityOptions = useMemo(
+    () => PRIORITY_CHIP_OPTIONS.map((o) => ({ value: o.value, color: o.color, label: t(o.labelKey) })),
+    [t],
+  );
+  const typeOptions = useMemo(
+    () => TYPE_CHIP_OPTIONS.map((o) => ({ value: o.value, color: o.color, label: t(o.labelKey) })),
+    [t],
+  );
   return (
     <Table.Row id={record.id}>
       <Table.Cell>
@@ -59,7 +73,7 @@ const TestCaseRow = memo(function TestCaseRow({
               <Tooltip.Trigger>
                 <Bot size={12} className="text-indigo-500 shrink-0" />
               </Tooltip.Trigger>
-              <Tooltip.Content>สร้างด้วย AI</Tooltip.Content>
+              <Tooltip.Content>{t("aiTooltip")}</Tooltip.Content>
             </Tooltip>
           )}
           <span className="font-medium">{record.title}</span>
@@ -68,37 +82,37 @@ const TestCaseRow = memo(function TestCaseRow({
       <Table.Cell className="w-[130px]">
         <InlineChipPicker
           value={record.status}
-          options={STATUS_CHIP_OPTIONS}
+          options={statusOptions}
           chipWidth={CHIP_PICKER_WIDTH.status}
-          ariaLabel="เปลี่ยนสถานะ"
-          errorMsg="อัปเดตสถานะไม่สำเร็จ"
+          ariaLabel={t("changeStatus")}
+          errorMsg={t("updateStatusError")}
           onChange={(status) => onStatusChange(record.id, status)}
         />
       </Table.Cell>
       <Table.Cell className="w-[100px]">
         <InlineChipPicker
           value={record.priority}
-          options={PRIORITY_CHIP_OPTIONS}
+          options={priorityOptions}
           chipWidth={CHIP_PICKER_WIDTH.priority}
-          ariaLabel="เปลี่ยนความสำคัญ"
-          errorMsg="อัปเดตความสำคัญไม่สำเร็จ"
+          ariaLabel={t("changePriority")}
+          errorMsg={t("updatePriorityError")}
           onChange={(priority) => onPriorityChange(record.id, priority)}
         />
       </Table.Cell>
       <Table.Cell className="w-[130px]">
         <InlineChipPicker
           value={record.testType}
-          options={TYPE_CHIP_OPTIONS}
+          options={typeOptions}
           chipWidth={CHIP_PICKER_WIDTH.type}
-          ariaLabel="เปลี่ยนประเภท"
-          errorMsg="อัปเดตประเภทไม่สำเร็จ"
+          ariaLabel={t("changeType")}
+          errorMsg={t("updateTypeError")}
           onChange={(testType) => onTypeChange(record.id, testType)}
         />
       </Table.Cell>
       <Table.Cell>
         <Tooltip>
           <Tooltip.Trigger>
-            <span className="text-xs text-muted">{dayjs(record.updatedAt).fromNow()}</span>
+            <span className="text-xs text-muted">{dayjs(record.updatedAt).locale(locale).fromNow()}</span>
           </Tooltip.Trigger>
           <Tooltip.Content>{dayjs(record.updatedAt).format("DD/MM/YYYY HH:mm")}</Tooltip.Content>
         </Tooltip>
@@ -109,19 +123,19 @@ const TestCaseRow = memo(function TestCaseRow({
             variant="ghost"
             isIconOnly
             size="sm"
-            aria-label="แก้ไข"
+            aria-label={t("edit")}
             className="text-[var(--text-primary)]"
             onPress={() => onEdit(record)}
           >
             <Pencil size={14} />
           </Button>
           <ConfirmDialog
-            title="ลบ test case นี้?"
-            confirmLabel="ลบ"
+            title={t("deleteConfirm")}
+            confirmLabel={t("delete")}
             confirmVariant="danger"
             onConfirm={() => onDelete(record.id)}
             trigger={
-              <Button variant="ghost" isIconOnly size="sm" aria-label="ลบ test case">
+              <Button variant="ghost" isIconOnly size="sm" aria-label={t("deleteAria")}>
                 <Trash2 size={14} className="text-red-500" />
               </Button>
             }
@@ -145,6 +159,7 @@ export default function TestCaseTable({
   onPriorityChange,
   onTypeChange,
 }: TestCaseTableProps) {
+  const t = useTranslations("testCases");
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const paginationItems = useMemo(() => {
     const start = Math.max(1, page - 3);
@@ -160,9 +175,9 @@ export default function TestCaseTable({
         </div>
       ) : testCases.length === 0 ? (
         <div className="flex flex-col items-center py-16 text-center px-4">
-          <p className="font-medium mb-1">ยังไม่มี test case</p>
+          <p className="font-medium mb-1">{t("empty")}</p>
           <p className="text-sm text-muted max-w-xs">
-            กด &quot;Test Case ใหม่&quot; เพื่อสร้างเอง หรือ &quot;สร้างด้วย AI&quot; ให้ระบบช่วยร่าง
+            {t("emptyHint")}
           </p>
         </div>
       ) : (
@@ -170,11 +185,11 @@ export default function TestCaseTable({
           <Table.ScrollContainer>
             <Table.Content aria-label="Test cases" className="min-w-[760px] w-full table-fixed">
               <Table.Header>
-                <Table.Column isRowHeader className="w-auto">ชื่อ Test Case</Table.Column>
-                <Table.Column className="w-[130px]">สถานะ</Table.Column>
-                <Table.Column className="w-[100px]">ความสำคัญ</Table.Column>
-                <Table.Column className="w-[130px]">ประเภท</Table.Column>
-                <Table.Column className="w-[110px]">อัปเดต</Table.Column>
+                <Table.Column isRowHeader className="w-auto">{t("colName")}</Table.Column>
+                <Table.Column className="w-[130px]">{t("colStatus")}</Table.Column>
+                <Table.Column className="w-[100px]">{t("colPriority")}</Table.Column>
+                <Table.Column className="w-[130px]">{t("colType")}</Table.Column>
+                <Table.Column className="w-[110px]">{t("colUpdated")}</Table.Column>
                 <Table.Column className="w-[80px]" />
               </Table.Header>
               <Table.Body>
@@ -194,7 +209,7 @@ export default function TestCaseTable({
           </Table.ScrollContainer>
           <Table.Footer>
             <div className="flex items-center justify-between px-4 py-2">
-              <p className="text-xs text-muted">ทั้งหมด {total} รายการ</p>
+              <p className="text-xs text-muted">{t("totalItems", { count: total })}</p>
               <Pagination>
                 <Pagination.Content>
                   <Pagination.Item>

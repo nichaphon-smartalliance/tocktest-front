@@ -1,26 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { Chip, Spinner } from "@heroui/react";
 import {
-  LayoutDashboard,
-  Github,
+  AlertTriangle,
+  Ban,
   Bot,
   BotOff,
-  AlertTriangle,
   CheckCircle2,
-  CircleDashed,
-  Ban,
-  Sparkles,
   ChevronRight,
+  CircleDashed,
+  Github,
+  LayoutDashboard,
+  Sparkles,
 } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Chip, Spinner } from "@heroui/react";
-import type { ClientSession } from "@/types/app/session";
-import type { QaSummaryResponse } from "@/types/api/main/dashboard";
-import { useQaSummary } from "@/hooks/dashboard";
-import { useRecentRepos } from "@/hooks/common/useRecentRepos";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 import { useAiHealth } from "@/hooks/ai/useAiHealth";
+import { useRecentRepos } from "@/hooks/common/useRecentRepos";
+import { useQaSummary } from "@/hooks/dashboard";
+import type { QaSummaryResponse } from "@/types/api/main/dashboard";
+import type { ClientSession } from "@/types/app/session";
 
 const EXPANDED_W = 260;
 const COLLAPSED_W = 64;
@@ -29,9 +29,9 @@ const MAIN_NAV = [
   { key: "/dashboard", icon: LayoutDashboard, labelKey: "dashboard" },
 ] as const;
 
-
 function SectionLabel({ children, collapsed }: { children: string; collapsed: boolean }) {
   if (collapsed) return null;
+
   return (
     <p className="px-3 pt-3 pb-1 text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
       {children}
@@ -115,14 +115,14 @@ function RecentRepoList({
 
   const fromApi = summary?.recentRepos ?? [];
   const merged = [...recentLocal];
-  for (const r of fromApi) {
-    if (!merged.some((m) => m.id === r.id)) merged.push({ id: r.id, fullName: r.fullName });
+  for (const repo of fromApi) {
+    if (!merged.some((item) => item.id === repo.id)) merged.push({ id: repo.id, fullName: repo.fullName });
   }
-  const LIMIT = 5;
-  const display = expanded ? merged : merged.slice(0, LIMIT);
+  const limit = 5;
+  const display = expanded ? merged : merged.slice(0, limit);
   if (display.length === 0) return null;
 
-  const statsMap = new Map(fromApi.map((r) => [r.id, r]));
+  const statsMap = new Map(fromApi.map((repo) => [repo.id, repo]));
 
   return (
     <>
@@ -132,6 +132,7 @@ function RecentRepoList({
           const stats = statsMap.get(repo.id);
           const active = repo.id === activeRepoId;
           const shortName = repo.fullName.split("/").pop() ?? repo.fullName;
+
           return (
             <button
               key={repo.id}
@@ -160,20 +161,19 @@ function RecentRepoList({
             </button>
           );
         })}
-        {merged.length > LIMIT && (
+        {merged.length > limit && (
           <button
             type="button"
-            onClick={() => setExpanded((v) => !v)}
+            onClick={() => setExpanded((value) => !value)}
             className="text-xs text-indigo-600 dark:text-indigo-400 px-2.5 py-1 hover:underline cursor-pointer text-left"
           >
-            {expanded ? "ซ่อน →" : t("viewAll")}
+            {t("viewAll")}
           </button>
         )}
       </div>
     </>
   );
 }
-
 
 interface SidebarProps {
   collapsed: boolean;
@@ -200,13 +200,13 @@ export default function Sidebar({ collapsed, session }: SidebarProps) {
 
   return (
     <aside
-      className="sticky top-0 flex h-screen flex-col border-r border-gray-200 bg-[var(--bg-sider)] transition-[width] duration-200 dark:border-gray-700 overflow-hidden"
+      className="shell-sidebar sticky top-0 flex h-screen flex-col border-r border-[var(--border-subtle)] bg-[var(--bg-sider)] transition-[width] duration-200 overflow-hidden"
       style={{ width: collapsed ? COLLAPSED_W : EXPANDED_W }}
     >
       <button
         type="button"
         onClick={() => router.push("/dashboard")}
-        className="flex h-16 shrink-0 items-center border-b border-white/10 bg-indigo-500 px-4 cursor-pointer"
+        className="flex h-16 shrink-0 items-center border-b border-white/10 bg-gradient-to-r from-indigo-600 via-indigo-500 to-sky-500 px-4 cursor-pointer"
         style={{ justifyContent: collapsed ? "center" : "flex-start", padding: collapsed ? 0 : undefined }}
       >
         {collapsed ? (
@@ -221,10 +221,11 @@ export default function Sidebar({ collapsed, session }: SidebarProps) {
 
       <div className="flex-1 overflow-y-auto overflow-x-hidden">
         <SectionLabel collapsed={collapsed}>{t("main")}</SectionLabel>
-        <nav className="flex flex-col gap-0.5 px-2 pb-1">
+        <nav className="flex flex-col gap-1 px-2 pb-1.5">
           {MAIN_NAV.map(({ key, icon: Icon, labelKey }) => {
             const active = selectedKey === key;
             const label = tNav(labelKey);
+
             return (
               <button
                 key={key}
@@ -233,8 +234,8 @@ export default function Sidebar({ collapsed, session }: SidebarProps) {
                 title={collapsed ? label : undefined}
                 className={`relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors cursor-pointer ${
                   active
-                    ? "bg-indigo-500/10 font-semibold text-indigo-600 dark:text-indigo-400"
-                    : "text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+                  ? "bg-indigo-500/14 font-semibold text-indigo-600 shadow-sm dark:text-indigo-300"
+                  : "text-gray-600 hover:bg-white/40 dark:text-gray-300 dark:hover:bg-white/6"
                 }`}
                 style={{ justifyContent: collapsed ? "center" : "flex-start" }}
               >
@@ -256,15 +257,10 @@ export default function Sidebar({ collapsed, session }: SidebarProps) {
           <QaSnapshot summary={summary} collapsed={collapsed} />
         )}
 
-        <RecentRepoList
-          summary={summary}
-          recentLocal={recent}
-          collapsed={collapsed}
-          activeRepoId={activeRepoId}
-        />
+        <RecentRepoList summary={summary} recentLocal={recent} collapsed={collapsed} activeRepoId={activeRepoId} />
       </div>
 
-      <div className="shrink-0 border-t border-gray-200 dark:border-gray-700 px-3 py-3">
+        <div className="shrink-0 border-t border-[var(--border-subtle)] px-3 py-3">
         {!collapsed && (
           <div className="flex flex-wrap gap-1.5 mb-3">
             <Chip size="sm" variant="soft" color={aiAvailable === true ? "success" : aiAvailable === false ? "warning" : "accent"}>

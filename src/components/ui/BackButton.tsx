@@ -2,9 +2,9 @@
 
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 interface BackButtonProps {
-  /** Used when there is no browser history (e.g. opened in a new tab). */
   fallbackHref?: string;
   label?: string;
   className?: string;
@@ -12,24 +12,22 @@ interface BackButtonProps {
 
 export function BackButton({
   fallbackHref = "/dashboard",
-  label = "กลับ",
+  label,
   className = "",
 }: BackButtonProps) {
   const router = useRouter();
-
-  const handleBack = () => {
-    router.push(fallbackHref);
-  };
+  const t = useTranslations("common");
+  const resolvedLabel = label ?? t("back");
 
   return (
     <button
       type="button"
-      onClick={handleBack}
-      aria-label={label}
+      onClick={() => router.push(fallbackHref)}
+      aria-label={resolvedLabel}
       className={`inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-[var(--text-primary)] cursor-pointer hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-800 transition-colors ${className}`}
     >
       <ArrowLeft size={16} />
-      {label}
+      {resolvedLabel}
     </button>
   );
 }

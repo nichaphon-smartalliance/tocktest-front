@@ -1,19 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import {
-  Card,
-  Button,
-  Table,
-  Chip,
-  TextField,
-  Label,
-  InputGroup,
-  Switch,
-  Spinner,
-} from "@heroui/react";
+import { Button, Card, Chip, InputGroup, Label, Spinner, Switch, Table, TextField } from "@heroui/react";
 import dayjs from "dayjs";
+import "dayjs/locale/th";
 import { Plus, Trash2 } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
+import { useEffect, useState } from "react";
 import { AddTokenModal } from "@/components/partials/Dashboard/Modal";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useGithubTokens } from "@/hooks/repository";
@@ -27,13 +19,18 @@ interface SettingsContentProps {
 
 export default function SettingsContent({ repoId }: SettingsContentProps) {
   const [addTokenOpen, setAddTokenOpen] = useState(false);
-  const { tokens, isLoading: isLoadingTokens, deleteToken } = useGithubTokens();
-  const { settings, isLoading, update, isUpdating } = useRepoSettings(repoId);
-
   const [defaultBranch, setDefaultBranch] = useState("");
   const [autoAnalyzeOnPush, setAutoAnalyzeOnPush] = useState(false);
   const [aiOfflineMode, setAiOfflineMode] = useState(false);
   const [docsAutoSync, setDocsAutoSync] = useState(false);
+  const locale = useLocale();
+  const t = useTranslations("repoSettings");
+  const { tokens, isLoading: isLoadingTokens, deleteToken } = useGithubTokens();
+  const { settings, isLoading, update, isUpdating } = useRepoSettings(repoId);
+
+  useEffect(() => {
+    dayjs.locale(locale);
+  }, [locale]);
 
   useEffect(() => {
     if (!settings) return;
@@ -46,18 +43,18 @@ export default function SettingsContent({ repoId }: SettingsContentProps) {
   const handleDeleteToken = async (id: string) => {
     try {
       await deleteToken(id);
-      message.success("Token removed");
+      message.success(t("tokenRemoved"));
     } catch {
-      message.error("Failed to remove token");
+      message.error(t("tokenRemoveFail"));
     }
   };
 
   const handleSaveSettings = async () => {
     try {
       await update({ defaultBranch, autoAnalyzeOnPush, aiOfflineMode, docsAutoSync });
-      message.success("Repository settings saved");
+      message.success(t("saved"));
     } catch {
-      message.error("Failed to save repository settings");
+      message.error(t("saveFail"));
     }
   };
 
@@ -65,10 +62,10 @@ export default function SettingsContent({ repoId }: SettingsContentProps) {
     <div className="max-w-[760px]">
       <Card className="mb-4 rounded-lg">
         <Card.Header className="flex items-center justify-between px-4 py-3">
-          <Card.Title className="text-base font-semibold m-0">GitHub Tokens</Card.Title>
+          <Card.Title className="text-base font-semibold m-0">{t("githubTokens")}</Card.Title>
           <Button size="sm" variant="secondary" onPress={() => setAddTokenOpen(true)}>
             <Plus size={14} />
-            Add token
+            {t("addToken")}
           </Button>
         </Card.Header>
         <Card.Content className="p-0">
@@ -77,16 +74,16 @@ export default function SettingsContent({ repoId }: SettingsContentProps) {
               <Spinner />
             </div>
           ) : tokens.length === 0 ? (
-            <p className="text-center text-muted py-8 text-sm">No GitHub token connected yet.</p>
+            <p className="text-center text-muted py-8 text-sm">{t("noToken")}</p>
           ) : (
             <Table>
               <Table.ScrollContainer>
                 <Table.Content aria-label="GitHub tokens">
                   <Table.Header>
-                    <Table.Column isRowHeader>Label</Table.Column>
-                    <Table.Column>Status</Table.Column>
-                    <Table.Column>Created</Table.Column>
-                    <Table.Column>Expires</Table.Column>
+                    <Table.Column isRowHeader>{t("colLabel")}</Table.Column>
+                    <Table.Column>{t("colStatus")}</Table.Column>
+                    <Table.Column>{t("colCreated")}</Table.Column>
+                    <Table.Column>{t("colExpires")}</Table.Column>
                     <Table.Column className="w-12" />
                   </Table.Header>
                   <Table.Body>
@@ -97,13 +94,13 @@ export default function SettingsContent({ repoId }: SettingsContentProps) {
                         </Table.Cell>
                         <Table.Cell>
                           <Chip size="sm" variant="soft" color={record.isActive ? "success" : "danger"}>
-                            <Chip.Label>{record.isActive ? "Active" : "Inactive"}</Chip.Label>
+                            <Chip.Label>{record.isActive ? t("active") : t("inactive")}</Chip.Label>
                           </Chip>
                         </Table.Cell>
                         <Table.Cell>{dayjs(record.createdAt).format("DD/MM/YYYY")}</Table.Cell>
                         <Table.Cell>
                           {!record.expiresAt ? (
-                            <span className="text-muted">No expiry</span>
+                            <span className="text-muted">{t("noExpiry")}</span>
                           ) : (
                             <Chip
                               size="sm"
@@ -112,19 +109,19 @@ export default function SettingsContent({ repoId }: SettingsContentProps) {
                             >
                               <Chip.Label>
                                 {dayjs(record.expiresAt).format("DD/MM/YYYY")}
-                                {dayjs(record.expiresAt).isBefore(dayjs()) ? " (expired)" : ""}
+                                {dayjs(record.expiresAt).isBefore(dayjs()) ? t("expiredSuffix") : ""}
                               </Chip.Label>
                             </Chip>
                           )}
                         </Table.Cell>
                         <Table.Cell>
                           <ConfirmDialog
-                            title="Remove this token?"
-                            confirmLabel="Remove"
+                            title={t("removeConfirm")}
+                            confirmLabel={t("remove")}
                             confirmVariant="danger"
                             onConfirm={() => handleDeleteToken(record.id)}
                             trigger={
-                              <Button variant="ghost" isIconOnly size="sm" aria-label="Remove token">
+                              <Button variant="ghost" isIconOnly size="sm" aria-label={t("removeAria")}>
                                 <Trash2 size={14} className="text-red-500" />
                               </Button>
                             }
@@ -142,7 +139,7 @@ export default function SettingsContent({ repoId }: SettingsContentProps) {
 
       <Card className="rounded-lg">
         <Card.Header className="px-4 py-3">
-          <Card.Title className="text-base font-semibold m-0">Repository Settings</Card.Title>
+          <Card.Title className="text-base font-semibold m-0">{t("title")}</Card.Title>
         </Card.Header>
         <Card.Content className="px-4 pb-4 flex flex-col gap-4">
           {isLoading ? (
@@ -150,7 +147,7 @@ export default function SettingsContent({ repoId }: SettingsContentProps) {
           ) : (
             <>
               <TextField value={defaultBranch} onChange={setDefaultBranch}>
-                <Label>Default Branch</Label>
+                <Label>{t("defaultBranch")}</Label>
                 <InputGroup>
                   <InputGroup.Input placeholder="main" />
                 </InputGroup>
@@ -161,10 +158,8 @@ export default function SettingsContent({ repoId }: SettingsContentProps) {
                   <Switch.Thumb />
                 </Switch.Control>
                 <Switch.Content>
-                  Auto analyze on push
-                  <span className="block text-xs text-muted mt-1">
-                    Queue commit analysis when new pushes arrive for this repository.
-                  </span>
+                  {t("autoAnalyze")}
+                  <span className="block text-xs text-muted mt-1">{t("autoAnalyzeDesc")}</span>
                 </Switch.Content>
               </Switch>
 
@@ -173,10 +168,8 @@ export default function SettingsContent({ repoId }: SettingsContentProps) {
                   <Switch.Thumb />
                 </Switch.Control>
                 <Switch.Content>
-                  AI Offline Mode
-                  <span className="block text-xs text-muted mt-1">
-                    Block AI requests in the UI and force backend workflows to short-circuit safely.
-                  </span>
+                  {t("aiOffline")}
+                  <span className="block text-xs text-muted mt-1">{t("aiOfflineDesc")}</span>
                 </Switch.Content>
               </Switch>
 
@@ -185,15 +178,13 @@ export default function SettingsContent({ repoId }: SettingsContentProps) {
                   <Switch.Thumb />
                 </Switch.Control>
                 <Switch.Content>
-                  Docs Auto Sync
-                  <span className="block text-xs text-muted mt-1">
-                    Keep project docs refreshed when source files change without starting duplicate jobs.
-                  </span>
+                  {t("docsAutoSync")}
+                  <span className="block text-xs text-muted mt-1">{t("docsAutoSyncDesc")}</span>
                 </Switch.Content>
               </Switch>
 
               <Button variant="primary" isDisabled={isUpdating} onPress={handleSaveSettings}>
-                {isUpdating ? "Saving..." : "Save settings"}
+                {isUpdating ? t("save") : t("save")}
               </Button>
             </>
           )}

@@ -27,7 +27,7 @@ export default function Header({ collapsed, onToggle, session }: HeaderProps) {
   const showBack = pathname.startsWith("/repos/");
 
   return (
-    <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-gray-200 bg-[var(--bg-sider)] px-4 dark:border-gray-700">
+    <header className="shell-header sticky top-0 z-50 flex h-16 items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-sider)] px-4">
       <div className="flex items-center gap-2">
         <Button variant="ghost" isIconOnly onPress={onToggle} aria-label={t("toggleSidebar")} className="text-[var(--text-primary)]">
           {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
@@ -53,7 +53,7 @@ export default function Header({ collapsed, onToggle, session }: HeaderProps) {
 
         <Dropdown>
           <Dropdown.Trigger>
-            <div className="flex items-center gap-2 rounded-lg px-2 py-1 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800">
+            <div className="flex items-center gap-2 rounded-xl px-2.5 py-1.5 cursor-pointer hover:bg-white/10 dark:hover:bg-white/6">
               <Avatar size="sm" color="accent">
                 <Avatar.Fallback>{session.user.name?.charAt(0)?.toUpperCase() ?? "U"}</Avatar.Fallback>
               </Avatar>

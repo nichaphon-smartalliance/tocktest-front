@@ -3,32 +3,159 @@
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
 :root {
-  --bg-layout: #f0f2f5;
-  --bg-sider: #ffffff;
+  --bg-layout: #eef2ff;
+  --bg-sider: rgba(255, 255, 255, 0.82);
+  --bg-panel: rgba(255, 255, 255, 0.72);
+  --bg-panel-strong: rgba(255, 255, 255, 0.92);
+  --bg-panel-muted: rgba(248, 250, 252, 0.9);
+  --surface-overlay: rgba(99, 102, 241, 0.08);
   --text-primary: #0f172a;
-  --text-muted: #475569;
+  --text-muted: #526077;
+  --border-subtle: rgba(148, 163, 184, 0.22);
+  --border-strong: rgba(99, 102, 241, 0.28);
+  --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.08);
+  --shadow-lift: 0 24px 60px rgba(79, 70, 229, 0.16);
+  --shell-glow-a: rgba(99, 102, 241, 0.16);
+  --shell-glow-b: rgba(14, 165, 233, 0.12);
+  --accent-primary: #6366f1;
+  --accent-primary-strong: #4f46e5;
 }
 
 [data-theme="dark"] {
-  --bg-layout: #0f172a;
-  --bg-sider: #1e293b;
-  --text-primary: #f1f5f9;
-  --text-muted: #94a3b8;
+  --bg-layout: #07111f;
+  --bg-sider: rgba(9, 17, 30, 0.88);
+  --bg-panel: rgba(11, 20, 35, 0.76);
+  --bg-panel-strong: rgba(15, 23, 42, 0.92);
+  --bg-panel-muted: rgba(17, 24, 39, 0.84);
+  --surface-overlay: rgba(99, 102, 241, 0.18);
+  --text-primary: #e6edf7;
+  --text-muted: #93a4bb;
+  --border-subtle: rgba(148, 163, 184, 0.16);
+  --border-strong: rgba(129, 140, 248, 0.38);
+  --shadow-soft: 0 24px 80px rgba(2, 6, 23, 0.48);
+  --shadow-lift: 0 32px 90px rgba(15, 23, 42, 0.72);
+  --shell-glow-a: rgba(79, 70, 229, 0.28);
+  --shell-glow-b: rgba(14, 165, 233, 0.16);
+  --accent-primary: #818cf8;
+  --accent-primary-strong: #a5b4fc;
   color-scheme: dark;
 }
 
 html,
 body {
   height: 100%;
-  background-color: var(--bg-layout);
+  background:
+    radial-gradient(circle at top left, var(--shell-glow-a), transparent 30%),
+    radial-gradient(circle at top right, var(--shell-glow-b), transparent 28%),
+    linear-gradient(180deg, var(--bg-layout) 0%, color-mix(in srgb, var(--bg-layout) 88%, #000 12%) 100%);
   color: var(--text-primary);
   font-family: var(--font-inter), var(--font-noto-thai), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+body {
+  position: relative;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 20% 15%, rgba(255, 255, 255, 0.08), transparent 18%),
+    radial-gradient(circle at 80% 10%, rgba(99, 102, 241, 0.08), transparent 18%);
+  opacity: 0.9;
+}
+
 .text-muted {
   color: var(--text-muted);
+}
+
+button,
+a,
+input,
+textarea,
+select,
+[role="button"],
+[data-slot="button"],
+[data-slot="card"] {
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.app-shell {
+  position: relative;
+  isolation: isolate;
+}
+
+.shell-header {
+  background: color-mix(in srgb, var(--bg-sider) 88%, transparent);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+.shell-sidebar {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--bg-sider) 94%, transparent), color-mix(in srgb, var(--bg-panel-strong) 92%, transparent)),
+    radial-gradient(circle at top, rgba(99, 102, 241, 0.16), transparent 28%);
+  backdrop-filter: blur(18px);
+}
+
+.surface-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(18px);
+}
+
+.surface-card-strong {
+  background: var(--bg-panel-strong);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(18px);
+}
+
+.surface-card-hover:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-lift);
+}
+
+.surface-inset {
+  background: var(--bg-panel-muted);
+  border: 1px solid var(--border-subtle);
+}
+
+.dashboard-hero {
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--surface-overlay) 100%, transparent), transparent 62%),
+    var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(18px);
+}
+
+.login-stage {
+  position: relative;
+}
+
+.login-stage::before {
+  content: "";
+  position: absolute;
+  inset: -8% -18% auto;
+  height: 340px;
+  background:
+    radial-gradient(circle, rgba(99, 102, 241, 0.24), transparent 52%),
+    radial-gradient(circle at 70% 30%, rgba(14, 165, 233, 0.18), transparent 44%);
+  filter: blur(16px);
+  opacity: 0.9;
+  pointer-events: none;
 }
 
 /* Scrollbar */

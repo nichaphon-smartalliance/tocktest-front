@@ -1,21 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Button, Chip, Spinner, Switch, TextArea } from "@heroui/react";
-import dynamic from "next/dynamic";
 import dayjs from "dayjs";
 import "dayjs/locale/th";
-import {
-  Bot,
-  FileText,
-  History,
-  Pencil,
-  RefreshCw,
-  Save,
-  Sparkles,
-  Trash2,
-  X,
-} from "lucide-react";
+import dynamic from "next/dynamic";
+import { useLocale, useTranslations } from "next-intl";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Bot, FileText, History, Pencil, RefreshCw, Save, Sparkles, Trash2, X } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useProjectDoc } from "@/hooks/docs";
 import { useRepoSettings } from "@/hooks/settings";
@@ -23,8 +14,6 @@ import { getApiErrorMessage } from "@/lib/api-error";
 import { message } from "@/lib/toast";
 
 const ReactMarkdown = dynamic(() => import("react-markdown"), { ssr: false });
-
-dayjs.locale("th");
 
 interface DocsContentProps {
   repoId: string;
@@ -35,6 +24,8 @@ export default function DocsContent({ repoId }: DocsContentProps) {
   const [editContent, setEditContent] = useState("");
   const [showHistory, setShowHistory] = useState(false);
   const lastSyncedAtRef = useRef<string | null>(null);
+  const locale = useLocale();
+  const t = useTranslations("docs");
 
   const {
     doc,
@@ -55,6 +46,10 @@ export default function DocsContent({ repoId }: DocsContentProps) {
   const { settings, update: updateSettings, isUpdating: isUpdatingSettings } = useRepoSettings(repoId);
 
   useEffect(() => {
+    dayjs.locale(locale);
+  }, [locale]);
+
+  useEffect(() => {
     if (!status || !settings?.docsAutoSync || !status.isStale) return;
     if (status.status === "queued" || status.status === "running") return;
     void refresh().catch(() => undefined);
@@ -65,9 +60,9 @@ export default function DocsContent({ repoId }: DocsContentProps) {
     if (status.lastGeneratedAt === lastSyncedAtRef.current) return;
     lastSyncedAtRef.current = status.lastGeneratedAt;
     if (status.status === "success") {
-      message.success(status.message ?? "Docs updated");
+      message.success(status.message ?? t("toastUpdated"));
     }
-  }, [status]);
+  }, [status, t]);
 
   const statusTone = useMemo(() => {
     switch (status?.status) {
@@ -83,74 +78,69 @@ export default function DocsContent({ repoId }: DocsContentProps) {
     }
   }, [status?.status]);
 
-  const startEdit = () => {
-    setEditContent(doc?.content ?? "");
-    setIsEditing(true);
-  };
-
   const handleSave = async () => {
     try {
       await update(editContent);
-      message.success("Docs saved");
+      message.success(t("toastSaved"));
       setIsEditing(false);
     } catch (error) {
-      message.error(getApiErrorMessage(error, "Failed to save docs"));
+      message.error(getApiErrorMessage(error, t("toastSaveFail")));
     }
   };
 
   const handleGenerate = async () => {
     try {
       await generate();
-      message.success("Full docs build queued");
+      message.success(t("toastBuildQueued"));
     } catch (error) {
-      message.error(getApiErrorMessage(error, "Failed to start docs generation"));
+      message.error(getApiErrorMessage(error, t("toastBuildFail")));
     }
   };
 
   const handleRefresh = async () => {
     try {
       await refresh();
-      message.success("Incremental docs refresh queued");
+      message.success(t("toastRefreshQueued"));
     } catch (error) {
-      message.error(getApiErrorMessage(error, "Failed to refresh docs"));
+      message.error(getApiErrorMessage(error, t("toastRefreshFail")));
     }
   };
 
   const handleAutoUpdate = async () => {
     try {
       await autoUpdate();
-      message.success("Auto update queued");
+      message.success(t("toastAutoQueued"));
     } catch (error) {
-      message.error(getApiErrorMessage(error, "Failed to start auto update"));
+      message.error(getApiErrorMessage(error, t("toastAutoFail")));
     }
   };
 
   const handleDelete = async () => {
     try {
       await deleteDoc();
-      message.success("Docs removed");
+      message.success(t("toastRemoved"));
       setIsEditing(false);
       setShowHistory(false);
     } catch (error) {
-      message.error(getApiErrorMessage(error, "Failed to delete docs"));
+      message.error(getApiErrorMessage(error, t("toastDeleteFail")));
     }
   };
 
   const handleToggleAutoSync = async (selected: boolean) => {
     try {
       await updateSettings({ docsAutoSync: selected });
-      message.success(selected ? "Docs auto sync enabled" : "Docs auto sync disabled");
+      message.success(selected ? t("toastAutoSyncOn") : t("toastAutoSyncOff"));
     } catch (error) {
-      message.error(getApiErrorMessage(error, "Failed to update docs auto sync"));
+      message.error(getApiErrorMessage(error, t("toastAutoSyncFail")));
     }
   };
 
   const handleToggleOffline = async (selected: boolean) => {
     try {
       await updateSettings({ aiOfflineMode: selected });
-      message.success(selected ? "AI offline mode enabled" : "AI offline mode disabled");
+      message.success(selected ? t("toastOfflineOn") : t("toastOfflineOff"));
     } catch (error) {
-      message.error(getApiErrorMessage(error, "Failed to update AI mode"));
+      message.error(getApiErrorMessage(error, t("toastOfflineFail")));
     }
   };
 
@@ -170,58 +160,61 @@ export default function DocsContent({ repoId }: DocsContentProps) {
           )}
           <span className="text-xs text-muted">
             {status?.lastGeneratedAt
-              ? `Last generated ${dayjs(status.lastGeneratedAt).format("DD MMM YYYY HH:mm")}`
+              ? t("lastGenerated", { date: dayjs(status.lastGeneratedAt).format("DD MMM YYYY HH:mm") })
               : doc
-                ? `Updated ${dayjs(doc.updatedAt).format("DD MMM YYYY HH:mm")}`
+                ? t("updated", { date: dayjs(doc.updatedAt).format("DD MMM YYYY HH:mm") })
                 : ""}
           </span>
           <div className="flex-1" />
 
           <div className="flex items-center gap-2 flex-wrap">
-            <Button variant="secondary" size="sm" isDisabled={isGenerating || isEditing} onPress={handleGenerate}>
+            <Button variant="secondary" size="sm" isDisabled={isGenerating || isEditing} onPress={() => void handleGenerate()}>
               <Sparkles size={14} />
-              Build docs
+              {t("buildDocs")}
             </Button>
-            <Button variant="secondary" size="sm" isDisabled={isRefreshing || isEditing} onPress={handleRefresh}>
+            <Button variant="secondary" size="sm" isDisabled={isRefreshing || isEditing} onPress={() => void handleRefresh()}>
               <RefreshCw size={14} className={isRefreshing ? "animate-spin" : ""} />
-              Refresh
+              {t("refresh")}
             </Button>
-            <Button variant="secondary" size="sm" isDisabled={isAutoUpdating || isEditing} onPress={handleAutoUpdate}>
+            <Button variant="secondary" size="sm" isDisabled={isAutoUpdating || isEditing} onPress={() => void handleAutoUpdate()}>
               <Bot size={14} />
-              Auto update
+              {t("autoUpdate")}
             </Button>
             <Button variant="secondary" size="sm" onPress={() => setShowHistory((value) => !value)}>
               <History size={14} />
-              History
+              {t("history")}
             </Button>
             {!isEditing ? (
-              <Button variant="primary" size="sm" onPress={startEdit}>
+              <Button variant="primary" size="sm" onPress={() => {
+                setEditContent(doc?.content ?? "");
+                setIsEditing(true);
+              }}>
                 <Pencil size={14} />
-                Edit
+                {t("edit")}
               </Button>
             ) : (
               <>
                 <Button variant="secondary" size="sm" onPress={() => setIsEditing(false)}>
                   <X size={14} />
-                  Cancel
+                  {t("cancel")}
                 </Button>
-                <Button variant="primary" size="sm" isDisabled={isUpdating} onPress={handleSave}>
+                <Button variant="primary" size="sm" isDisabled={isUpdating} onPress={() => void handleSave()}>
                   <Save size={14} />
-                  {isUpdating ? "Saving..." : "Save"}
+                  {isUpdating ? "Saving..." : t("save")}
                 </Button>
               </>
             )}
             {doc && (
               <ConfirmDialog
-                title="Delete docs?"
-                description="This removes the current docs history for the repository."
-                confirmLabel="Delete"
+                title={t("deleteTitle")}
+                description={t("deleteDesc")}
+                confirmLabel={t("deleteConfirm")}
                 confirmVariant="danger"
                 onConfirm={handleDelete}
                 trigger={
                   <Button variant="danger" size="sm" isDisabled={isDeleting}>
                     <Trash2 size={14} />
-                    Delete
+                    {t("delete")}
                   </Button>
                 }
               />
@@ -240,10 +233,8 @@ export default function DocsContent({ repoId }: DocsContentProps) {
                 <Switch.Thumb />
               </Switch.Control>
               <Switch.Content>
-                Docs auto sync
-                <span className="block text-xs text-muted mt-1">
-                  Queue incremental refresh when the latest repo commit changes.
-                </span>
+                {t("docsAutoSync")}
+                <span className="block text-xs text-muted mt-1">{t("docsAutoSyncDesc")}</span>
               </Switch.Content>
             </Switch>
           </div>
@@ -257,10 +248,8 @@ export default function DocsContent({ repoId }: DocsContentProps) {
                 <Switch.Thumb />
               </Switch.Control>
               <Switch.Content>
-                AI offline mode
-                <span className="block text-xs text-muted mt-1">
-                  Prevent AI requests locally and keep backend workflows in offline-safe mode.
-                </span>
+                {t("aiOffline")}
+                <span className="block text-xs text-muted mt-1">{t("aiOfflineDesc")}</span>
               </Switch.Content>
             </Switch>
           </div>
@@ -270,11 +259,11 @@ export default function DocsContent({ repoId }: DocsContentProps) {
           <Alert status={statusTone} className="mb-4">
             <Alert.Indicator />
             <Alert.Content>
-              <Alert.Title>Docs pipeline</Alert.Title>
+              <Alert.Title>{t("pipelineTitle")}</Alert.Title>
               <Alert.Description>
-                <p className="text-sm">{status.message ?? "Docs are ready."}</p>
+                <p className="text-sm">{status.message ?? t("ready")}</p>
                 <p className="text-xs text-muted mt-1">
-                  {status.isStale ? "Repository changes are waiting to be documented." : "Docs match the latest tracked source revision."}
+                  {status.isStale ? t("stale") : t("upToDate")}
                 </p>
               </Alert.Description>
             </Alert.Content>
@@ -290,14 +279,14 @@ export default function DocsContent({ repoId }: DocsContentProps) {
             value={editContent}
             onChange={(event) => setEditContent(event.target.value)}
             className="min-h-[500px] font-mono text-sm"
-            placeholder="Write repository documentation in Markdown..."
+            placeholder={t("editorPlaceholder")}
           />
         ) : !doc ? (
           <div className="flex flex-col items-center py-16 text-center">
             <FileText size={48} className="opacity-20 mb-4" />
-            <p className="text-muted mb-4">No project docs yet.</p>
-            <Button variant="primary" onPress={handleGenerate}>
-              Generate docs
+            <p className="text-muted mb-4">{t("empty")}</p>
+            <Button variant="primary" onPress={() => void handleGenerate()}>
+              {t("generate")}
             </Button>
           </div>
         ) : (
@@ -329,7 +318,7 @@ export default function DocsContent({ repoId }: DocsContentProps) {
 
       {showHistory && (
         <div className="w-64 shrink-0">
-          <div className="font-semibold mb-3 text-sm">Version History</div>
+          <div className="font-semibold mb-3 text-sm">{t("versionHistory")}</div>
           <div className="flex flex-col gap-3 border-l-2 border-gray-200 dark:border-gray-700 pl-4">
             {versions.map((version) => (
               <div

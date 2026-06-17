@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import {
   Modal,
   Button,
@@ -14,6 +15,7 @@ import { message } from "@/lib/toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { Bot, Calendar, WifiOff, Check } from "lucide-react";
 import dayjs from "dayjs";
+import "dayjs/locale/th";
 import { useAiGenerateTestCases } from "@/hooks/testCase";
 import type { GeneratedTestCasePreview } from "@/types/app/testCase";
 import { TYPE_CONFIG, PRIORITY_CONFIG } from "../TestCases.config";
@@ -27,8 +29,8 @@ const DATE_INPUT =
 const isOfflinePreview = (tc: GeneratedTestCasePreview) =>
   tc.tags.some((t) => t === "ai-offline" || t === "heuristic");
 
-const formatRange = (from: string, to: string) =>
-  `${dayjs(from).format("D MMM YYYY")} – ${dayjs(to).format("D MMM YYYY")}`;
+const formatRange = (from: string, to: string, locale: string) =>
+  `${dayjs(from).locale(locale).format("D MMM YYYY")} – ${dayjs(to).locale(locale).format("D MMM YYYY")}`;
 
 interface AiGenerateModalProps {
   repoId: string;
@@ -39,6 +41,9 @@ interface AiGenerateModalProps {
 }
 
 export default function AiGenerateModal({ repoId, folderId, open, onClose, onSaved }: AiGenerateModalProps) {
+  const t = useTranslations("aiModal");
+  const tTc = useTranslations("testCases");
+  const locale = useLocale();
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [previews, setPreviews] = useState<GeneratedTestCasePreview[]>([]);
@@ -53,15 +58,15 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
 
   const selectedCount = useMemo(() => previews.filter((p) => p.selected).length, [previews]);
   const isOfflineResult = useMemo(() => previews.some(isOfflinePreview), [previews]);
-  const dateRangeLabel = fromDate && toDate ? formatRange(fromDate, toDate) : null;
+  const dateRangeLabel = fromDate && toDate ? formatRange(fromDate, toDate, locale) : null;
 
   const handleGenerate = async () => {
     if (!fromDate || !toDate) {
-      message.warning("กรุณาเลือกวันเริ่มต้นและวันสิ้นสุด");
+      message.warning(t("selectDates"));
       return;
     }
     if (dayjs(fromDate).isAfter(dayjs(toDate))) {
-      message.warning("วันเริ่มต้นต้องไม่เกินวันสิ้นสุด");
+      message.warning(t("invalidRange"));
       return;
     }
 
@@ -72,26 +77,26 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
         toDate: dayjs(toDate).endOf("day").toISOString(),
       });
       if (result.length === 0) {
-        message.warning("ไม่พบ test case ในช่วงเวลานี้ — ลองเลือกช่วงเวลาอื่นหรือตรวจสอบ GitHub Token");
+        message.warning(t("noResults"));
         return;
       }
       setPreviews(result);
-      message.success(`สร้าง ${result.length} test case สำเร็จ`);
+      message.success(t("genSuccess", { count: result.length }));
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
-      message.error(getApiErrorMessage(error, "AI สร้าง test case ไม่สำเร็จ กรุณาลองใหม่"));
+      message.error(getApiErrorMessage(error, t("genError")));
     }
   };
 
   const handleSave = async () => {
     const selected = previews.filter((p) => p.selected);
     if (selected.length === 0) {
-      message.warning("กรุณาเลือก test case อย่างน้อย 1 รายการ");
+      message.warning(t("selectAtLeastOne"));
       return;
     }
     try {
       await save(selected.map((p) => ({ ...p, folderId: folderId ?? undefined })));
-      message.success(`บันทึก ${selected.length} test case สำเร็จ`);
+      message.success(t("saveSuccess", { count: selected.length }));
       setPreviews([]);
       setFromDate("");
       setToDate("");
@@ -99,7 +104,7 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
       onClose();
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
-      message.error(getApiErrorMessage(error, "บันทึกไม่สำเร็จ"));
+      message.error(getApiErrorMessage(error, t("saveError")));
     }
   };
 
@@ -125,7 +130,7 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
               <Modal.Heading>
                 <span className="flex items-center gap-2">
                   <Bot size={18} className="text-indigo-500" />
-                  สร้าง Test Case ด้วย AI
+                  {t("heading")}
                 </span>
               </Modal.Heading>
               <Modal.CloseTrigger />
@@ -137,16 +142,16 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
                   <Alert status="accent">
                     <Alert.Indicator />
                     <Alert.Content>
-                      <Alert.Title>วิเคราะห์จาก commit ในช่วงเวลา</Alert.Title>
+                      <Alert.Title>{t("alertTitle")}</Alert.Title>
                       <Alert.Description>
-                        เลือกช่วงวันที่ ระบบจะดึง code changes จาก GitHub แล้วสร้าง test case ให้เลือกบันทึก
+                        {t("alertDesc")}
                       </Alert.Description>
                     </Alert.Content>
                   </Alert>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="flex flex-col gap-1.5">
-                      <Label htmlFor="ai-from-date">วันเริ่มต้น</Label>
+                      <Label htmlFor="ai-from-date">{t("fromDate")}</Label>
                       <input
                         id="ai-from-date"
                         type="date"
@@ -157,7 +162,7 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
                       />
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <Label htmlFor="ai-to-date">วันสิ้นสุด</Label>
+                      <Label htmlFor="ai-to-date">{t("toDate")}</Label>
                       <input
                         id="ai-to-date"
                         type="date"
@@ -172,7 +177,7 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
                   {dateRangeLabel && (
                     <p className="flex items-center gap-1.5 text-xs text-muted">
                       <Calendar size={13} />
-                      ช่วงที่เลือก: {dateRangeLabel}
+                      {t("selectedRange", { range: dateRangeLabel })}
                     </p>
                   )}
 
@@ -186,12 +191,12 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
                     {isGenerating ? (
                       <>
                         <Spinner size="sm" color="current" />
-                        กำลังวิเคราะห์ commit...
+                        {t("analyzing")}
                       </>
                     ) : (
                       <>
                         <Bot size={16} />
-                        สร้าง Test Cases
+                        {t("generate")}
                       </>
                     )}
                   </Button>
@@ -207,7 +212,7 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
                           AI offline
                         </Alert.Title>
                         <Alert.Description>
-                          แสดง test case แบบพื้นฐานจากไฟล์ที่เปลี่ยนในช่วงเวลาที่เลือก — สามารถแก้ไขหลังบันทึกได้
+                          {t("offlineDesc")}
                         </Alert.Description>
                       </Alert.Content>
                     </Alert>
@@ -216,7 +221,7 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
                       <p className="text-sm font-medium">
-                        พบ {previews.length} test case — เลือกรายการที่ต้องการบันทึก
+                        {t("foundCount", { count: previews.length })}
                       </p>
                       {dateRangeLabel && (
                         <p className="text-xs text-muted mt-0.5 flex items-center gap-1">
@@ -231,14 +236,14 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
                         variant="secondary"
                         onPress={() => setPreviews((p) => p.map((x) => ({ ...x, selected: true })))}
                       >
-                        เลือกทั้งหมด
+                        {t("selectAll")}
                       </Button>
                       <Button
                         size="sm"
                         variant="secondary"
                         onPress={() => setPreviews((p) => p.map((x) => ({ ...x, selected: false })))}
                       >
-                        ยกเลิกทั้งหมด
+                        {t("deselectAll")}
                       </Button>
                     </div>
                   </div>
@@ -282,14 +287,14 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
                               )}
                               <div className="flex flex-wrap items-center gap-1.5 mt-2">
                                 <Chip size="sm" variant="soft" color={typeCfg(tc.testType).color}>
-                                  <Chip.Label>{typeCfg(tc.testType).label}</Chip.Label>
+                                  <Chip.Label>{tTc(typeCfg(tc.testType).labelKey)}</Chip.Label>
                                 </Chip>
                                 <Chip size="sm" variant="soft" color={priorityCfg(tc.priority).color}>
-                                  <Chip.Label>{priorityCfg(tc.priority).label}</Chip.Label>
+                                  <Chip.Label>{tTc(priorityCfg(tc.priority).labelKey)}</Chip.Label>
                                 </Chip>
                                 {stepCount > 0 && (
                                   <Chip size="sm" variant="soft">
-                                    <Chip.Label>{stepCount} ขั้นตอน</Chip.Label>
+                                    <Chip.Label>{t("steps", { count: stepCount })}</Chip.Label>
                                   </Chip>
                                 )}
                                 {isOfflinePreview(tc) && (
@@ -316,10 +321,10 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
             {previews.length > 0 && (
               <Modal.Footer className="flex-wrap gap-2">
                 <span className="text-sm text-muted mr-auto">
-                  เลือกแล้ว {selectedCount} / {previews.length} รายการ
+                  {t("selectedCount", { count: selectedCount, total: previews.length })}
                 </span>
                 <Button variant="secondary" onPress={resetForm} isDisabled={isSaving}>
-                  เริ่มใหม่
+                  {t("restart")}
                 </Button>
                 <Button
                   variant="primary"
@@ -329,10 +334,10 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
                   {isSaving ? (
                     <>
                       <Spinner size="sm" color="current" />
-                      กำลังบันทึก...
+                      {t("saving")}
                     </>
                   ) : (
-                    `บันทึก ${selectedCount} รายการ`
+                    t("saveCount", { count: selectedCount })
                   )}
                 </Button>
               </Modal.Footer>

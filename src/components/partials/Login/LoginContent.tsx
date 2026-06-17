@@ -58,16 +58,18 @@ export default function LoginContent() {
   };
 
   return (
-    <div className="w-full max-w-[420px] px-4">
+    <div className="login-stage w-full max-w-[440px] px-4">
       <div className="text-center mb-8">
         <div className="flex justify-center mb-2">
-          <FlaskConical size={48} className="text-indigo-500" />
+          <div className="surface-card flex h-18 w-18 items-center justify-center rounded-[1.75rem]">
+            <FlaskConical size={42} className="text-indigo-500" />
+          </div>
         </div>
         <h1 className="text-2xl font-bold text-indigo-500 m-0">TockTest</h1>
         <p className="text-sm text-muted mt-1">{tCommon("tagline")}</p>
       </div>
 
-      <Card className="rounded-2xl shadow-lg">
+      <Card className="surface-card rounded-[1.75rem] shadow-none">
         <Card.Content className="p-8">
           <h2 className="text-lg font-semibold text-center mb-6">{t("signIn")}</h2>
 
