@@ -160,7 +160,7 @@ export default function SandboxContent({ repoId }: { repoId: string }) {
   const dockerAvailable = statusData === undefined ? null : (statusData?.available ?? false);
 
   return (
-    <div className="max-w-6xl mx-auto flex flex-col gap-4">
+    <div className="max-w-2xl mx-auto flex flex-col gap-4">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-xl font-semibold">Sandbox Runner</h1>
@@ -174,7 +174,7 @@ export default function SandboxContent({ repoId }: { repoId: string }) {
       </div>
 
       {dockerAvailable === false && (
-        <Alert status="warning">
+        <Alert status="warning" className="rounded-lg">
           <Alert.Indicator />
           <Alert.Content>
             <Alert.Title>Docker is required</Alert.Title>

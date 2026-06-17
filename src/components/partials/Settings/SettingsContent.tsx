@@ -61,7 +61,7 @@ export default function SettingsContent({ repoId }: SettingsContentProps) {
   return (
     <div className="max-w-[760px]">
       <Card className="mb-4 rounded-lg">
-        <Card.Header className="flex items-center justify-between px-4 py-3">
+        <Card.Header className="flex items-center justify-between px-4 py-3 gap-5">
           <Card.Title className="text-base font-semibold m-0">{t("githubTokens")}</Card.Title>
           <Button size="sm" variant="secondary" onPress={() => setAddTokenOpen(true)}>
             <Plus size={14} />

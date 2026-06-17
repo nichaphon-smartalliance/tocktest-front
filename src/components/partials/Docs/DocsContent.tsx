@@ -278,7 +278,7 @@ export default function DocsContent({ repoId }: DocsContentProps) {
           <TextArea
             value={editContent}
             onChange={(event) => setEditContent(event.target.value)}
-            className="min-h-[500px] font-mono text-sm"
+            className="min-h-[500px] min-w-[100%] font-mono text-sm"
             placeholder={t("editorPlaceholder")}
           />
         ) : !doc ? (
