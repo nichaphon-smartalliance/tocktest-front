@@ -302,13 +302,7 @@ export default function DocsContent({ repoId }: DocsContentProps) {
         ) : !doc ? (
           <div className="flex flex-col items-center py-16 text-center">
             <FileText size={48} className="opacity-20 mb-4" />
-            <p className="text-muted mb-4">{t("empty")}</p>
-            <Button variant="primary" onPress={() => {
-              setEditContent("");
-              setIsEditing(true);
-            }}>
-              {t2("createBtn")}
-            </Button>
+            <p className="text-muted">{t("empty")}</p>
           </div>
         ) : (
           <div className="markdown-body p-6 border border-gray-200 dark:border-gray-700 rounded-lg min-h-[400px] text-sm leading-relaxed">
