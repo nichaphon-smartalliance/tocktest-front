@@ -3,7 +3,6 @@
 import { useState } from "react";
 import {
   LayoutDashboard,
-  Settings,
   Github,
   Bot,
   BotOff,
@@ -28,7 +27,6 @@ const COLLAPSED_W = 64;
 
 const MAIN_NAV = [
   { key: "/dashboard", icon: LayoutDashboard, labelKey: "dashboard" },
-  { key: "/settings", icon: Settings, labelKey: "settings" },
 ] as const;
 
 
