@@ -89,7 +89,7 @@ function QaSnapshot({ summary, collapsed }: { summary: QaSummaryResponse | null 
           <Chip size="sm" variant="soft" color="accent">
             <Chip.Label className="text-xs flex items-center gap-0.5">
               <Sparkles size={9} />
-              AI {aiGeneratedCount}
+              {aiGeneratedCount}
             </Chip.Label>
           </Chip>
         )}
