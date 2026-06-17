@@ -301,7 +301,7 @@
     "error": "ไม่ได้รับคำตอบจาก AI ตรวจสอบว่า AI service กำลังทำงานอยู่"
   },
   "docs": {
-    "buildDocs": "สร้าง docs",
+    "buildDocs": "สร้าง docs ด้วย AI",
     "refresh": "รีเฟรช",
     "autoUpdate": "อัปเดตอัตโนมัติ",
     "history": "ประวัติ",

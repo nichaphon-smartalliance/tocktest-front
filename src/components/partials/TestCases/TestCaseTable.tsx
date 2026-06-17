@@ -123,7 +123,7 @@ const TestCaseRow = memo(function TestCaseRow({
             variant="ghost"
             isIconOnly
             size="sm"
-            aria-label={t("edit")}
+            aria-label={t("delete")}
             className="text-[var(--text-primary)]"
             onPress={() => onEdit(record)}
           >

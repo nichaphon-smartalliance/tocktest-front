@@ -26,6 +26,7 @@ export default function DocsContent({ repoId }: DocsContentProps) {
   const lastSyncedAtRef = useRef<string | null>(null);
   const locale = useLocale();
   const t = useTranslations("docs");
+  const t2 = useTranslations("testCases.folder");
 
   const {
     doc,
@@ -190,7 +191,7 @@ export default function DocsContent({ repoId }: DocsContentProps) {
                 setIsEditing(true);
               }}>
                 <Pencil size={14} />
-                {t("edit")}
+                {doc ? t("edit") : t2("createBtn")}
               </Button>
             ) : (
               <>
