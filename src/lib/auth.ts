@@ -39,13 +39,8 @@ export const authOptions: AuthOptions = {
     async signIn({ user, account, profile }) {
       if (account?.provider === "github") {
         try {
-          const githubProfile = profile as { id?: number; login?: string; avatar_url?: string } | undefined;
           const res = await axios.post(`${process.env.BACKEND_URL}/api/v1/auth/github`, {
-            githubId: githubProfile?.id,
-            githubLogin: githubProfile?.login,
-            email: user.email ?? undefined,
-            name: user.name ?? undefined,
-            avatarUrl: githubProfile?.avatar_url ?? user.image ?? undefined,
+            accessToken: account.access_token,
           });
           const { accessToken, user: backendUser } = res.data?.data ?? {};
           if (!accessToken || !backendUser) return false;
