@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   LayoutDashboard,
   Settings,
@@ -111,6 +112,7 @@ function RecentRepoList({
 }) {
   const router = useRouter();
   const t = useTranslations("sidebar");
+  const [expanded, setExpanded] = useState(false);
   if (collapsed) return null;
 
   const fromApi = summary?.recentRepos ?? [];
@@ -118,7 +120,8 @@ function RecentRepoList({
   for (const r of fromApi) {
     if (!merged.some((m) => m.id === r.id)) merged.push({ id: r.id, fullName: r.fullName });
   }
-  const display = merged.slice(0, 5);
+  const LIMIT = 5;
+  const display = expanded ? merged : merged.slice(0, LIMIT);
   if (display.length === 0) return null;
 
   const statsMap = new Map(fromApi.map((r) => [r.id, r]));
@@ -159,13 +162,15 @@ function RecentRepoList({
             </button>
           );
         })}
-        <button
-          type="button"
-          onClick={() => router.push("/dashboard")}
-          className="text-xs text-indigo-600 dark:text-indigo-400 px-2.5 py-1 hover:underline cursor-pointer text-left"
-        >
-          {t("viewAll")}
-        </button>
+        {merged.length > LIMIT && (
+          <button
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            className="text-xs text-indigo-600 dark:text-indigo-400 px-2.5 py-1 hover:underline cursor-pointer text-left"
+          >
+            {expanded ? "ซ่อน →" : t("viewAll")}
+          </button>
+        )}
       </div>
     </>
   );
