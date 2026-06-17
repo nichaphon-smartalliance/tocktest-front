@@ -21,7 +21,6 @@ import {
   Sliders,
   Trash2,
   User,
-  Webhook,
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -33,7 +32,6 @@ import { useGithubAppInstallationRepositories, useGithubAppSetup, useJobStats, u
 import { useGithubTokens } from "@/hooks/repository";
 import { useChangePassword, useUserProfile, useUserSettings } from "@/hooks/user";
 import { setUserLocale } from "@/i18n/locale";
-import { getWebhookEventsApi, replayWebhookEventApi, type WebhookEventResponse } from "@/lib/api/api-main";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { message } from "@/lib/toast";
 import type { GithubToken } from "@/types/app/repository";
@@ -44,7 +42,6 @@ const TAB_CONFIG: { key: AdminSettingsTab; labelKey: string; icon: typeof User }
   { key: "security", labelKey: "tabSecurity", icon: Shield },
   { key: "preferences", labelKey: "tabPreferences", icon: Sliders },
   { key: "integrations", labelKey: "tabIntegrations", icon: Github },
-  { key: "webhooks", labelKey: "tabWebhooks", icon: Webhook },
   { key: "system", labelKey: "tabSystem", icon: Server },
 ];
 
@@ -618,119 +615,8 @@ export default function AdminSettingsContent() {
         </div>
       )}
 
-      {tab === "webhooks" && <WebhookEventsPanel />}
-
       <AddTokenModal open={addTokenOpen} onClose={() => setAddTokenOpen(false)} />
     </div>
-  );
-}
-
-function WebhookEventsPanel() {
-  const qc = useQueryClient();
-  const [statusFilter, setStatusFilter] = useState<string>("");
-  const t = useTranslations("adminSettings");
-
-  const { data: events, isLoading } = useQuery({
-    queryKey: ["webhook-events", statusFilter],
-    queryFn: () => getWebhookEventsApi({ limit: 50, status: statusFilter || undefined }).then((response) => response.data?.data ?? []),
-    staleTime: 10_000,
-  });
-
-  const replayMutation = useMutation({
-    mutationFn: (eventId: string) => replayWebhookEventApi(eventId),
-    onSuccess: () => {
-      message.success(t("webhookReplayed"));
-      void qc.invalidateQueries({ queryKey: ["webhook-events"] });
-    },
-    onError: (error) => message.error(getApiErrorMessage(error, t("replayFailed"))),
-  });
-
-  const statusColor = (status: string): "success" | "danger" | "warning" | "accent" => {
-    if (status === "processed") return "success";
-    if (status === "failed") return "danger";
-    if (status === "replaying") return "accent";
-    return "warning";
-  };
-
-  return (
-    <Card className="rounded-xl">
-      <Card.Header className="px-5 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-        <div>
-          <Card.Title className="text-base font-semibold m-0">{t("webhookTitle")}</Card.Title>
-          <p className="text-xs text-muted mt-0.5">{t("webhookDesc")}</p>
-        </div>
-        <div className="flex gap-2 items-center">
-          <select
-            value={statusFilter}
-            onChange={(event) => setStatusFilter(event.target.value)}
-            className="text-xs border border-black-200 dark:border-black-700 rounded-lg px-2 py-1.5 bg-transparent"
-          >
-            <option value="">{t("allStatuses")}</option>
-            <option value="received">received</option>
-            <option value="processed">processed</option>
-            <option value="failed">failed</option>
-          </select>
-          <button
-            type="button"
-            onClick={() => void qc.invalidateQueries({ queryKey: ["webhook-events"] })}
-            className="text-muted hover:text-primary transition-colors"
-          >
-            <RefreshCw size={14} />
-          </button>
-        </div>
-      </Card.Header>
-      <Card.Content className="p-0">
-        {isLoading ? (
-          <div className="flex justify-center py-8">
-            <Spinner />
-          </div>
-        ) : !events?.length ? (
-          <div className="px-5 py-6 text-sm text-muted">{t("noWebhooks")}</div>
-        ) : (
-          <Table>
-            <Table.ScrollContainer>
-              <Table.Content aria-label="Webhook events">
-                <Table.Header>
-                  <Table.Column isRowHeader>{t("colEvent")}</Table.Column>
-                  <Table.Column>{t("colRepository")}</Table.Column>
-                  <Table.Column>{t("jobStatus")}</Table.Column>
-                  <Table.Column>{t("colReceived")}</Table.Column>
-                  <Table.Column className="w-16" />
-                </Table.Header>
-                <Table.Body>
-                  {events.map((event: WebhookEventResponse) => (
-                    <Table.Row key={event.id} id={event.id}>
-                      <Table.Cell>
-                        <span className="font-mono text-xs">{event.event}{event.action ? `.${event.action}` : ""}</span>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <span className="text-xs text-muted">{event.repoFullName ?? "-"}</span>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Chip size="sm" variant="soft" color={statusColor(event.status)}>
-                          <Chip.Label>{event.status}</Chip.Label>
-                        </Chip>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <span className="text-xs text-muted">{dayjs(event.createdAt).format("DD/MM HH:mm:ss")}</span>
-                      </Table.Cell>
-                      <Table.Cell>
-                        {event.status === "failed" && (
-                          <Button size="sm" variant="secondary" isDisabled={replayMutation.isPending} onPress={() => replayMutation.mutate(event.id)}>
-                            <RefreshCw size={12} />
-                            {t("replay")}
-                          </Button>
-                        )}
-                      </Table.Cell>
-                    </Table.Row>
-                  ))}
-                </Table.Body>
-              </Table.Content>
-            </Table.ScrollContainer>
-          </Table>
-        )}
-      </Card.Content>
-    </Card>
   );
 }
 

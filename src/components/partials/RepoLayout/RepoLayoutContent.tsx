@@ -1,7 +1,7 @@
 "use client";
 
 import { Breadcrumbs, Chip } from "@heroui/react";
-import { BookOpen, BugPlay, GitCommitHorizontal, MessageSquare, Settings, Terminal, Globe, Lock } from "lucide-react";
+import { BookOpen, BugPlay, GitCommitHorizontal, MessageSquare, Settings, Globe, Lock } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";
@@ -16,7 +16,6 @@ interface RepoLayoutContentProps {
 const TAB_ITEMS = [
   { key: "test-cases", labelKey: "testCases", icon: BugPlay },
   { key: "analysis", labelKey: "analysis", icon: GitCommitHorizontal },
-  { key: "sandbox", labelKey: "sandbox", icon: Terminal },
   { key: "chat", labelKey: "chat", icon: MessageSquare },
   { key: "docs", labelKey: "docs", icon: BookOpen },
   { key: "settings", labelKey: "settings", icon: Settings },

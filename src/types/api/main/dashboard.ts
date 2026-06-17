@@ -29,7 +29,6 @@ export interface GithubAppSetupResponse {
   installUrl: string | null;
   appIdConfigured: boolean;
   privateKeyConfigured: boolean;
-  webhookSecretConfigured: boolean;
 }
 
 export interface GithubAppInstallationResponse {

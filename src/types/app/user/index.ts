@@ -18,4 +18,4 @@ export interface UserSettings {
   updatedAt: string;
 }
 
-export type AdminSettingsTab = "profile" | "security" | "preferences" | "integrations" | "system" | "webhooks";
+export type AdminSettingsTab = "profile" | "security" | "preferences" | "integrations" | "system";
