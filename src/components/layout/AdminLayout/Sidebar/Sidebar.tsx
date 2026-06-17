@@ -111,6 +111,7 @@ function RecentRepoList({
   const router = useRouter();
   const t = useTranslations("sidebar");
   const [expanded, setExpanded] = useState(false);
+  console.log("expanded", expanded);
   if (collapsed) return null;
 
   const fromApi = summary?.recentRepos ?? [];
@@ -167,7 +168,7 @@ function RecentRepoList({
             onClick={() => setExpanded((value) => !value)}
             className="text-xs text-indigo-600 dark:text-indigo-400 px-2.5 py-1 hover:underline cursor-pointer text-left"
           >
-            {t("viewAll")}
+            {expanded ? t("viewLess"):t("viewAll")} 
           </button>
         )}
       </div>

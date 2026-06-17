@@ -34,7 +34,8 @@
   "sidebar": {
     "main": "หลัก",
     "recentRepos": "Repos ล่าสุด",
-    "viewAll": "ดูทั้งหมด →",
+    "viewAll": "ดูทั้งหมด",
+    "viewLess": "ดูน้อยลง",
     "qaOverview": "ภาพรวม QA",
     "noTestCases": "ยังไม่มี test case",
     "noTestCasesHint": "ซิงค์ repo แล้วเริ่มสร้าง test case",
