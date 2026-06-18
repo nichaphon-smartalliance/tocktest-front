@@ -7,6 +7,7 @@ import "dayjs/locale/th";
 import {
   Bot,
   BotOff,
+  Camera,
   Check,
   ChevronDown,
   ChevronUp,
@@ -24,7 +25,7 @@ import {
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { type ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { AddTokenModal } from "@/components/partials/Dashboard/Modal";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useAiHealth } from "@/hooks/ai/useAiHealth";
@@ -56,6 +57,8 @@ export default function AdminSettingsContent() {
   const [defaultPageSize, setDefaultPageSize] = useState("20");
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [preferredLanguage, setPreferredLanguage] = useState("th");
+  const [avatarDataUrl, setAvatarDataUrl] = useState<string | null>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
   const locale = useLocale();
@@ -104,8 +107,29 @@ export default function AdminSettingsContent() {
   }, [router, searchParams, t]);
 
   useEffect(() => {
-    if (profile) setName(profile.name);
+    if (profile) {
+      setName(profile.name);
+      setAvatarDataUrl(localStorage.getItem(`avatar_${profile.id}`));
+    }
   }, [profile]);
+
+  const handleAvatarChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !profile) return;
+    if (file.size > 2 * 1024 * 1024) {
+      message.warning("Image must be under 2MB");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const src = reader.result as string;
+      setAvatarDataUrl(src);
+      localStorage.setItem(`avatar_${profile.id}`, src);
+      message.success("Photo updated");
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
 
   useEffect(() => {
     if (!settings) return;
@@ -221,6 +245,48 @@ export default function AdminSettingsContent() {
               <Spinner />
             ) : (
               <>
+                <div className="flex items-center gap-4">
+                  <button
+                    type="button"
+                    onClick={() => avatarInputRef.current?.click()}
+                    className="group relative h-16 w-16 shrink-0 rounded-full overflow-hidden border-2 border-gray-200 dark:border-[#3e3e42] cursor-pointer"
+                  >
+                    {avatarDataUrl ? (
+                      <img src={avatarDataUrl} alt="avatar" className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="h-full w-full bg-indigo-500/15 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold text-2xl">
+                        {profile?.name?.charAt(0)?.toUpperCase() ?? "U"}
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                      <Camera size={18} className="text-white" />
+                    </div>
+                  </button>
+                  <div>
+                    <p className="text-sm font-medium">Profile Photo</p>
+                    <p className="text-xs text-muted">JPG, PNG or GIF · max 2MB · stored locally</p>
+                    <div className="flex gap-3 mt-1">
+                      <button type="button" onClick={() => avatarInputRef.current?.click()} className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer">
+                        {avatarDataUrl ? "Change photo" : "Upload photo"}
+                      </button>
+                      {avatarDataUrl && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAvatarDataUrl(null);
+                            if (profile?.id) localStorage.removeItem(`avatar_${profile.id}`);
+                            message.success("Photo removed");
+                          }}
+                          className="text-xs text-red-500 hover:underline cursor-pointer"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+                </div>
+
                 <TextField value={name} onChange={setName} isRequired>
                   <Label>{t("displayName")}</Label>
                   <InputGroup>

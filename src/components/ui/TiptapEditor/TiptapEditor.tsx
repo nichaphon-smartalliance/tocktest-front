@@ -96,6 +96,18 @@ function Toolbar({ editor }: { editor: Editor }) {
     [editor],
   );
 
+  const addImageByUrl = useCallback(() => {
+    // eslint-disable-next-line no-alert
+    const url = window.prompt("Image URL (http/https or paste a direct image link)");
+    if (!url) return;
+    if (!/^https?:\/\//i.test(url)) {
+      // eslint-disable-next-line no-alert
+      window.alert("Please enter a valid http/https URL.");
+      return;
+    }
+    editor.chain().focus().setImage({ src: url }).run();
+  }, [editor]);
+
   const setLink = useCallback(() => {
     const previous = (editor.getAttributes("link").href as string) ?? "";
     // eslint-disable-next-line no-alert
@@ -163,8 +175,12 @@ function Toolbar({ editor }: { editor: Editor }) {
       <ToolbarButton label="Link" active={editor.isActive("link")} onClick={setLink}>
         <Link2 size={15} />
       </ToolbarButton>
-      <ToolbarButton label="Image" onClick={() => imageInputRef.current?.click()}>
+      <ToolbarButton label="Upload image (file)" onClick={() => imageInputRef.current?.click()}>
         <ImagePlus size={15} />
+      </ToolbarButton>
+      <ToolbarButton label="Insert image by URL" onClick={addImageByUrl}>
+        <ImagePlus size={15} />
+        <span className="text-[9px] font-bold leading-none ml-0.5">URL</span>
       </ToolbarButton>
       <ToolbarButton
         label="Insert table"
