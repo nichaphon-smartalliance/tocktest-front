@@ -30,7 +30,7 @@ export function LocaleSwitcher() {
       <Dropdown.Trigger>
         <div
           aria-label={t("language")}
-          className={`flex h-9 w-9 items-center justify-center rounded-lg cursor-pointer text-[var(--text-primary)] hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${
+          className={`flex h-9 w-9 items-center justify-center rounded-lg cursor-pointer text-[var(--text-primary)] hover:bg-gray-100 dark:hover:bg-white/8 transition-colors ${
             isPending ? "opacity-50 pointer-events-none" : ""
           }`}
         >

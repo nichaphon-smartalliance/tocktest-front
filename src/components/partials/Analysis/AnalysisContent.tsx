@@ -185,7 +185,7 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
           event.stopPropagation();
           void handleAnalyze(record.commitSha);
         }}
-        className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-2.5 py-1.5 text-xs font-medium text-[var(--text-primary)] cursor-pointer hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:hover:bg-gray-800"
+        className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-2.5 py-1.5 text-xs font-medium text-[var(--text-primary)] cursor-pointer hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/16 dark:hover:bg-white/8"
       >
         {isAnalyzing ? <Spinner size="sm" color="current" /> : <Bot size={14} />}
         {label}

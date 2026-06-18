@@ -23,19 +23,19 @@
 
 [data-theme="dark"] {
   --bg-layout: #07111f;
-  --bg-sider: rgba(9, 17, 30, 0.88);
-  --bg-panel: rgba(11, 20, 35, 0.76);
-  --bg-panel-strong: rgba(15, 23, 42, 0.92);
-  --bg-panel-muted: rgba(17, 24, 39, 0.84);
+  --bg-sider: rgba(10, 18, 34, 0.92);
+  --bg-panel: rgba(11, 20, 38, 0.88);
+  --bg-panel-strong: rgba(15, 24, 44, 0.96);
+  --bg-panel-muted: rgba(17, 25, 42, 0.92);
   --surface-overlay: rgba(99, 102, 241, 0.18);
-  --text-primary: #e6edf7;
-  --text-muted: #93a4bb;
-  --border-subtle: rgba(148, 163, 184, 0.16);
-  --border-strong: rgba(129, 140, 248, 0.38);
-  --shadow-soft: 0 24px 80px rgba(2, 6, 23, 0.48);
-  --shadow-lift: 0 32px 90px rgba(15, 23, 42, 0.72);
-  --shell-glow-a: rgba(79, 70, 229, 0.28);
-  --shell-glow-b: rgba(14, 165, 233, 0.16);
+  --text-primary: #eef3fb;
+  --text-muted: #b4c6da;
+  --border-subtle: rgba(148, 163, 184, 0.26);
+  --border-strong: rgba(129, 140, 248, 0.52);
+  --shadow-soft: 0 24px 80px rgba(2, 6, 23, 0.52);
+  --shadow-lift: 0 32px 90px rgba(15, 23, 42, 0.76);
+  --shell-glow-a: rgba(79, 70, 229, 0.30);
+  --shell-glow-b: rgba(14, 165, 233, 0.18);
   --accent-primary: #818cf8;
   --accent-primary-strong: #a5b4fc;
   color-scheme: dark;
@@ -171,7 +171,7 @@ select,
   border-radius: 3px;
 }
 [data-theme="dark"] ::-webkit-scrollbar-thumb {
-  background: #374151;
+  background: #2e4057;
 }
 
 /* Markdown rendering (Docs page) */
@@ -214,6 +214,15 @@ select,
 }
 .markdown-body hr { margin: 1rem 0; border-color: var(--text-muted); opacity: 0.3; }
 .markdown-body img { max-width: 100%; height: auto; border-radius: 8px; margin: 0.5rem 0; }
+
+[data-theme="dark"] .markdown-body code {
+  background: rgba(129, 140, 248, 0.14);
+}
+[data-theme="dark"] .markdown-body pre {
+  background: #091525;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+}
+[data-theme="dark"] .markdown-body a { color: var(--accent-primary-strong); }
 
 /* Tiptap editor (Docs page) */
 .tiptap-editor { white-space: pre-wrap; }

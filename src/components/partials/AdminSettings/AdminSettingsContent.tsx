@@ -213,7 +213,7 @@ export default function AdminSettingsContent() {
 
       {tab === "profile" && (
         <Card className="rounded-xl">
-          <Card.Header className="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
+          <Card.Header className="px-5 py-4 border-b border-gray-200 dark:border-white/12">
             <Card.Title className="text-base font-semibold m-0">{t("profileTitle")}</Card.Title>
           </Card.Header>
           <Card.Content className="px-5 py-4 flex flex-col gap-4">
@@ -253,7 +253,7 @@ export default function AdminSettingsContent() {
 
       {tab === "security" && (
         <Card className="rounded-xl">
-          <Card.Header className="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
+          <Card.Header className="px-5 py-4 border-b border-gray-200 dark:border-white/12">
             <Card.Title className="text-base font-semibold m-0">{t("changePassword")}</Card.Title>
           </Card.Header>
           <Card.Content className="px-5 py-4 flex flex-col gap-4">
@@ -284,7 +284,7 @@ export default function AdminSettingsContent() {
 
       {tab === "preferences" && (
         <Card className="rounded-xl">
-          <Card.Header className="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
+          <Card.Header className="px-5 py-4 border-b border-gray-200 dark:border-white/12">
             <Card.Title className="text-base font-semibold m-0">{t("preferencesTitle")}</Card.Title>
           </Card.Header>
           <Card.Content className="px-5 py-4 flex flex-col gap-4">
@@ -347,7 +347,7 @@ export default function AdminSettingsContent() {
       {tab === "integrations" && (
         <div className="flex flex-col gap-4 mb-4">
           <Card className="rounded-xl">
-            <Card.Header className="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
+            <Card.Header className="px-5 py-4 border-b border-gray-200 dark:border-white/12">
               <div>
                 <Card.Title className="text-base font-semibold m-0">{t("connectGithubTitle")}</Card.Title>
                 <p className="text-xs text-muted mt-0.5">{t("connectGithubDesc")}</p>
@@ -355,7 +355,7 @@ export default function AdminSettingsContent() {
             </Card.Header>
             <Card.Content className="px-5 py-4 flex flex-col gap-3">
               {tokens.some((token) => token.provider === "oauth") ? (
-                <div className="flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-3">
+                <div className="flex items-center justify-between rounded-lg border border-gray-200 dark:border-white/12 px-4 py-3">
                   <div className="flex items-center gap-2">
                     <Github size={18} className="text-emerald-500" />
                     <span className="text-sm font-medium">
@@ -376,7 +376,7 @@ export default function AdminSettingsContent() {
           </Card>
 
           <Card className="rounded-xl">
-            <Card.Header className="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
+            <Card.Header className="px-5 py-4 border-b border-gray-200 dark:border-white/12">
               <div>
                 <Card.Title className="text-base font-semibold m-0">{t("githubAppTitle")}</Card.Title>
                 <p className="text-xs text-muted mt-0.5">{t("githubAppDesc")}</p>
@@ -401,7 +401,7 @@ export default function AdminSettingsContent() {
                     const isExpanded = expandedInstallationId === installation.installationId;
 
                     return (
-                      <div key={installation.id} className="rounded-lg border border-gray-200 dark:border-gray-700">
+                      <div key={installation.id} className="rounded-lg border border-gray-200 dark:border-white/12">
                         <button
                           type="button"
                           onClick={() => setExpandedInstallationId(isExpanded ? null : installation.installationId)}
@@ -436,7 +436,7 @@ export default function AdminSettingsContent() {
           </Card>
 
           <Card className="rounded-xl">
-            <Card.Header className="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-700">
+            <Card.Header className="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-white/12">
               <div>
                 <Card.Title className="text-base font-semibold m-0">GitHub Tokens</Card.Title>
                 <p className="text-xs text-muted mt-0.5">{t("tokensDesc")}</p>
@@ -511,11 +511,11 @@ export default function AdminSettingsContent() {
       {tab === "system" && (
         <div className="flex flex-col gap-4">
           <Card className="rounded-xl">
-            <Card.Header className="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
+            <Card.Header className="px-5 py-4 border-b border-gray-200 dark:border-white/12">
               <Card.Title className="text-base font-semibold m-0">{t("serviceStatus")}</Card.Title>
             </Card.Header>
             <Card.Content className="px-5 py-4 flex flex-col gap-3">
-              <div className="flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-3">
+              <div className="flex items-center justify-between rounded-lg border border-gray-200 dark:border-white/12 px-4 py-3">
                 <div className="flex items-center gap-2">
                   {aiAvailable === false ? (
                     <BotOff size={18} className="text-amber-500" />
@@ -528,7 +528,7 @@ export default function AdminSettingsContent() {
                   <Chip.Label>{aiAvailable === true ? t("aiReady") : aiAvailable === false ? "offline" : t("aiChecking")}</Chip.Label>
                 </Chip>
               </div>
-              <div className="flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-3">
+              <div className="flex items-center justify-between rounded-lg border border-gray-200 dark:border-white/12 px-4 py-3">
                 <span className="text-sm font-medium">{t("backendApi")}</span>
                 <Chip size="sm" variant="soft" color="success">
                   <Chip.Label>{process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4004"}</Chip.Label>
@@ -542,7 +542,7 @@ export default function AdminSettingsContent() {
                     { label: t("jobCompleted"), value: jobStats.completed, color: "text-emerald-600" },
                     { label: t("jobFailed"), value: jobStats.failed, color: "text-rose-600" },
                   ].map((item) => (
-                    <div key={item.label} className="rounded-lg border border-gray-200 px-4 py-3 dark:border-gray-700">
+                    <div key={item.label} className="rounded-lg border border-gray-200 px-4 py-3 dark:border-white/12">
                       <p className={`m-0 text-lg font-semibold ${item.color}`}>{item.value}</p>
                       <p className="m-0 text-xs text-muted">{item.label}</p>
                     </div>
@@ -553,7 +553,7 @@ export default function AdminSettingsContent() {
           </Card>
 
           <Card className="rounded-xl">
-            <Card.Header className="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
+            <Card.Header className="px-5 py-4 border-b border-gray-200 dark:border-white/12">
               <Card.Title className="text-base font-semibold m-0">{t("recentJobs")}</Card.Title>
             </Card.Header>
             <Card.Content className="p-0">
@@ -639,7 +639,7 @@ function InstallationRepositoryPanel({ installationId }: { installationId: strin
   };
 
   return (
-    <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-3">
+    <div className="border-t border-gray-200 dark:border-white/12 px-4 py-3">
       {isLoading ? (
         <div className="flex items-center justify-center py-4">
           <Spinner size="sm" />
@@ -649,7 +649,7 @@ function InstallationRepositoryPanel({ installationId }: { installationId: strin
       ) : (
         <div className="flex flex-col gap-2">
           {repositories.map((repo) => (
-            <div key={repo.githubRepoId} className="flex items-center justify-between rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2">
+            <div key={repo.githubRepoId} className="flex items-center justify-between rounded-lg bg-gray-50 dark:bg-white/6 px-3 py-2">
               <div className="flex flex-col">
                 <span className="text-sm font-medium">{repo.fullName}</span>
                 <span className="text-xs text-muted">

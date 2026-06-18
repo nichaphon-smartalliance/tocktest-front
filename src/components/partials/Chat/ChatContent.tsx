@@ -93,7 +93,7 @@ export default function ChatContent({ repoId, repoName }: ChatContentProps) {
                     key={s}
                     type="button"
                     onClick={() => void send(s)}
-                    className="text-left rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-xs text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                    className="text-left rounded-lg border border-gray-200 dark:border-slate-600/60 px-3 py-2 text-xs text-gray-600 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-white/6 transition-colors cursor-pointer"
                   >
                     {s}
                   </button>
@@ -133,21 +133,21 @@ export default function ChatContent({ repoId, repoName }: ChatContentProps) {
                 <Bot size={14} className="text-white" />
               </div>
               <div className="rounded-2xl rounded-tl-sm bg-gray-100 dark:bg-gray-800 px-4 py-2.5 flex items-center gap-1.5">
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "0ms" }} />
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "150ms" }} />
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "300ms" }} />
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-gray-400 dark:bg-slate-400 animate-bounce" style={{ animationDelay: "0ms" }} />
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-gray-400 dark:bg-slate-400 animate-bounce" style={{ animationDelay: "150ms" }} />
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-gray-400 dark:bg-slate-400 animate-bounce" style={{ animationDelay: "300ms" }} />
               </div>
             </div>
           )}
           <div ref={bottomRef} />
         </div>
 
-        <div className="border-t border-gray-200 dark:border-gray-700 p-3 flex gap-2 items-end">
+        <div className="border-t border-gray-200 dark:border-white/10 p-3 flex gap-2 items-end">
           {messages.length > 0 && (
             <button
               type="button"
               onClick={() => setMessages([])}
-              className="shrink-0 h-9 w-9 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center justify-center text-muted hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="shrink-0 h-9 w-9 rounded-lg border border-gray-200 dark:border-white/10 flex items-center justify-center text-muted hover:bg-gray-100 dark:hover:bg-white/8 transition-colors"
               title="Clear conversation"
             >
               <RefreshCw size={14} />
@@ -160,7 +160,7 @@ export default function ChatContent({ repoId, repoName }: ChatContentProps) {
             onKeyDown={handleKeyDown}
             placeholder="Ask about testing, code quality, or test case ideas... (Enter to send)"
             rows={1}
-            className="flex-1 resize-none rounded-xl border border-gray-200 dark:border-gray-700 bg-transparent px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow"
+            className="flex-1 resize-none rounded-xl border border-gray-200 dark:border-white/15 bg-transparent dark:bg-white/4 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 transition-shadow"
             style={{ minHeight: "38px", maxHeight: "120px", overflowY: "auto" }}
           />
           <Button
