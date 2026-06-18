@@ -126,9 +126,9 @@ export default function LoginContent() {
           </form>
 
           <div className="my-5 flex items-center gap-3">
-            <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
+            <div className="h-px flex-1 bg-gray-200 dark:bg-white/14" />
             <span className="text-xs text-muted">{t("or")}</span>
-            <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
+            <div className="h-px flex-1 bg-gray-200 dark:bg-white/14" />
           </div>
 
           <Button

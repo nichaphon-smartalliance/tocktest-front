@@ -35,14 +35,14 @@ function TagInput({
 
   return (
     <div
-      className={`border border-gray-300 dark:border-gray-600 rounded-md p-1 flex flex-wrap gap-1 min-h-9 ${
-        disabled ? "bg-gray-100 dark:bg-gray-800" : "bg-white dark:bg-gray-900"
+      className={`border border-gray-300 dark:border-white/16 rounded-md p-1 flex flex-wrap gap-1 min-h-9 ${
+        disabled ? "bg-gray-100 dark:bg-white/6" : "bg-white dark:bg-slate-900/80"
       }`}
     >
       {value.map((tag) => (
         <span
           key={tag}
-          className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded px-2 py-0.5 text-sm inline-flex items-center gap-1.5"
+          className="bg-gray-100 dark:bg-white/6 border border-gray-200 dark:border-white/12 rounded px-2 py-0.5 text-sm inline-flex items-center gap-1.5"
         >
           {tag}
           {!disabled && (

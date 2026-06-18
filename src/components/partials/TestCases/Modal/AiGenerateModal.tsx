@@ -24,7 +24,7 @@ const typeCfg = (t: GeneratedTestCasePreview["testType"]) => TYPE_CONFIG[t] ?? T
 const priorityCfg = (p: GeneratedTestCasePreview["priority"]) => PRIORITY_CONFIG[p] ?? PRIORITY_CONFIG.medium;
 const HIDDEN_TAGS = new Set(["heuristic", "ai-offline"]);
 const DATE_INPUT =
-  "w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40";
+  "w-full rounded-lg border border-gray-300 dark:border-white/16 bg-white dark:bg-slate-900/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40";
 
 const isOfflinePreview = (tc: GeneratedTestCasePreview) =>
   tc.tags.some((t) => t === "ai-offline" || t === "heuristic");
@@ -266,7 +266,7 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
                           className={`w-full text-left rounded-xl border p-3 transition-all ${
                             tc.selected
                               ? "border-indigo-500 bg-indigo-500/5 shadow-sm"
-                              : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+                              : "border-gray-200 dark:border-white/12 hover:border-gray-300 dark:hover:border-gray-600"
                           }`}
                         >
                           <div className="flex items-start gap-3">
@@ -275,7 +275,7 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
                               className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${
                                 tc.selected
                                   ? "border-indigo-500 bg-indigo-500 text-white"
-                                  : "border-gray-300 dark:border-gray-600"
+                                  : "border-gray-300 dark:border-white/16"
                               }`}
                             >
                               {tc.selected && <Check size={10} strokeWidth={3} />}

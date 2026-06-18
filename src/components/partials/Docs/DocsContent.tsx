@@ -342,7 +342,7 @@ export default function DocsContent({ repoId }: DocsContentProps) {
               >
                 <div
                   className={`absolute -left-[21px] top-1.5 size-2.5 rounded-full ${
-                    version.version === doc?.version ? "bg-indigo-500" : "bg-gray-300 dark:bg-gray-600"
+                    version.version === doc?.version ? "bg-indigo-500" : "bg-gray-300 dark:bg-slate-500"
                   }`}
                 />
                 <div className="font-medium text-sm">v{version.version}</div>

@@ -104,7 +104,7 @@ export default function ChatContent({ repoId, repoName }: ChatContentProps) {
 
           {messages.map((msg, i) => (
             <div key={i} className={`flex gap-2.5 ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
-              <div className={`shrink-0 h-7 w-7 rounded-full flex items-center justify-center text-white ${msg.role === "user" ? "bg-indigo-500" : "bg-gray-600 dark:bg-gray-500"}`}>
+              <div className={`shrink-0 h-7 w-7 rounded-full flex items-center justify-center text-white ${msg.role === "user" ? "bg-indigo-500" : "bg-gray-600 dark:bg-slate-500"}`}>
                 {msg.role === "user" ? <User size={14} /> : <Bot size={14} />}
               </div>
               <div
@@ -113,7 +113,7 @@ export default function ChatContent({ repoId, repoName }: ChatContentProps) {
                     ? "max-w-[80%] bg-indigo-500 text-white rounded-tr-sm"
                     : msg.error
                     ? "max-w-[92%] bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-tl-sm"
-                    : "max-w-[92%] bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-tl-sm"
+                    : "max-w-[92%] bg-gray-100 dark:bg-slate-800 text-gray-900 dark:text-slate-100 rounded-tl-sm"
                 }`}
               >
                 {msg.role === "assistant" ? (
@@ -129,10 +129,10 @@ export default function ChatContent({ repoId, repoName }: ChatContentProps) {
 
           {loading && (
             <div className="flex gap-2.5">
-              <div className="shrink-0 h-7 w-7 rounded-full bg-gray-600 dark:bg-gray-500 flex items-center justify-center">
+              <div className="shrink-0 h-7 w-7 rounded-full bg-gray-600 dark:bg-slate-500 flex items-center justify-center">
                 <Bot size={14} className="text-white" />
               </div>
-              <div className="rounded-2xl rounded-tl-sm bg-gray-100 dark:bg-gray-800 px-4 py-2.5 flex items-center gap-1.5">
+              <div className="rounded-2xl rounded-tl-sm bg-gray-100 dark:bg-slate-800 px-4 py-2.5 flex items-center gap-1.5">
                 <span className="inline-block h-1.5 w-1.5 rounded-full bg-gray-400 dark:bg-slate-400 animate-bounce" style={{ animationDelay: "0ms" }} />
                 <span className="inline-block h-1.5 w-1.5 rounded-full bg-gray-400 dark:bg-slate-400 animate-bounce" style={{ animationDelay: "150ms" }} />
                 <span className="inline-block h-1.5 w-1.5 rounded-full bg-gray-400 dark:bg-slate-400 animate-bounce" style={{ animationDelay: "300ms" }} />
