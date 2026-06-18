@@ -305,7 +305,7 @@ export default function DocsContent({ repoId }: DocsContentProps) {
             <p className="text-muted">{t("empty")}</p>
           </div>
         ) : (
-          <div className="markdown-body p-6 border border-gray-200 dark:border-gray-700 rounded-lg min-h-[400px] text-sm leading-relaxed">
+          <div className="markdown-body p-6 border border-gray-200 dark:border-gray-700 rounded-lg min-h-[400px] text-sm leading-relaxed bg-white dark:bg-gray-900">
             <ReactMarkdown
               components={{
                 code(props) {

@@ -241,7 +241,7 @@ export default function TiptapEditor({ value, onChange, placeholder, editable = 
   }, [editor, editable]);
 
   return (
-    <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden bg-[var(--bg-panel-strong)]">
+    <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden bg-white dark:bg-gray-900">
       {editor && <Toolbar editor={editor} />}
       <EditorContent editor={editor} />
     </div>
