@@ -93,7 +93,7 @@ export default function ChatContent({ repoId, repoName }: ChatContentProps) {
                     key={s}
                     type="button"
                     onClick={() => void send(s)}
-                    className="text-left rounded-lg border border-gray-200 dark:border-slate-600/60 px-3 py-2 text-xs text-gray-600 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-white/6 transition-colors cursor-pointer"
+                    className="text-left rounded-lg border border-gray-200 dark:border-[#3e3e42] px-3 py-2 text-xs text-gray-600 dark:text-[#cccccc] hover:bg-gray-50 dark:hover:bg-[#2a2d2e] transition-colors cursor-pointer"
                   >
                     {s}
                   </button>
@@ -104,7 +104,7 @@ export default function ChatContent({ repoId, repoName }: ChatContentProps) {
 
           {messages.map((msg, i) => (
             <div key={i} className={`flex gap-2.5 ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
-              <div className={`shrink-0 h-7 w-7 rounded-full flex items-center justify-center text-white ${msg.role === "user" ? "bg-indigo-500" : "bg-gray-600 dark:bg-slate-500"}`}>
+              <div className={`shrink-0 h-7 w-7 rounded-full flex items-center justify-center text-white ${msg.role === "user" ? "bg-indigo-500" : "bg-gray-600 dark:bg-[#5a5a5a]"}`}>
                 {msg.role === "user" ? <User size={14} /> : <Bot size={14} />}
               </div>
               <div
@@ -113,7 +113,7 @@ export default function ChatContent({ repoId, repoName }: ChatContentProps) {
                     ? "max-w-[80%] bg-indigo-500 text-white rounded-tr-sm"
                     : msg.error
                     ? "max-w-[92%] bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-tl-sm"
-                    : "max-w-[92%] bg-gray-100 dark:bg-slate-800 text-gray-900 dark:text-slate-100 rounded-tl-sm"
+                    : "max-w-[92%] bg-gray-100 dark:bg-[#2d2d2d] text-gray-900 dark:text-[#d4d4d4] rounded-tl-sm"
                 }`}
               >
                 {msg.role === "assistant" ? (
@@ -129,25 +129,25 @@ export default function ChatContent({ repoId, repoName }: ChatContentProps) {
 
           {loading && (
             <div className="flex gap-2.5">
-              <div className="shrink-0 h-7 w-7 rounded-full bg-gray-600 dark:bg-slate-500 flex items-center justify-center">
+              <div className="shrink-0 h-7 w-7 rounded-full bg-gray-600 dark:bg-[#5a5a5a] flex items-center justify-center">
                 <Bot size={14} className="text-white" />
               </div>
-              <div className="rounded-2xl rounded-tl-sm bg-gray-100 dark:bg-slate-800 px-4 py-2.5 flex items-center gap-1.5">
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-gray-400 dark:bg-slate-400 animate-bounce" style={{ animationDelay: "0ms" }} />
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-gray-400 dark:bg-slate-400 animate-bounce" style={{ animationDelay: "150ms" }} />
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-gray-400 dark:bg-slate-400 animate-bounce" style={{ animationDelay: "300ms" }} />
+              <div className="rounded-2xl rounded-tl-sm bg-gray-100 dark:bg-[#2d2d2d] px-4 py-2.5 flex items-center gap-1.5">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-gray-400 dark:bg-[#858585] animate-bounce" style={{ animationDelay: "0ms" }} />
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-gray-400 dark:bg-[#858585] animate-bounce" style={{ animationDelay: "150ms" }} />
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-gray-400 dark:bg-[#858585] animate-bounce" style={{ animationDelay: "300ms" }} />
               </div>
             </div>
           )}
           <div ref={bottomRef} />
         </div>
 
-        <div className="border-t border-gray-200 dark:border-white/10 p-3 flex gap-2 items-end">
+        <div className="border-t border-gray-200 dark:border-[#3e3e42] p-3 flex gap-2 items-end">
           {messages.length > 0 && (
             <button
               type="button"
               onClick={() => setMessages([])}
-              className="shrink-0 h-9 w-9 rounded-lg border border-gray-200 dark:border-white/10 flex items-center justify-center text-muted hover:bg-gray-100 dark:hover:bg-white/8 transition-colors"
+              className="shrink-0 h-9 w-9 rounded-lg border border-gray-200 dark:border-[#3e3e42] flex items-center justify-center text-muted hover:bg-gray-100 dark:hover:bg-[#2a2d2e] transition-colors"
               title="Clear conversation"
             >
               <RefreshCw size={14} />
@@ -160,7 +160,7 @@ export default function ChatContent({ repoId, repoName }: ChatContentProps) {
             onKeyDown={handleKeyDown}
             placeholder="Ask about testing, code quality, or test case ideas... (Enter to send)"
             rows={1}
-            className="flex-1 resize-none rounded-xl border border-gray-200 dark:border-white/15 bg-transparent dark:bg-white/4 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 transition-shadow"
+            className="flex-1 resize-none rounded-xl border border-gray-200 dark:border-[#3e3e42] bg-transparent dark:bg-[#3c3c3c] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-[#007acc] transition-shadow"
             style={{ minHeight: "38px", maxHeight: "120px", overflowY: "auto" }}
           />
           <Button

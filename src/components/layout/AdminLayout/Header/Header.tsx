@@ -53,7 +53,7 @@ export default function Header({ collapsed, onToggle, session }: HeaderProps) {
 
         <Dropdown>
           <Dropdown.Trigger>
-            <div className="flex items-center gap-2 rounded-xl px-2.5 py-1.5 cursor-pointer hover:bg-white/10 dark:hover:bg-white/6">
+            <div className="flex items-center gap-2 rounded-xl px-2.5 py-1.5 cursor-pointer hover:bg-white/10 dark:hover:bg-[#2a2d2e]">
               <Avatar size="sm" color="accent">
                 <Avatar.Fallback>{session.user.name?.charAt(0)?.toUpperCase() ?? "U"}</Avatar.Fallback>
               </Avatar>

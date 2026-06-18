@@ -226,7 +226,7 @@ export default function DocsContent({ repoId }: DocsContentProps) {
         </div>
 
         <div className="grid gap-3 mb-4 lg:grid-cols-2">
-          <div className="rounded-lg border border-gray-200 dark:border-white/12 p-3">
+          <div className="rounded-lg border border-gray-200 dark:border-[#3e3e42] p-3">
             <Switch
               isSelected={settings?.docsAutoSync ?? false}
               isDisabled={isUpdatingSettings}
@@ -241,7 +241,7 @@ export default function DocsContent({ repoId }: DocsContentProps) {
               </Switch.Content>
             </Switch>
           </div>
-          <div className="rounded-lg border border-gray-200 dark:border-white/12 p-3">
+          <div className="rounded-lg border border-gray-200 dark:border-[#3e3e42] p-3">
             <Switch
               isSelected={settings?.aiOfflineMode ?? false}
               isDisabled={isUpdatingSettings}
@@ -305,13 +305,13 @@ export default function DocsContent({ repoId }: DocsContentProps) {
             <p className="text-muted">{t("empty")}</p>
           </div>
         ) : (
-          <div className="markdown-body p-6 border border-gray-200 dark:border-white/12 rounded-lg min-h-[400px] text-sm leading-relaxed bg-white dark:bg-slate-900/80">
+          <div className="markdown-body p-6 border border-gray-200 dark:border-[#3e3e42] rounded-lg min-h-[400px] text-sm leading-relaxed bg-white dark:bg-[#1e1e1e]">
             <ReactMarkdown
               components={{
                 code(props) {
                   const { children, className } = props;
                   return (
-                    <code className={className ? className : "rounded bg-gray-100 dark:bg-white/8 px-1.5 py-0.5"}>
+                    <code className={className ? className : "rounded bg-gray-100 dark:bg-[#2d2d2d] px-1.5 py-0.5"}>
                       {children}
                     </code>
                   );
@@ -334,7 +334,7 @@ export default function DocsContent({ repoId }: DocsContentProps) {
       {showHistory && (
         <div className="w-64 shrink-0">
           <div className="font-semibold mb-3 text-sm">{t("versionHistory")}</div>
-          <div className="flex flex-col gap-3 border-l-2 border-gray-200 dark:border-white/12 pl-4">
+          <div className="flex flex-col gap-3 border-l-2 border-gray-200 dark:border-[#3e3e42] pl-4">
             {versions.map((version) => (
               <div
                 key={version.version}
@@ -342,7 +342,7 @@ export default function DocsContent({ repoId }: DocsContentProps) {
               >
                 <div
                   className={`absolute -left-[21px] top-1.5 size-2.5 rounded-full ${
-                    version.version === doc?.version ? "bg-indigo-500" : "bg-gray-300 dark:bg-slate-500"
+                    version.version === doc?.version ? "bg-indigo-500" : "bg-gray-300 dark:bg-[#5a5a5a]"
                   }`}
                 />
                 <div className="font-medium text-sm">v{version.version}</div>

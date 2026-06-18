@@ -54,7 +54,7 @@ function FolderNode({
     <div>
       <div
         className={`group flex items-center gap-1 rounded-md py-1.5 pr-1 text-sm cursor-pointer ${
-          isSelected ? "bg-indigo-500/10 font-semibold text-indigo-600 dark:text-indigo-400" : "hover:bg-gray-100 dark:hover:bg-white/8"
+          isSelected ? "bg-indigo-500/10 font-semibold text-indigo-600 dark:text-[#4fc1ff]" : "hover:bg-gray-100 dark:hover:bg-[#2a2d2e]"
         }`}
         style={{ paddingLeft: 8 + depth * 12 }}
       >
@@ -87,7 +87,7 @@ function FolderNode({
         <Dropdown>
           <Dropdown.Trigger
             aria-label={t("manage")}
-            className="opacity-0 group-hover:opacity-100 min-w-6 h-6 inline-flex items-center justify-center rounded-md bg-transparent border-0 cursor-pointer hover:bg-gray-100 dark:hover:bg-white/8 text-[var(--text-primary)]"
+            className="opacity-0 group-hover:opacity-100 min-w-6 h-6 inline-flex items-center justify-center rounded-md bg-transparent border-0 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#2a2d2e] text-[var(--text-primary)]"
           >
             <MoreHorizontal size={14} />
           </Dropdown.Trigger>
@@ -182,7 +182,7 @@ export default function FolderTree({ repoId, selectedFolderId, onSelectFolder }:
 
   return (
     <div className="py-2">
-      <div className="flex items-center justify-between px-2 pb-2 mb-2 border-b border-gray-100 dark:border-white/8">
+      <div className="flex items-center justify-between px-2 pb-2 mb-2 border-b border-gray-100 dark:border-[#3e3e42]">
         <span className="font-semibold text-sm">{t("title")}</span>
         <Button
           variant="ghost"
@@ -201,8 +201,8 @@ export default function FolderTree({ repoId, selectedFolderId, onSelectFolder }:
         onClick={() => onSelectFolder(null)}
         className={`flex w-full items-center gap-1.5 rounded-md px-3 py-1.5 text-sm mb-1 cursor-pointer ${
           selectedFolderId === null
-            ? "bg-indigo-500/10 font-semibold text-indigo-600 dark:text-indigo-400"
-            : "hover:bg-gray-100 dark:hover:bg-white/8"
+            ? "bg-indigo-500/10 font-semibold text-indigo-600 dark:text-[#4fc1ff]"
+            : "hover:bg-gray-100 dark:hover:bg-[#2a2d2e]"
         }`}
       >
         <FolderOpen size={14} className="opacity-50" />

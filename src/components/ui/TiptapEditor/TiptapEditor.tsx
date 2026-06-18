@@ -67,7 +67,7 @@ function ToolbarButton({
       className={`flex size-8 items-center justify-center rounded-md border text-sm transition disabled:opacity-40 disabled:cursor-not-allowed ${
         active
           ? "border-indigo-400 bg-indigo-500/15 text-indigo-600 dark:text-indigo-300"
-          : "border-gray-200 dark:border-white/12 hover:bg-gray-100 dark:hover:bg-white/8"
+          : "border-gray-200 dark:border-[#3e3e42] hover:bg-gray-100 dark:hover:bg-[#2a2d2e]"
       }`}
     >
       {children}
@@ -114,7 +114,7 @@ function Toolbar({ editor }: { editor: Editor }) {
   }, [editor]);
 
   return (
-    <div className="flex flex-wrap items-center gap-1 border-b border-gray-200 dark:border-white/12 p-2">
+    <div className="flex flex-wrap items-center gap-1 border-b border-gray-200 dark:border-[#3e3e42] p-2">
       <ToolbarButton label="Bold" active={editor.isActive("bold")} onClick={() => editor.chain().focus().toggleBold().run()}>
         <Bold size={15} />
       </ToolbarButton>
@@ -128,7 +128,7 @@ function Toolbar({ editor }: { editor: Editor }) {
         <Code size={15} />
       </ToolbarButton>
 
-      <span className="mx-1 h-5 w-px bg-gray-200 dark:bg-white/12" />
+      <span className="mx-1 h-5 w-px bg-gray-200 dark:bg-[#3e3e42]" />
 
       <ToolbarButton label="Heading 1" active={editor.isActive("heading", { level: 1 })} onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}>
         <Heading1 size={15} />
@@ -140,7 +140,7 @@ function Toolbar({ editor }: { editor: Editor }) {
         <Heading3 size={15} />
       </ToolbarButton>
 
-      <span className="mx-1 h-5 w-px bg-gray-200 dark:bg-white/12" />
+      <span className="mx-1 h-5 w-px bg-gray-200 dark:bg-[#3e3e42]" />
 
       <ToolbarButton label="Bullet list" active={editor.isActive("bulletList")} onClick={() => editor.chain().focus().toggleBulletList().run()}>
         <List size={15} />
@@ -158,7 +158,7 @@ function Toolbar({ editor }: { editor: Editor }) {
         <Minus size={15} />
       </ToolbarButton>
 
-      <span className="mx-1 h-5 w-px bg-gray-200 dark:bg-white/12" />
+      <span className="mx-1 h-5 w-px bg-gray-200 dark:bg-[#3e3e42]" />
 
       <ToolbarButton label="Link" active={editor.isActive("link")} onClick={setLink}>
         <Link2 size={15} />
@@ -173,7 +173,7 @@ function Toolbar({ editor }: { editor: Editor }) {
         <TableIcon size={15} />
       </ToolbarButton>
 
-      <span className="mx-1 h-5 w-px bg-gray-200 dark:bg-white/12" />
+      <span className="mx-1 h-5 w-px bg-gray-200 dark:bg-[#3e3e42]" />
 
       <ToolbarButton label="Undo" disabled={!editor.can().undo()} onClick={() => editor.chain().focus().undo().run()}>
         <Undo2 size={15} />
@@ -241,7 +241,7 @@ export default function TiptapEditor({ value, onChange, placeholder, editable = 
   }, [editor, editable]);
 
   return (
-    <div className="rounded-lg border border-gray-200 dark:border-white/12 overflow-hidden bg-white dark:bg-slate-900/80">
+    <div className="rounded-lg border border-gray-200 dark:border-[#3e3e42] overflow-hidden bg-white dark:bg-[#1e1e1e]">
       {editor && <Toolbar editor={editor} />}
       <EditorContent editor={editor} />
     </div>

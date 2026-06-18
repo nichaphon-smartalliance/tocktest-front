@@ -46,7 +46,7 @@ function QaSnapshot({ summary, collapsed }: { summary: QaSummaryResponse | null 
   const { byStatus, totalTestCases, passRate, failHighPriority, aiGeneratedCount } = summary;
   if (totalTestCases === 0) {
     return (
-      <div className="mx-2 mb-2 rounded-lg border border-dashed border-gray-300 dark:border-white/18 px-3 py-2.5">
+      <div className="mx-2 mb-2 rounded-lg border border-dashed border-gray-300 dark:border-[#3e3e42] px-3 py-2.5">
         <p className="text-xs text-muted m-0">{t("noTestCases")}</p>
         <p className="text-xs text-muted mt-0.5 m-0">{t("noTestCasesHint")}</p>
       </div>
@@ -61,7 +61,7 @@ function QaSnapshot({ summary, collapsed }: { summary: QaSummaryResponse | null 
   ];
 
   return (
-    <div className="mx-2 mb-2 rounded-lg border border-gray-200 dark:border-white/12 bg-gray-50/80 dark:bg-white/5 px-3 py-2.5">
+    <div className="mx-2 mb-2 rounded-lg border border-gray-200 dark:border-[#3e3e42] bg-gray-50/80 dark:bg-[#2d2d2d] px-3 py-2.5">
       <div className="flex items-center justify-between mb-2">
         <span className="text-xs font-semibold">{t("qaOverview")}</span>
         <span className="text-xs text-muted">{t("cases", { count: totalTestCases })}</span>
@@ -75,7 +75,7 @@ function QaSnapshot({ summary, collapsed }: { summary: QaSummaryResponse | null 
           </div>
         ))}
       </div>
-      <div className="mt-2 pt-2 border-t border-gray-200 dark:border-white/10 flex flex-wrap gap-1.5">
+      <div className="mt-2 pt-2 border-t border-gray-200 dark:border-[#3e3e42] flex flex-wrap gap-1.5">
         <Chip size="sm" variant="soft" color={passRate >= 70 ? "success" : passRate >= 40 ? "warning" : "danger"}>
           <Chip.Label className="text-xs">{t("passRate", { rate: passRate })}</Chip.Label>
         </Chip>
@@ -142,8 +142,8 @@ function RecentRepoList({
               onClick={() => router.push(`/repos/${repo.id}/test-cases`)}
               className={`flex items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs transition-colors cursor-pointer w-full ${
                 active
-                  ? "bg-indigo-500/10 text-indigo-600 dark:text-indigo-300"
-                  : "text-gray-600 hover:bg-gray-100 dark:text-slate-200 dark:hover:bg-white/8"
+                  ? "bg-indigo-500/10 dark:bg-[#37373d] text-indigo-600 dark:text-[#4fc1ff]"
+                  : "text-gray-600 hover:bg-gray-100 dark:text-[#cccccc] dark:hover:bg-[#2a2d2e]"
               }`}
             >
               <Github size={13} className="shrink-0 opacity-60" />
@@ -166,7 +166,7 @@ function RecentRepoList({
           <button
             type="button"
             onClick={() => setExpanded((value) => !value)}
-            className="text-xs text-indigo-600 dark:text-indigo-300 px-2.5 py-1 hover:underline cursor-pointer text-left"
+            className="text-xs text-indigo-600 dark:text-[#007acc] px-2.5 py-1 hover:underline cursor-pointer text-left"
           >
             {expanded ? t("viewLess"):t("viewAll")} 
           </button>
@@ -207,7 +207,7 @@ export default function Sidebar({ collapsed, session }: SidebarProps) {
       <button
         type="button"
         onClick={() => router.push("/dashboard")}
-        className="flex h-16 shrink-0 items-center border-b border-white/10 bg-gradient-to-r from-indigo-600 via-indigo-500 to-sky-500 px-4 cursor-pointer"
+        className="flex h-16 shrink-0 items-center border-b border-white/10 bg-gradient-to-r from-indigo-600 via-indigo-500 to-sky-500 dark:from-[#007acc] dark:via-[#007acc] dark:to-[#007acc] px-4 cursor-pointer"
         style={{ justifyContent: collapsed ? "center" : "flex-start", padding: collapsed ? 0 : undefined }}
       >
         {collapsed ? (
@@ -235,8 +235,8 @@ export default function Sidebar({ collapsed, session }: SidebarProps) {
                 title={collapsed ? label : undefined}
                 className={`relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors cursor-pointer ${
                   active
-                  ? "bg-indigo-500/14 font-semibold text-indigo-600 shadow-sm dark:text-indigo-200"
-                  : "text-gray-600 hover:bg-white/40 dark:text-slate-200 dark:hover:bg-white/8"
+                  ? "bg-indigo-500/14 dark:bg-[#37373d] font-semibold text-indigo-600 shadow-sm dark:text-[#4fc1ff] dark:shadow-none"
+                  : "text-gray-600 hover:bg-white/40 dark:text-[#cccccc] dark:hover:bg-[#2a2d2e]"
                 }`}
                 style={{ justifyContent: collapsed ? "center" : "flex-start" }}
               >
