@@ -6,7 +6,7 @@ import { Button, SearchField, Spinner } from "@heroui/react";
 import { message } from "@/lib/toast";
 import { Plus, RefreshCw, Github } from "lucide-react";
 import { useRepositoryList, useGithubTokens } from "@/hooks/repository";
-import { useGithubAppSetup } from "@/hooks/dashboard";
+import { useGithubAppSetup, useQaSummary } from "@/hooks/dashboard";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import RepoCard from "./RepoCard";
 import { AddTokenModal } from "./Modal";
@@ -20,6 +20,8 @@ export default function DashboardContent() {
   const privateCount = repositories.filter((r) => r.isPrivate).length;
   const { syncRepositories, isSyncing } = useGithubTokens();
   const { setup } = useGithubAppSetup();
+  const { summary } = useQaSummary();
+  const qaStatsMap = new Map(summary?.recentRepos?.map((r) => [r.id, r]) ?? []);
 
   const handleSync = async () => {
     try {
@@ -112,7 +114,7 @@ export default function DashboardContent() {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
           {repositories.map((repo) => (
-            <RepoCard key={repo.id} repo={repo} />
+            <RepoCard key={repo.id} repo={repo} qaStats={qaStatsMap.get(repo.id)} />
           ))}
         </div>
         </>

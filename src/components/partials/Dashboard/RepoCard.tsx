@@ -13,9 +13,10 @@ dayjs.extend(relativeTime);
 
 interface RepoCardProps {
   repo: Repository;
+  qaStats?: { testCaseCount: number; failCount: number };
 }
 
-export default function RepoCard({ repo }: RepoCardProps) {
+export default function RepoCard({ repo, qaStats }: RepoCardProps) {
   const router = useRouter();
   const t = useTranslations("repoCard");
   const locale = useLocale();
@@ -76,6 +77,28 @@ export default function RepoCard({ repo }: RepoCardProps) {
             </span>
           </div>
         </div>
+
+        {qaStats && qaStats.testCaseCount > 0 ? (
+          <div className="mt-3 pt-3 border-t border-gray-100 dark:border-[#3e3e42]">
+            <div className="flex items-center justify-between text-xs mb-1.5">
+              <div className="flex items-center gap-2 font-semibold">
+                <span className="text-emerald-500">{qaStats.testCaseCount - qaStats.failCount} ✓</span>
+                {qaStats.failCount > 0 && <span className="text-red-500">{qaStats.failCount} ✗</span>}
+              </div>
+              <span className="text-muted">{qaStats.testCaseCount} cases</span>
+            </div>
+            <div className="h-1 rounded-full bg-gray-100 dark:bg-[#3e3e42] overflow-hidden">
+              <div
+                className="h-full rounded-full bg-emerald-500"
+                style={{ width: `${Math.round(((qaStats.testCaseCount - qaStats.failCount) / qaStats.testCaseCount) * 100)}%` }}
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="mt-3 pt-3 border-t border-gray-100 dark:border-[#3e3e42]">
+            <span className="text-xs text-muted">No test cases</span>
+          </div>
+        )}
       </Card.Content>
     </Card>
   );
