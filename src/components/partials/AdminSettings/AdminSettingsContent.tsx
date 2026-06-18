@@ -125,6 +125,7 @@ export default function AdminSettingsContent() {
       const src = reader.result as string;
       setAvatarDataUrl(src);
       localStorage.setItem(`avatar_${profile.id}`, src);
+      window.dispatchEvent(new CustomEvent("avatar-updated", { detail: { src } }));
       message.success("Photo updated");
     };
     reader.readAsDataURL(file);
@@ -274,7 +275,10 @@ export default function AdminSettingsContent() {
                           type="button"
                           onClick={() => {
                             setAvatarDataUrl(null);
-                            if (profile?.id) localStorage.removeItem(`avatar_${profile.id}`);
+                            if (profile?.id) {
+                              localStorage.removeItem(`avatar_${profile.id}`);
+                              window.dispatchEvent(new CustomEvent("avatar-updated", { detail: { src: null } }));
+                            }
                             message.success("Photo removed");
                           }}
                           className="text-xs text-red-500 hover:underline cursor-pointer"

@@ -5,6 +5,7 @@ import { PanelLeftClose, PanelLeftOpen, LogOut, Sun, Moon, BotOff, Settings } fr
 import { signOut } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { useEffect, useState } from "react";
 import { useTheme } from "@/context/theme/ThemeProvider";
 import { BackButton } from "@/components/ui/BackButton";
 import { LocaleSwitcher } from "@/components/ui/LocaleSwitcher";
@@ -25,6 +26,18 @@ export default function Header({ collapsed, onToggle, session }: HeaderProps) {
   const t = useTranslations("header");
   const tNav = useTranslations("nav");
   const showBack = pathname.startsWith("/repos/");
+
+  const [avatarSrc, setAvatarSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    setAvatarSrc(localStorage.getItem(`avatar_${session.user.id}`));
+
+    const handleAvatarUpdate = (e: Event) => {
+      setAvatarSrc((e as CustomEvent<{ src: string | null }>).detail.src);
+    };
+    window.addEventListener("avatar-updated", handleAvatarUpdate);
+    return () => window.removeEventListener("avatar-updated", handleAvatarUpdate);
+  }, [session.user.id]);
 
   return (
     <header className="shell-header sticky top-0 z-50 flex h-16 items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-sider)] px-4">
@@ -54,9 +67,15 @@ export default function Header({ collapsed, onToggle, session }: HeaderProps) {
         <Dropdown>
           <Dropdown.Trigger>
             <div className="flex items-center gap-2 rounded-xl px-2.5 py-1.5 cursor-pointer hover:bg-white/10 dark:hover:bg-[#2a2d2e]">
-              <Avatar size="sm" color="accent">
-                <Avatar.Fallback>{session.user.name?.charAt(0)?.toUpperCase() ?? "U"}</Avatar.Fallback>
-              </Avatar>
+              {avatarSrc ? (
+                <div className="h-8 w-8 rounded-full overflow-hidden shrink-0 border border-gray-200 dark:border-[#3e3e42]">
+                  <img src={avatarSrc} alt="avatar" className="h-full w-full object-cover" />
+                </div>
+              ) : (
+                <Avatar size="sm" color="accent">
+                  <Avatar.Fallback>{session.user.name?.charAt(0)?.toUpperCase() ?? "U"}</Avatar.Fallback>
+                </Avatar>
+              )}
               <span className="text-sm font-medium text-[var(--text-primary)] hidden sm:inline">{session.user.name}</span>
             </div>
           </Dropdown.Trigger>
