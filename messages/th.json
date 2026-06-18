@@ -82,7 +82,12 @@
     "public": "Public",
     "noDescription": "ไม่มีคำอธิบาย",
     "syncedAgo": "ซิงค์ {time}",
-    "notSynced": "ยังไม่ได้ซิงค์"
+    "notSynced": "ยังไม่ได้ซิงค์",
+    "noTestCases": "ยังไม่มี test case",
+    "statusPass": "ผ่าน",
+    "statusFail": "ไม่ผ่าน",
+    "statusBlocked": "ติดขัด",
+    "statusWaiting": "รอทดสอบ"
   },
   "tokenModal": {
     "heading": "จัดการ GitHub Token",

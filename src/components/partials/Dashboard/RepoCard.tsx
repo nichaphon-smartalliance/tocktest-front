@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, Chip } from "@heroui/react";
-import { Lock, Globe, Package, GitBranch, Clock } from "lucide-react";
+import { Lock, Globe, Package, GitBranch, Clock, CheckCircle2, AlertTriangle, Ban, CircleDashed } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import dayjs from "dayjs";
@@ -13,7 +13,13 @@ dayjs.extend(relativeTime);
 
 interface RepoCardProps {
   repo: Repository;
-  qaStats?: { testCaseCount: number; failCount: number };
+  qaStats?: {
+    testCaseCount: number;
+    passCount: number;
+    failCount: number;
+    blockedCount: number;
+    notTestedCount: number;
+  };
 }
 
 export default function RepoCard({ repo, qaStats }: RepoCardProps) {
@@ -78,27 +84,34 @@ export default function RepoCard({ repo, qaStats }: RepoCardProps) {
           </div>
         </div>
 
-        {qaStats && qaStats.testCaseCount > 0 ? (
-          <div className="mt-3 pt-3 border-t border-gray-100 dark:border-[#3e3e42]">
-            <div className="flex items-center justify-between text-xs mb-1.5">
-              <div className="flex items-center gap-2 font-semibold">
-                <span className="text-emerald-500">{qaStats.testCaseCount - qaStats.failCount} ✓</span>
-                {qaStats.failCount > 0 && <span className="text-red-500">{qaStats.failCount} ✗</span>}
+        <div className="mt-3 pt-3 border-t border-gray-100 dark:border-[#3e3e42]">
+          {qaStats && qaStats.testCaseCount > 0 ? (
+            <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+              <div className="flex items-center gap-1.5 text-xs">
+                <CheckCircle2 size={11} className="text-emerald-500 shrink-0" />
+                <span className="text-muted">{t("statusPass")}</span>
+                <span className="ml-auto font-semibold tabular-nums">{qaStats.passCount}</span>
               </div>
-              <span className="text-muted">{qaStats.testCaseCount} cases</span>
+              <div className="flex items-center gap-1.5 text-xs">
+                <AlertTriangle size={11} className="text-red-500 shrink-0" />
+                <span className="text-muted">{t("statusFail")}</span>
+                <span className="ml-auto font-semibold tabular-nums">{qaStats.failCount}</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-xs">
+                <Ban size={11} className="text-amber-500 shrink-0" />
+                <span className="text-muted">{t("statusBlocked")}</span>
+                <span className="ml-auto font-semibold tabular-nums">{qaStats.blockedCount}</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-xs">
+                <CircleDashed size={11} className="text-gray-400 shrink-0" />
+                <span className="text-muted">{t("statusWaiting")}</span>
+                <span className="ml-auto font-semibold tabular-nums">{qaStats.notTestedCount}</span>
+              </div>
             </div>
-            <div className="h-1 rounded-full bg-gray-100 dark:bg-[#3e3e42] overflow-hidden">
-              <div
-                className="h-full rounded-full bg-emerald-500"
-                style={{ width: `${Math.round(((qaStats.testCaseCount - qaStats.failCount) / qaStats.testCaseCount) * 100)}%` }}
-              />
-            </div>
-          </div>
-        ) : (
-          <div className="mt-3 pt-3 border-t border-gray-100 dark:border-[#3e3e42]">
-            <span className="text-xs text-muted">No test cases</span>
-          </div>
-        )}
+          ) : (
+            <span className="text-xs text-muted">{t("noTestCases")}</span>
+          )}
+        </div>
       </Card.Content>
     </Card>
   );

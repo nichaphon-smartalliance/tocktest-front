@@ -76,7 +76,9 @@ export interface QaRecentRepoResponse {
   id: string;
   fullName: string;
   testCaseCount: number;
-  failCount: number;
   passCount: number;
+  failCount: number;
+  blockedCount: number;
+  notTestedCount: number;
   lastSyncedAt: string | null;
 }

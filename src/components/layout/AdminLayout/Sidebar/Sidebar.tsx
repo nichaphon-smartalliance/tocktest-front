@@ -1,17 +1,12 @@
 "use client";
 
-import { Chip, Spinner } from "@heroui/react";
+import { Chip } from "@heroui/react";
 import {
-  AlertTriangle,
-  Ban,
   Bot,
   BotOff,
-  CheckCircle2,
   ChevronRight,
-  CircleDashed,
   Github,
   LayoutDashboard,
-  Sparkles,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
@@ -19,7 +14,7 @@ import { useState } from "react";
 import { useAiHealth } from "@/hooks/ai/useAiHealth";
 import { useRecentRepos } from "@/hooks/common/useRecentRepos";
 import { useQaSummary } from "@/hooks/dashboard";
-import type { QaSummaryResponse } from "@/types/api/main/dashboard";
+import type { QaRecentRepoResponse } from "@/types/api/main/dashboard";
 import type { ClientSession } from "@/types/app/session";
 
 const EXPANDED_W = 260;
@@ -39,63 +34,6 @@ function SectionLabel({ children, collapsed }: { children: string; collapsed: bo
   );
 }
 
-function QaSnapshot({ summary, collapsed }: { summary: QaSummaryResponse | null | undefined; collapsed: boolean }) {
-  const t = useTranslations("sidebar");
-  if (collapsed || !summary) return null;
-
-  const { byStatus, totalTestCases, passRate, failHighPriority, aiGeneratedCount } = summary;
-  if (totalTestCases === 0) {
-    return (
-      <div className="mx-2 mb-2 rounded-lg border border-dashed border-gray-300 dark:border-[#3e3e42] px-3 py-2.5">
-        <p className="text-xs text-muted m-0">{t("noTestCases")}</p>
-        <p className="text-xs text-muted mt-0.5 m-0">{t("noTestCasesHint")}</p>
-      </div>
-    );
-  }
-
-  const items = [
-    { key: "pass", label: t("status.pass"), value: byStatus.pass, icon: CheckCircle2, color: "text-emerald-600" },
-    { key: "fail", label: t("status.fail"), value: byStatus.fail, icon: AlertTriangle, color: "text-red-500" },
-    { key: "blocked", label: t("status.blocked"), value: byStatus.blocked, icon: Ban, color: "text-amber-500" },
-    { key: "not_tested", label: t("status.notTested"), value: byStatus.not_tested, icon: CircleDashed, color: "text-gray-400" },
-  ];
-
-  return (
-    <div className="mx-2 mb-2 rounded-lg border border-gray-200 dark:border-[#3e3e42] bg-gray-50/80 dark:bg-[#2d2d2d] px-3 py-2.5">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-semibold">{t("qaOverview")}</span>
-        <span className="text-xs text-muted">{t("cases", { count: totalTestCases })}</span>
-      </div>
-      <div className="grid grid-cols-2 gap-1.5">
-        {items.map(({ key, label, value, icon: Icon, color }) => (
-          <div key={key} className="flex items-center gap-1.5 text-xs">
-            <Icon size={12} className={color} />
-            <span className="text-muted">{label}</span>
-            <span className="ml-auto font-semibold tabular-nums">{value}</span>
-          </div>
-        ))}
-      </div>
-      <div className="mt-2 pt-2 border-t border-gray-200 dark:border-[#3e3e42] flex flex-wrap gap-1.5">
-        <Chip size="sm" variant="soft" color={passRate >= 70 ? "success" : passRate >= 40 ? "warning" : "danger"}>
-          <Chip.Label className="text-xs">{t("passRate", { rate: passRate })}</Chip.Label>
-        </Chip>
-        {failHighPriority > 0 && (
-          <Chip size="sm" variant="soft" color="danger">
-            <Chip.Label className="text-xs">{t("failImportant", { count: failHighPriority })}</Chip.Label>
-          </Chip>
-        )}
-        {aiGeneratedCount > 0 && (
-          <Chip size="sm" variant="soft" color="accent">
-            <Chip.Label className="text-xs flex items-center gap-0.5">
-              <Sparkles size={9} />
-              {aiGeneratedCount}
-            </Chip.Label>
-          </Chip>
-        )}
-      </div>
-    </div>
-  );
-}
 
 function RecentRepoList({
   summary,
@@ -103,7 +41,7 @@ function RecentRepoList({
   collapsed,
   activeRepoId,
 }: {
-  summary: QaSummaryResponse | null | undefined;
+  summary: { recentRepos?: QaRecentRepoResponse[] } | null | undefined;
   recentLocal: { id: string; fullName: string }[];
   collapsed: boolean;
   activeRepoId?: string;
@@ -184,7 +122,7 @@ interface SidebarProps {
 export default function Sidebar({ collapsed, session }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { summary, isLoading } = useQaSummary();
+  const { summary } = useQaSummary();
   const { recent } = useRecentRepos();
   const { aiAvailable } = useAiHealth();
   const t = useTranslations("sidebar");
@@ -249,14 +187,6 @@ export default function Sidebar({ collapsed, session }: SidebarProps) {
             );
           })}
         </nav>
-
-        {isLoading && !collapsed ? (
-          <div className="flex justify-center py-4">
-            <Spinner size="sm" />
-          </div>
-        ) : (
-          <QaSnapshot summary={summary} collapsed={collapsed} />
-        )}
 
         <RecentRepoList summary={summary} recentLocal={recent} collapsed={collapsed} activeRepoId={activeRepoId} />
       </div>

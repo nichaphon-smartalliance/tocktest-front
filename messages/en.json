@@ -35,6 +35,7 @@
     "main": "Main",
     "recentRepos": "Recent repos",
     "viewAll": "View all →",
+    "viewLess": "View less",
     "qaOverview": "QA overview",
     "noTestCases": "No test cases yet",
     "noTestCasesHint": "Sync a repo, then start creating test cases",
@@ -81,7 +82,12 @@
     "public": "Public",
     "noDescription": "No description",
     "syncedAgo": "Synced {time}",
-    "notSynced": "Not synced"
+    "notSynced": "Not synced",
+    "noTestCases": "No test cases",
+    "statusPass": "Pass",
+    "statusFail": "Not pass",
+    "statusBlocked": "Blocked",
+    "statusWaiting": "Waiting"
   },
   "tokenModal": {
     "heading": "Manage GitHub Token",
