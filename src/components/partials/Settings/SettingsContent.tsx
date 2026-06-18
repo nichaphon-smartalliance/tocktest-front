@@ -164,15 +164,15 @@ export default function SettingsContent({ repoId }: SettingsContentProps) {
                 </Switch.Content>
               
 
-              <Switch isSelected={docsAutoSync} onChange={setDocsAutoSync}>
+             
                 <Switch.Control>
                   <Switch.Thumb />
                 </Switch.Control>
                 <Switch.Content>
-                  {t("docsAutoSync")}
-                  <span className="block text-xs text-muted mt-1">{t("docsAutoSyncDesc")}</span>
+                 
+
                 </Switch.Content>
-              </Switch>
+           
 
       
             </>

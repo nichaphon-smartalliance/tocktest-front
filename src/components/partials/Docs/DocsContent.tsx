@@ -226,32 +226,18 @@ export default function DocsContent({ repoId }: DocsContentProps) {
         </div>
 
         <div className="grid gap-3 mb-4 lg:grid-cols-3">
-          <div className="rounded-lg border border-gray-800 dark:border-[#3e3e42] p-3">
-            <Switch
-              isSelected={settings?.docsAutoSync ?? false}
-              isDisabled={isUpdatingSettings}
-              onChange={handleToggleAutoSync}
-            >
-              <Switch.Control>
-                <Switch.Thumb />
-              </Switch.Control>
-              <Switch.Content>
-                {t("docsAutoSync")}
-                <span className="block text-xs text-muted mt-1">{t("docsAutoSyncDesc")}</span>
-              </Switch.Content>
-            </Switch>
-          </div>
-         
-           
-              <Switch.Control>
-                <Switch.Thumb />
-              </Switch.Control>
-              <Switch.Content>
-              
-                
-              </Switch.Content>
-           
-         
+
+
+
+          <Switch.Control>
+            <Switch.Thumb />
+          </Switch.Control>
+          <Switch.Content>
+
+
+          </Switch.Content>
+
+
         </div>
 
         {status && (
@@ -321,7 +307,7 @@ export default function DocsContent({ repoId }: DocsContentProps) {
                 },
               }}
             >
-              {doc.content}
+              {doc?.content != "" || doc?.content != null ? doc?.content : "empty"} 
             </ReactMarkdown>
           </div>
         )}
@@ -337,9 +323,8 @@ export default function DocsContent({ repoId }: DocsContentProps) {
                 className={`relative ${version.version === doc?.version ? "text-indigo-600 dark:text-indigo-400" : "text-muted"}`}
               >
                 <div
-                  className={`absolute -left-[21px] top-1.5 size-2.5 rounded-full ${
-                    version.version === doc?.version ? "bg-indigo-500" : "bg-gray-300 dark:bg-[#5a5a5a]"
-                  }`}
+                  className={`absolute -left-[21px] top-1.5 size-2.5 rounded-full ${version.version === doc?.version ? "bg-indigo-500" : "bg-gray-300 dark:bg-[#5a5a5a]"
+                    }`}
                 />
                 <div className="font-medium text-sm">v{version.version}</div>
                 <div className="text-xs opacity-70">{dayjs(version.updatedAt).format("DD/MM/YYYY HH:mm")}</div>
