@@ -21,7 +21,7 @@ export default function SettingsContent({ repoId }: SettingsContentProps) {
   const [addTokenOpen, setAddTokenOpen] = useState(false);
   const [defaultBranch, setDefaultBranch] = useState("");
   const [autoAnalyzeOnPush, setAutoAnalyzeOnPush] = useState(false);
-  const [aiOfflineMode, setAiOfflineMode] = useState(false);
+ 
   const [docsAutoSync, setDocsAutoSync] = useState(false);
   const locale = useLocale();
   const t = useTranslations("repoSettings");
@@ -36,7 +36,7 @@ export default function SettingsContent({ repoId }: SettingsContentProps) {
     if (!settings) return;
     setDefaultBranch(settings.defaultBranch ?? "");
     setAutoAnalyzeOnPush(settings.autoAnalyzeOnPush ?? false);
-    setAiOfflineMode(settings.aiOfflineMode ?? false);
+    
     setDocsAutoSync(settings.docsAutoSync ?? false);
   }, [settings]);
 
@@ -49,14 +49,6 @@ export default function SettingsContent({ repoId }: SettingsContentProps) {
     }
   };
 
-  const handleSaveSettings = async () => {
-    try {
-      await update({ defaultBranch, autoAnalyzeOnPush, aiOfflineMode, docsAutoSync });
-      message.success(t("saved"));
-    } catch {
-      message.error(t("saveFail"));
-    }
-  };
 
   return (
     <div className="max-w-[760px]">
@@ -163,15 +155,14 @@ export default function SettingsContent({ repoId }: SettingsContentProps) {
                 </Switch.Content>
               </Switch>
 
-              <Switch isSelected={aiOfflineMode} onChange={setAiOfflineMode}>
-                <Switch.Control>
+              
+                
                   <Switch.Thumb />
-                </Switch.Control>
+              
                 <Switch.Content>
-                  {t("aiOffline")}
-                  <span className="block text-xs text-muted mt-1">{t("aiOfflineDesc")}</span>
+                 
                 </Switch.Content>
-              </Switch>
+              
 
               <Switch isSelected={docsAutoSync} onChange={setDocsAutoSync}>
                 <Switch.Control>
@@ -183,9 +174,7 @@ export default function SettingsContent({ repoId }: SettingsContentProps) {
                 </Switch.Content>
               </Switch>
 
-              <Button variant="primary" isDisabled={isUpdating} onPress={handleSaveSettings}>
-                {isUpdating ? t("save") : t("save")}
-              </Button>
+      
             </>
           )}
         </Card.Content>

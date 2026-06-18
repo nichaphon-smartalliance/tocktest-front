@@ -226,8 +226,8 @@ export default function AnalysisContent({ repoId }: AnalysisContentProps) {
         <Alert status="warning">
           <Alert.Indicator />
           <Alert.Content>
-            <Alert.Title>{t("offlineTitle")}</Alert.Title>
-            <Alert.Description>{t("offlineDesc")}</Alert.Description>
+            
+            
           </Alert.Content>
         </Alert>
       )}

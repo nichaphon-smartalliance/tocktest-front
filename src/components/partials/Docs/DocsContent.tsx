@@ -225,8 +225,8 @@ export default function DocsContent({ repoId }: DocsContentProps) {
           </div>
         </div>
 
-        <div className="grid gap-3 mb-4 lg:grid-cols-2">
-          <div className="rounded-lg border border-gray-200 dark:border-[#3e3e42] p-3">
+        <div className="grid gap-3 mb-4 lg:grid-cols-3">
+          <div className="rounded-lg border border-gray-800 dark:border-[#3e3e42] p-3">
             <Switch
               isSelected={settings?.docsAutoSync ?? false}
               isDisabled={isUpdatingSettings}
@@ -241,21 +241,17 @@ export default function DocsContent({ repoId }: DocsContentProps) {
               </Switch.Content>
             </Switch>
           </div>
-          <div className="rounded-lg border border-gray-200 dark:border-[#3e3e42] p-3">
-            <Switch
-              isSelected={settings?.aiOfflineMode ?? false}
-              isDisabled={isUpdatingSettings}
-              onChange={handleToggleOffline}
-            >
+         
+           
               <Switch.Control>
                 <Switch.Thumb />
               </Switch.Control>
               <Switch.Content>
-                {t("aiOffline")}
-                <span className="block text-xs text-muted mt-1">{t("aiOfflineDesc")}</span>
+              
+                
               </Switch.Content>
-            </Switch>
-          </div>
+           
+         
         </div>
 
         {status && (
