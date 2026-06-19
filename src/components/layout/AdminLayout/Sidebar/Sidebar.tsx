@@ -103,7 +103,7 @@ export default function Sidebar({ collapsed, session }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { summary } = useQaSummary();
-  const { repositories: recentRepos } = useRepositoryList({ pageSize: 5 });
+  const { repositories: recentRepos } = useRepositoryList({ page: 1, pageSize: 5 });
   const { aiAvailable } = useAiHealth();
   const t = useTranslations("sidebar");
   const tNav = useTranslations("nav");

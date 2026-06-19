@@ -17,12 +17,12 @@ export default function DashboardContent() {
   const t = useTranslations("dashboard");
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search);
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(1);
   const [tokenModalOpen, setTokenModalOpen] = useState(false);
 
   const handleSearch = (value: string) => {
     setSearch(value);
-    setPage(0);
+    setPage(1);
   };
 
   const { repositories, total, totalPages, pageNumber, isLoading, refetch } = useRepositoryList({
@@ -136,19 +136,19 @@ export default function DashboardContent() {
             <Button
               variant="secondary"
               size="sm"
-              isDisabled={pageNumber === 0}
-              onPress={() => setPage((p) => Math.max(0, p - 1))}
+              isDisabled={pageNumber <= 1}
+              onPress={() => setPage((p) => Math.max(1, p - 1))}
             >
               &#8249; {t("prevPage")}
             </Button>
             <span className="text-sm text-muted px-2">
-              {t("pageOf", { current: pageNumber + 1, total: totalPages })}
+              {t("pageOf", { current: pageNumber, total: totalPages })}
             </span>
             <Button
               variant="secondary"
               size="sm"
-              isDisabled={pageNumber >= totalPages - 1}
-              onPress={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+              isDisabled={pageNumber >= totalPages}
+              onPress={() => setPage((p) => Math.min(totalPages, p + 1))}
             >
               {t("nextPage")} &#8250;
             </Button>
