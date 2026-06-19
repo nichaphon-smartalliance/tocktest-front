@@ -10,10 +10,9 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
 import { useAiHealth } from "@/hooks/ai/useAiHealth";
-import { useRecentRepos } from "@/hooks/common/useRecentRepos";
 import { useQaSummary } from "@/hooks/dashboard";
+import { useRepositoryList } from "@/hooks/repository";
 import type { QaRecentRepoResponse } from "@/types/api/main/dashboard";
 import type { ClientSession } from "@/types/app/session";
 
@@ -36,38 +35,28 @@ function SectionLabel({ children, collapsed }: { children: string; collapsed: bo
 
 
 function RecentRepoList({
+  repos,
   summary,
-  recentLocal,
   collapsed,
   activeRepoId,
 }: {
+  repos: { id: string; fullName: string }[];
   summary: { recentRepos?: QaRecentRepoResponse[] } | null | undefined;
-  recentLocal: { id: string; fullName: string }[];
   collapsed: boolean;
   activeRepoId?: string;
 }) {
   const router = useRouter();
   const t = useTranslations("sidebar");
-  const [expanded, setExpanded] = useState(false);
-  console.log("expanded", expanded);
   if (collapsed) return null;
+  if (repos.length === 0) return null;
 
-  const fromApi = summary?.recentRepos ?? [];
-  const merged = [...recentLocal];
-  for (const repo of fromApi) {
-    if (!merged.some((item) => item.id === repo.id)) merged.push({ id: repo.id, fullName: repo.fullName });
-  }
-  const limit = 5;
-  const display = expanded ? merged : merged.slice(0, limit);
-  if (display.length === 0) return null;
-
-  const statsMap = new Map(fromApi.map((repo) => [repo.id, repo]));
+  const statsMap = new Map((summary?.recentRepos ?? []).map((repo) => [repo.id, repo]));
 
   return (
     <>
       <SectionLabel collapsed={collapsed}>{t("recentRepos")}</SectionLabel>
       <div className="px-2 flex flex-col gap-0.5 mb-2">
-        {display.map((repo) => {
+        {repos.map((repo) => {
           const stats = statsMap.get(repo.id);
           const active = repo.id === activeRepoId;
           const shortName = repo.fullName.split("/").pop() ?? repo.fullName;
@@ -100,15 +89,6 @@ function RecentRepoList({
             </button>
           );
         })}
-        {merged.length > limit && (
-          <button
-            type="button"
-            onClick={() => setExpanded((value) => !value)}
-            className="text-xs text-indigo-600 dark:text-[#007acc] px-2.5 py-1 hover:underline cursor-pointer text-left"
-          >
-            {expanded ? t("viewLess"):t("viewAll")} 
-          </button>
-        )}
       </div>
     </>
   );
@@ -123,7 +103,7 @@ export default function Sidebar({ collapsed, session }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { summary } = useQaSummary();
-  const { recent } = useRecentRepos();
+  const { repositories: recentRepos } = useRepositoryList({ pageSize: 5 });
   const { aiAvailable } = useAiHealth();
   const t = useTranslations("sidebar");
   const tNav = useTranslations("nav");
@@ -188,7 +168,7 @@ export default function Sidebar({ collapsed, session }: SidebarProps) {
           })}
         </nav>
 
-        <RecentRepoList summary={summary} recentLocal={recent} collapsed={collapsed} activeRepoId={activeRepoId} />
+        <RecentRepoList repos={recentRepos} summary={summary} collapsed={collapsed} activeRepoId={activeRepoId} />
       </div>
 
         <div className="shrink-0 border-t border-[var(--border-subtle)] px-3 py-3">
