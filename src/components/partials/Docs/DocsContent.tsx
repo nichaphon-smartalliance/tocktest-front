@@ -20,6 +20,14 @@ interface DocsContentProps {
   repoId: string;
 }
 
+function safeUrlTransform(url: string): string {
+  if (/^data:image\//i.test(url)) return url;
+  const colon = url.indexOf(":");
+  if (colon < 0) return url;
+  const proto = url.slice(0, colon).toLowerCase();
+  return ["https", "http", "mailto"].includes(proto) ? url : "";
+}
+
 export default function DocsContent({ repoId }: DocsContentProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState("");
@@ -289,6 +297,7 @@ export default function DocsContent({ repoId }: DocsContentProps) {
         ) : (
           <div className="markdown-body p-6 border border-gray-200 dark:border-[#3e3e42] rounded-lg min-h-[400px] text-sm leading-relaxed bg-white dark:bg-[#1e1e1e]">
             <ReactMarkdown
+              urlTransform={safeUrlTransform}
               components={{
                 code(props) {
                   const { children, className } = props;
