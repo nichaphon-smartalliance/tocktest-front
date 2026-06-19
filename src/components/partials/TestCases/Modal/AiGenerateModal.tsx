@@ -13,13 +13,16 @@ import {
 import { ControlledModal } from "@/components/ui/ControlledModal";
 import { message } from "@/lib/toast";
 import { getApiErrorMessage } from "@/lib/api-error";
-import { Bot, Calendar, WifiOff, Check } from "lucide-react";
+import { Bot, Calendar, WifiOff, Check, GitCommitHorizontal } from "lucide-react";
 import dayjs from "dayjs";
 import "dayjs/locale/th";
 import { useAiGenerateTestCases } from "@/hooks/testCase";
-import { getRepositoryBranchesApi } from "@/lib/api/api-main";
+import { getRepositoryBranchesApi, getCommitsApi } from "@/lib/api/api-main";
 import type { GeneratedTestCasePreview } from "@/types/app/testCase";
+import type { CommitItem } from "@/types/app/analysis";
 import { TYPE_CONFIG, PRIORITY_CONFIG } from "../TestCases.config";
+
+type Step = "filter" | "commits" | "preview";
 
 const typeCfg = (t: GeneratedTestCasePreview["testType"]) => TYPE_CONFIG[t] ?? TYPE_CONFIG.manual;
 const priorityCfg = (p: GeneratedTestCasePreview["priority"]) => PRIORITY_CONFIG[p] ?? PRIORITY_CONFIG.medium;
@@ -45,20 +48,25 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
   const t = useTranslations("aiModal");
   const tTc = useTranslations("testCases");
   const locale = useLocale();
+
+  const [step, setStep] = useState<Step>("filter");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [branch, setBranch] = useState("");
   const [branches, setBranches] = useState<{ name: string; commitSha: string }[]>([]);
   const [branchesLoading, setBranchesLoading] = useState(false);
+  const [commitList, setCommitList] = useState<CommitItem[]>([]);
+  const [selectedShas, setSelectedShas] = useState<Set<string>>(new Set());
+  const [isFetchingCommits, setIsFetchingCommits] = useState(false);
   const [previews, setPreviews] = useState<GeneratedTestCasePreview[]>([]);
   const { generate, isGenerating, save, isSaving } = useAiGenerateTestCases(repoId);
 
   useEffect(() => {
-    if (open && !fromDate && !toDate && previews.length === 0) {
+    if (open && !fromDate && !toDate) {
       setToDate(dayjs().format("YYYY-MM-DD"));
       setFromDate(dayjs().subtract(7, "day").format("YYYY-MM-DD"));
     }
-  }, [open, fromDate, toDate, previews.length]);
+  }, [open, fromDate, toDate]);
 
   useEffect(() => {
     if (!open) return;
@@ -69,33 +77,48 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
       .finally(() => setBranchesLoading(false));
   }, [open, repoId]);
 
+  const dateRangeLabel = fromDate && toDate ? formatRange(fromDate, toDate, locale) : null;
   const selectedCount = useMemo(() => previews.filter((p) => p.selected).length, [previews]);
   const isOfflineResult = useMemo(() => previews.some(isOfflinePreview), [previews]);
-  const dateRangeLabel = fromDate && toDate ? formatRange(fromDate, toDate, locale) : null;
 
-  const handleGenerate = async () => {
-    if (!fromDate || !toDate) {
-      message.warning(t("selectDates"));
-      return;
-    }
-    if (dayjs(fromDate).isAfter(dayjs(toDate))) {
-      message.warning(t("invalidRange"));
-      return;
-    }
-
+  const handleFetchCommits = async () => {
+    if (!fromDate || !toDate) { message.warning(t("selectDates")); return; }
+    if (dayjs(fromDate).isAfter(dayjs(toDate))) { message.warning(t("invalidRange")); return; }
+    setIsFetchingCommits(true);
     try {
-      const result = await generate({
-        repoId,
+      const res = await getCommitsApi(repoId, {
         fromDate: dayjs(fromDate).startOf("day").toISOString(),
         toDate: dayjs(toDate).endOf("day").toISOString(),
         ...(branch ? { branch } : {}),
+        pageSize: 50,
       });
-      if (result.length === 0) {
-        message.warning(t("noResults"));
-        return;
-      }
+      const items: CommitItem[] = res.data?.data?.content ?? [];
+      if (items.length === 0) { message.warning(t("noCommits")); return; }
+      setCommitList(items);
+      setSelectedShas(new Set(items.map((c) => c.commitSha)));
+      setStep("commits");
+    } catch (error) {
+      message.error(getApiErrorMessage(error, t("genError")));
+    } finally {
+      setIsFetchingCommits(false);
+    }
+  };
+
+  const toggleSha = (sha: string) =>
+    setSelectedShas((prev) => {
+      const next = new Set(prev);
+      next.has(sha) ? next.delete(sha) : next.add(sha);
+      return next;
+    });
+
+  const handleGenerate = async () => {
+    if (selectedShas.size === 0) { message.warning(t("selectAtLeastOne")); return; }
+    try {
+      const result = await generate({ repoId, commitShas: [...selectedShas] });
+      if (result.length === 0) { message.warning(t("noResults")); return; }
       setPreviews(result);
       message.success(t("genSuccess", { count: result.length }));
+      setStep("preview");
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
       message.error(getApiErrorMessage(error, t("genError")));
@@ -104,25 +127,22 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
 
   const handleSave = async () => {
     const selected = previews.filter((p) => p.selected);
-    if (selected.length === 0) {
-      message.warning(t("selectAtLeastOne"));
-      return;
-    }
+    if (selected.length === 0) { message.warning(t("selectAtLeastOne")); return; }
     try {
       await save(selected.map((p) => ({ ...p, folderId: folderId ?? undefined })));
       message.success(t("saveSuccess", { count: selected.length }));
-      setPreviews([]);
-      setFromDate("");
-      setToDate("");
+      handleClose();
       onSaved();
-      onClose();
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
       message.error(getApiErrorMessage(error, t("saveError")));
     }
   };
 
-  const resetForm = () => {
+  const resetAll = () => {
+    setStep("filter");
+    setCommitList([]);
+    setSelectedShas(new Set());
     setPreviews([]);
     setFromDate(dayjs().subtract(7, "day").format("YYYY-MM-DD"));
     setToDate(dayjs().format("YYYY-MM-DD"));
@@ -130,10 +150,13 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
   };
 
   const handleClose = useCallback(() => {
-    setPreviews([]);
+    setStep("filter");
     setFromDate("");
     setToDate("");
     setBranch("");
+    setCommitList([]);
+    setSelectedShas(new Set());
+    setPreviews([]);
     onClose();
   }, [onClose]);
 
@@ -153,15 +176,15 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
             </Modal.Header>
 
             <Modal.Body className="gap-4">
-              {previews.length === 0 ? (
+
+              {/* ── Step 1: Filter ── */}
+              {step === "filter" && (
                 <>
                   <Alert status="accent">
                     <Alert.Indicator />
                     <Alert.Content>
                       <Alert.Title>{t("alertTitle")}</Alert.Title>
-                      <Alert.Description>
-                        {t("alertDesc")}
-                      </Alert.Description>
+                      <Alert.Description>{t("alertDesc")}</Alert.Description>
                     </Alert.Content>
                   </Alert>
 
@@ -176,9 +199,7 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
                     >
                       <option value="">{branchesLoading ? "..." : t("allBranches")}</option>
                       {branches.map((b) => (
-                        <option key={b.name} value={b.name}>
-                          {b.name}
-                        </option>
+                        <option key={b.name} value={b.name}>{b.name}</option>
                       ))}
                     </select>
                   </div>
@@ -218,24 +239,86 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
                   <Button
                     variant="primary"
                     fullWidth
-                    isDisabled={isGenerating || !fromDate || !toDate}
-                    onPress={() => void handleGenerate()}
+                    isDisabled={isFetchingCommits || !fromDate || !toDate}
+                    onPress={() => void handleFetchCommits()}
                     className="h-11"
                   >
-                    {isGenerating ? (
-                      <>
-                        <Spinner size="sm" color="current" />
-                        {t("analyzing")}
-                      </>
+                    {isFetchingCommits ? (
+                      <><Spinner size="sm" color="current" />{t("fetchingCommits")}</>
                     ) : (
-                      <>
-                        <Bot size={16} />
-                        {t("generate")}
-                      </>
+                      <><GitCommitHorizontal size={16} />{t("fetchCommits")}</>
                     )}
                   </Button>
                 </>
-              ) : (
+              )}
+
+              {/* ── Step 2: Select commits ── */}
+              {step === "commits" && (
+                <>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <p className="text-sm font-medium">
+                      {t("commitCount", { count: commitList.length })}
+                    </p>
+                    <div className="flex gap-2 shrink-0">
+                      <Button size="sm" variant="secondary"
+                        onPress={() => setSelectedShas(new Set(commitList.map((c) => c.commitSha)))}>
+                        {t("selectAllCommits")}
+                      </Button>
+                      <Button size="sm" variant="secondary"
+                        onPress={() => setSelectedShas(new Set())}>
+                        {t("deselectAllCommits")}
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="max-h-[380px] overflow-y-auto flex flex-col gap-2 pr-0.5">
+                    {commitList.map((commit) => {
+                      const selected = selectedShas.has(commit.commitSha);
+                      return (
+                        <button
+                          key={commit.commitSha}
+                          type="button"
+                          aria-pressed={selected}
+                          onClick={() => toggleSha(commit.commitSha)}
+                          className={`w-full text-left rounded-xl border p-3 transition-all ${
+                            selected
+                              ? "border-indigo-500 bg-indigo-500/5 shadow-sm"
+                              : "border-gray-200 dark:border-[#3e3e42] hover:border-gray-300 dark:hover:border-gray-600"
+                          }`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <span
+                              aria-hidden
+                              className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${
+                                selected
+                                  ? "border-indigo-500 bg-indigo-500 text-white"
+                                  : "border-gray-300 dark:border-[#3e3e42]"
+                              }`}
+                            >
+                              {selected && <Check size={10} strokeWidth={3} />}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-sm leading-snug line-clamp-2">
+                                {commit.commitMessage ?? "(no message)"}
+                              </p>
+                              <p className="text-xs text-muted mt-1 flex items-center gap-2">
+                                <span className="font-mono">{commit.commitSha.slice(0, 7)}</span>
+                                {commit.authorName && <span>· {commit.authorName}</span>}
+                                {commit.committedAt && (
+                                  <span>· {dayjs(commit.committedAt).locale(locale).format("D MMM YYYY")}</span>
+                                )}
+                              </p>
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+
+              {/* ── Step 3: Preview test cases ── */}
+              {step === "preview" && (
                 <>
                   {isOfflineResult && (
                     <Alert status="warning">
@@ -245,48 +328,31 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
                           <WifiOff size={14} />
                           AI offline
                         </Alert.Title>
-                        <Alert.Description>
-                          {t("offlineDesc")}
-                        </Alert.Description>
+                        <Alert.Description>{t("offlineDesc")}</Alert.Description>
                       </Alert.Content>
                     </Alert>
                   )}
 
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-medium">
-                        {t("foundCount", { count: previews.length })}
-                      </p>
-                      {dateRangeLabel && (
-                        <p className="text-xs text-muted mt-0.5 flex items-center gap-1">
-                          <Calendar size={12} />
-                          {dateRangeLabel}
-                        </p>
-                      )}
-                    </div>
+                    <p className="text-sm font-medium">
+                      {t("foundCount", { count: previews.length })}
+                    </p>
                     <div className="flex gap-2 shrink-0">
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onPress={() => setPreviews((p) => p.map((x) => ({ ...x, selected: true })))}
-                      >
+                      <Button size="sm" variant="secondary"
+                        onPress={() => setPreviews((p) => p.map((x) => ({ ...x, selected: true })))}>
                         {t("selectAll")}
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onPress={() => setPreviews((p) => p.map((x) => ({ ...x, selected: false })))}
-                      >
+                      <Button size="sm" variant="secondary"
+                        onPress={() => setPreviews((p) => p.map((x) => ({ ...x, selected: false })))}>
                         {t("deselectAll")}
                       </Button>
                     </div>
                   </div>
 
-                  <div className="max-h-[420px] overflow-y-auto flex flex-col gap-2 pr-0.5">
+                  <div className="max-h-[380px] overflow-y-auto flex flex-col gap-2 pr-0.5">
                     {previews.map((tc, index) => {
-                      const visibleTags = tc.tags.filter((t) => !HIDDEN_TAGS.has(t));
+                      const visibleTags = tc.tags.filter((tag) => !HIDDEN_TAGS.has(tag));
                       const stepCount = tc.steps?.length ?? 0;
-
                       return (
                         <button
                           key={`${tc.title}-${index}`}
@@ -294,7 +360,7 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
                           aria-pressed={tc.selected}
                           onClick={() =>
                             setPreviews((prev) =>
-                              prev.map((p, i) => (i === index ? { ...p, selected: !p.selected } : p)),
+                              prev.map((p, i) => (i === index ? { ...p, selected: !p.selected } : p))
                             )
                           }
                           className={`w-full text-left rounded-xl border p-3 transition-all ${
@@ -352,12 +418,36 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
               )}
             </Modal.Body>
 
-            {previews.length > 0 && (
+            {/* ── Footer ── */}
+            {step === "commits" && (
+              <Modal.Footer className="flex-wrap gap-2">
+                <span className="text-sm text-muted mr-auto">
+                  {t("selectedCommits", { count: selectedShas.size })}
+                </span>
+                <Button variant="secondary" onPress={() => setStep("filter")} isDisabled={isGenerating}>
+                  {t("restart")}
+                </Button>
+                <Button
+                  variant="primary"
+                  isDisabled={selectedShas.size === 0 || isGenerating}
+                  onPress={() => void handleGenerate()}
+                  className="h-10"
+                >
+                  {isGenerating ? (
+                    <><Spinner size="sm" color="current" />{t("analyzing")}</>
+                  ) : (
+                    <><Bot size={16} />{t("analyzeSelected")}</>
+                  )}
+                </Button>
+              </Modal.Footer>
+            )}
+
+            {step === "preview" && (
               <Modal.Footer className="flex-wrap gap-2">
                 <span className="text-sm text-muted mr-auto">
                   {t("selectedCount", { count: selectedCount, total: previews.length })}
                 </span>
-                <Button variant="secondary" onPress={resetForm} isDisabled={isSaving}>
+                <Button variant="secondary" onPress={resetAll} isDisabled={isSaving}>
                   {t("restart")}
                 </Button>
                 <Button
@@ -366,16 +456,14 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
                   onPress={() => void handleSave()}
                 >
                   {isSaving ? (
-                    <>
-                      <Spinner size="sm" color="current" />
-                      {t("saving")}
-                    </>
+                    <><Spinner size="sm" color="current" />{t("saving")}</>
                   ) : (
                     t("saveCount", { count: selectedCount })
                   )}
                 </Button>
               </Modal.Footer>
             )}
+
           </Modal.Dialog>
         </Modal.Container>
       </Modal.Backdrop>
