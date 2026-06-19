@@ -11,12 +11,25 @@ import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import RepoCard from "./RepoCard";
 import { AddTokenModal } from "./Modal";
 
+const PAGE_SIZE = 20;
+
 export default function DashboardContent() {
   const t = useTranslations("dashboard");
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search);
+  const [page, setPage] = useState(0);
   const [tokenModalOpen, setTokenModalOpen] = useState(false);
-  const { repositories, total, isLoading, refetch } = useRepositoryList({ search: debouncedSearch || undefined });
+
+  const handleSearch = (value: string) => {
+    setSearch(value);
+    setPage(0);
+  };
+
+  const { repositories, total, totalPages, pageNumber, isLoading, refetch } = useRepositoryList({
+    search: debouncedSearch || undefined,
+    page,
+    pageSize: PAGE_SIZE,
+  });
   const privateCount = repositories.filter((r) => r.isPrivate).length;
   const { syncRepositories, isSyncing } = useGithubTokens();
   const { setup } = useGithubAppSetup();
@@ -46,7 +59,7 @@ export default function DashboardContent() {
           <SearchField
             aria-label={t("searchRepo")}
             value={search}
-            onChange={setSearch}
+            onChange={handleSearch}
             className="w-[220px]"
           >
             <SearchField.Group>
@@ -117,6 +130,30 @@ export default function DashboardContent() {
             <RepoCard key={repo.id} repo={repo} qaStats={qaStatsMap.get(repo.id)} />
           ))}
         </div>
+
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 mt-6">
+            <Button
+              variant="secondary"
+              size="sm"
+              isDisabled={pageNumber === 0}
+              onPress={() => setPage((p) => Math.max(0, p - 1))}
+            >
+              &#8249; {t("prevPage")}
+            </Button>
+            <span className="text-sm text-muted px-2">
+              {t("pageOf", { current: pageNumber + 1, total: totalPages })}
+            </span>
+            <Button
+              variant="secondary"
+              size="sm"
+              isDisabled={pageNumber >= totalPages - 1}
+              onPress={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+            >
+              {t("nextPage")} &#8250;
+            </Button>
+          </div>
+        )}
         </>
       )}
 

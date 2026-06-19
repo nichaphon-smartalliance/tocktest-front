@@ -74,7 +74,10 @@
     "statAll": "ทั้งหมด",
     "statShowing": "แสดงผล",
     "statPublic": "Public",
-    "statPrivate": "Private"
+    "statPrivate": "Private",
+    "prevPage": "ก่อนหน้า",
+    "nextPage": "ถัดไป",
+    "pageOf": "หน้า {current} จาก {total}"
   },
   "repoCard": {
     "openAria": "เปิด {name}",

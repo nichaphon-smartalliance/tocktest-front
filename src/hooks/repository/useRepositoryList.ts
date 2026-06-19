@@ -12,5 +12,12 @@ export const useRepositoryList = (params?: RepoFilterParams) => {
     queryFn: () => getRepositories(params),
   });
 
-  return { repositories: data?.items ?? [], total: data?.total ?? 0, isLoading, refetch };
+  return {
+    repositories: data?.items ?? [],
+    total: data?.total ?? 0,
+    totalPages: data?.totalPages ?? 1,
+    pageNumber: data?.pageNumber ?? 0,
+    isLoading,
+    refetch,
+  };
 };

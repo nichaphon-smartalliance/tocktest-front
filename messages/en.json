@@ -74,7 +74,10 @@
     "statAll": "All",
     "statShowing": "Showing",
     "statPublic": "Public",
-    "statPrivate": "Private"
+    "statPrivate": "Private",
+    "prevPage": "Prev",
+    "nextPage": "Next",
+    "pageOf": "Page {current} of {total}"
   },
   "repoCard": {
     "openAria": "Open {name}",

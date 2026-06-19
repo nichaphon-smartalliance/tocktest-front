@@ -15,10 +15,17 @@ const mapGithubToken = (token: GithubTokenResponse): GithubToken => ({
   expiresAt: token.expiresAt ?? null,
 });
 
-export const getRepositories = async (params?: RepoFilterParams): Promise<{ items: Repository[]; total: number }> => {
+export const getRepositories = async (
+  params?: RepoFilterParams,
+): Promise<{ items: Repository[]; total: number; totalPages: number; pageNumber: number }> => {
   const res = await getRepositoriesApi(params);
   const data = res.data?.data;
-  return { items: data?.content ?? [], total: data?.totalElements ?? 0 };
+  return {
+    items: data?.content ?? [],
+    total: data?.totalElements ?? 0,
+    totalPages: data?.totalPages ?? 1,
+    pageNumber: data?.pageNumber ?? 0,
+  };
 };
 
 export const getRepository = async (id: string): Promise<Repository | null> => {
