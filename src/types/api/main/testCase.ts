@@ -41,6 +41,7 @@ export interface AiGenerateRequest {
   fromDate?: string;
   toDate?: string;
   commitShas?: string[];
+  branch?: string;
 }
 
 export interface AiGenerateResponse {

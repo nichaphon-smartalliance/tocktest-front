@@ -17,6 +17,7 @@ import { Bot, Calendar, WifiOff, Check } from "lucide-react";
 import dayjs from "dayjs";
 import "dayjs/locale/th";
 import { useAiGenerateTestCases } from "@/hooks/testCase";
+import { getRepositoryBranchesApi } from "@/lib/api/api-main";
 import type { GeneratedTestCasePreview } from "@/types/app/testCase";
 import { TYPE_CONFIG, PRIORITY_CONFIG } from "../TestCases.config";
 
@@ -46,6 +47,9 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
   const locale = useLocale();
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+  const [branch, setBranch] = useState("");
+  const [branches, setBranches] = useState<{ name: string; commitSha: string }[]>([]);
+  const [branchesLoading, setBranchesLoading] = useState(false);
   const [previews, setPreviews] = useState<GeneratedTestCasePreview[]>([]);
   const { generate, isGenerating, save, isSaving } = useAiGenerateTestCases(repoId);
 
@@ -55,6 +59,15 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
       setFromDate(dayjs().subtract(7, "day").format("YYYY-MM-DD"));
     }
   }, [open, fromDate, toDate, previews.length]);
+
+  useEffect(() => {
+    if (!open) return;
+    setBranchesLoading(true);
+    getRepositoryBranchesApi(repoId)
+      .then((res) => setBranches(res.data?.data ?? []))
+      .catch(() => setBranches([]))
+      .finally(() => setBranchesLoading(false));
+  }, [open, repoId]);
 
   const selectedCount = useMemo(() => previews.filter((p) => p.selected).length, [previews]);
   const isOfflineResult = useMemo(() => previews.some(isOfflinePreview), [previews]);
@@ -75,6 +88,7 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
         repoId,
         fromDate: dayjs(fromDate).startOf("day").toISOString(),
         toDate: dayjs(toDate).endOf("day").toISOString(),
+        ...(branch ? { branch } : {}),
       });
       if (result.length === 0) {
         message.warning(t("noResults"));
@@ -112,12 +126,14 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
     setPreviews([]);
     setFromDate(dayjs().subtract(7, "day").format("YYYY-MM-DD"));
     setToDate(dayjs().format("YYYY-MM-DD"));
+    setBranch("");
   };
 
   const handleClose = useCallback(() => {
     setPreviews([]);
     setFromDate("");
     setToDate("");
+    setBranch("");
     onClose();
   }, [onClose]);
 
@@ -148,6 +164,24 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
                       </Alert.Description>
                     </Alert.Content>
                   </Alert>
+
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="ai-branch">{t("branch")}</Label>
+                    <select
+                      id="ai-branch"
+                      value={branch}
+                      onChange={(e) => setBranch(e.target.value)}
+                      disabled={branchesLoading}
+                      className={DATE_INPUT}
+                    >
+                      <option value="">{branchesLoading ? "..." : t("allBranches")}</option>
+                      {branches.map((b) => (
+                        <option key={b.name} value={b.name}>
+                          {b.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="flex flex-col gap-1.5">

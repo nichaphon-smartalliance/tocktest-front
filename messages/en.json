@@ -206,6 +206,8 @@
     "saveError": "Save failed",
     "alertTitle": "Analyze from commits in a time range",
     "alertDesc": "Pick a date range; the system pulls code changes from GitHub and generates test cases for you to save",
+    "branch": "Branch",
+    "allBranches": "All branches (default)",
     "fromDate": "Start date",
     "toDate": "End date",
     "selectedRange": "Selected range: {range}",

@@ -206,6 +206,8 @@
     "saveError": "บันทึกไม่สำเร็จ",
     "alertTitle": "วิเคราะห์จาก commit ในช่วงเวลา",
     "alertDesc": "เลือกช่วงวันที่ ระบบจะดึง code changes จาก GitHub แล้วสร้าง test case ให้เลือกบันทึก",
+    "branch": "Branch",
+    "allBranches": "ทุก branch (ค่าเริ่มต้น)",
     "fromDate": "วันเริ่มต้น",
     "toDate": "วันสิ้นสุด",
     "selectedRange": "ช่วงที่เลือก: {range}",
