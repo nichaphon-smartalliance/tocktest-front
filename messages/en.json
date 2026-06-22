@@ -308,7 +308,7 @@
     "richEditorPlaceholder": "Write documentation with the rich text editor...",
     "showSource": "View Markdown source",
     "hideSource": "Hide Markdown source",
-    "empty": "No project docs yet.",
+    "empty": "No project docs yet",
     "versionHistory": "Version History",
     "toastUpdated": "Docs updated",
     "toastSaved": "Docs saved",
