@@ -1,9 +1,9 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { App as AntdApp, ConfigProvider, theme as antdTheme } from "antd";
-import thTH from "antd/locale/th_TH";
-import { AntdBridge } from "@/lib/antd-static";
+import { Toast, I18nProvider } from "@heroui/react";
+import { useLocale } from "next-intl";
+import { localeToBcp47, type Locale } from "@/i18n/config";
 
 type ThemeMode = "light" | "dark";
 
@@ -19,6 +19,7 @@ const ThemeContext = createContext<ThemeContextValue>({
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mode, setMode] = useState<ThemeMode>("light");
+  const locale = useLocale() as Locale;
 
   useEffect(() => {
     const saved = (localStorage.getItem("tocktest-theme") as ThemeMode) || "light";
@@ -34,29 +35,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <ThemeContext.Provider value={{ mode, toggle }}>
-      <ConfigProvider
-        locale={thTH}
-        theme={{
-          algorithm:
-            mode === "dark"
-              ? antdTheme.darkAlgorithm
-              : antdTheme.defaultAlgorithm,
-          token: {
-            colorPrimary: "#6366f1",
-            borderRadius: 8,
-            fontFamily:
-              "'Inter', 'Noto Sans Thai', -apple-system, BlinkMacSystemFont, sans-serif",
-          },
-        }}
-      >
-        {/* antd App provides context for message/modal/notification APIs */}
-        <AntdApp>
-          <AntdBridge />
-          {children}
-        </AntdApp>
-      </ConfigProvider>
-    </ThemeContext.Provider>
+    <I18nProvider locale={localeToBcp47[locale] ?? "th-TH"}>
+      <ThemeContext.Provider value={{ mode, toggle }}>
+        {children}
+        <Toast.Provider placement="top end" />
+      </ThemeContext.Provider>
+    </I18nProvider>
   );
 }
 

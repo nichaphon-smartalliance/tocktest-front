@@ -20,12 +20,12 @@ export const getTestCaseFolders = async (repoId: string): Promise<TestCaseFolder
 
 export const createFolder = async (repoId: string, name: string, parentId?: string): Promise<TestCaseFolder> => {
   const res = await createFolderApi(repoId, { name, parentId });
-  return res.data.data;
+  return res.data?.data;
 };
 
 export const updateFolder = async (repoId: string, folderId: string, name: string): Promise<TestCaseFolder> => {
   const res = await updateFolderApi(repoId, folderId, { name });
-  return res.data.data;
+  return res.data?.data;
 };
 
 export const deleteFolder = async (repoId: string, folderId: string): Promise<void> => {
@@ -40,12 +40,12 @@ export const getTestCases = async (repoId: string, params?: TestCaseFilterParams
 
 export const createTestCase = async (repoId: string, values: TestCaseFormValues): Promise<TestCase> => {
   const res = await createTestCaseApi(repoId, values);
-  return res.data.data;
+  return res.data?.data;
 };
 
 export const updateTestCase = async (repoId: string, id: string, values: Partial<TestCaseFormValues>): Promise<TestCase> => {
   const res = await updateTestCaseApi(repoId, id, values);
-  return res.data.data;
+  return res.data?.data;
 };
 
 export const deleteTestCase = async (repoId: string, id: string): Promise<void> => {
@@ -57,8 +57,10 @@ export const aiGenerateTestCases = async (req: AiGenerateRequest): Promise<Gener
   return (res.data?.data?.testCases ?? []).map((tc) => ({ ...tc, selected: true }));
 };
 
+const toBulkSavePayload = ({ selected: _selected, ...tc }: GeneratedTestCasePreview) => tc;
+
 export const bulkSaveTestCases = async (repoId: string, previews: GeneratedTestCasePreview[]): Promise<TestCase[]> => {
-  const selected = previews.filter((p) => p.selected);
-  const res = await bulkSaveTestCasesApi(repoId, selected);
+  const payload = previews.filter((p) => p.selected).map(toBulkSavePayload);
+  const res = await bulkSaveTestCasesApi(repoId, payload);
   return res.data?.data ?? [];
 };

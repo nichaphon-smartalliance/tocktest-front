@@ -1,4 +1,5 @@
-import { SettingsContent } from "@/components/partials/Settings";
+import { ClientOnly } from "@/components/ui/ClientOnly";
+import SettingsContent from "@/components/partials/Settings/SettingsContent";
 
 export default async function SettingsPage({
   params,
@@ -6,5 +7,9 @@ export default async function SettingsPage({
   params: Promise<{ repoId: string }>;
 }) {
   const { repoId } = await params;
-  return <SettingsContent repoId={repoId} />;
+  return (
+    <ClientOnly>
+      <SettingsContent repoId={repoId} />
+    </ClientOnly>
+  );
 }

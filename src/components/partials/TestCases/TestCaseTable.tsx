@@ -1,16 +1,18 @@
 "use client";
 
-import { Table, Tag, Button, Popconfirm, Tooltip, Badge, Space } from "antd";
-import { EditOutlined, DeleteOutlined, RobotOutlined } from "@ant-design/icons";
-import type { ColumnsType } from "antd/es/table";
+import { memo, useMemo } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { Button, Pagination, Spinner, Table, Tooltip } from "@heroui/react";
+import { Pencil, Trash2, Bot } from "lucide-react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/th";
-import type { TestCase } from "@/types/app/testCase";
+import type { TestCase, TestStatus, TestType, PriorityLevel } from "@/types/app/testCase";
 import { STATUS_CONFIG, TYPE_CONFIG, PRIORITY_CONFIG } from "./TestCases.config";
+import { CHIP_PICKER_WIDTH, configToChipOptions, InlineChipPicker } from "./InlineChipPicker";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 dayjs.extend(relativeTime);
-dayjs.locale("th");
 
 interface TestCaseTableProps {
   repoId: string;
@@ -22,7 +24,127 @@ interface TestCaseTableProps {
   onPageChange: (page: number, size: number) => void;
   onEdit: (tc: TestCase) => void;
   onDelete: (id: string) => void;
+  onStatusChange: (id: string, status: TestStatus) => Promise<void>;
+  onPriorityChange: (id: string, priority: PriorityLevel) => Promise<void>;
+  onTypeChange: (id: string, testType: TestType) => Promise<void>;
 }
+
+interface TestCaseRowProps {
+  record: TestCase;
+  onEdit: (tc: TestCase) => void;
+  onDelete: (id: string) => void;
+  onStatusChange: (id: string, status: TestStatus) => Promise<void>;
+  onPriorityChange: (id: string, priority: PriorityLevel) => Promise<void>;
+  onTypeChange: (id: string, testType: TestType) => Promise<void>;
+}
+
+const STATUS_CHIP_OPTIONS = configToChipOptions(STATUS_CONFIG);
+const PRIORITY_CHIP_OPTIONS = configToChipOptions(PRIORITY_CONFIG);
+const TYPE_CHIP_OPTIONS = configToChipOptions(TYPE_CONFIG);
+
+const TestCaseRow = memo(function TestCaseRow({
+  record,
+  onEdit,
+  onDelete,
+  onStatusChange,
+  onPriorityChange,
+  onTypeChange,
+}: TestCaseRowProps) {
+  const t = useTranslations("testCases");
+  const locale = useLocale();
+  const statusOptions = useMemo(
+    () => STATUS_CHIP_OPTIONS.map((o) => ({ value: o.value, color: o.color, label: t(o.labelKey) })),
+    [t],
+  );
+  const priorityOptions = useMemo(
+    () => PRIORITY_CHIP_OPTIONS.map((o) => ({ value: o.value, color: o.color, label: t(o.labelKey) })),
+    [t],
+  );
+  const typeOptions = useMemo(
+    () => TYPE_CHIP_OPTIONS.map((o) => ({ value: o.value, color: o.color, label: t(o.labelKey) })),
+    [t],
+  );
+  return (
+    <Table.Row id={record.id}>
+      <Table.Cell>
+        <div className="flex items-center gap-2">
+          {record.isAiGenerated && (
+            <Tooltip>
+              <Tooltip.Trigger>
+                <Bot size={12} className="text-indigo-500 shrink-0" />
+              </Tooltip.Trigger>
+              <Tooltip.Content>{t("aiTooltip")}</Tooltip.Content>
+            </Tooltip>
+          )}
+          <span className="font-medium">{record.title}</span>
+        </div>
+      </Table.Cell>
+      <Table.Cell className="w-[130px]">
+        <InlineChipPicker
+          value={record.status}
+          options={statusOptions}
+          chipWidth={CHIP_PICKER_WIDTH.status}
+          ariaLabel={t("changeStatus")}
+          errorMsg={t("updateStatusError")}
+          onChange={(status) => onStatusChange(record.id, status)}
+        />
+      </Table.Cell>
+      <Table.Cell className="w-[100px]">
+        <InlineChipPicker
+          value={record.priority}
+          options={priorityOptions}
+          chipWidth={CHIP_PICKER_WIDTH.priority}
+          ariaLabel={t("changePriority")}
+          errorMsg={t("updatePriorityError")}
+          onChange={(priority) => onPriorityChange(record.id, priority)}
+        />
+      </Table.Cell>
+      <Table.Cell className="w-[130px]">
+        <InlineChipPicker
+          value={record.testType}
+          options={typeOptions}
+          chipWidth={CHIP_PICKER_WIDTH.type}
+          ariaLabel={t("changeType")}
+          errorMsg={t("updateTypeError")}
+          onChange={(testType) => onTypeChange(record.id, testType)}
+        />
+      </Table.Cell>
+      <Table.Cell>
+        <Tooltip>
+          <Tooltip.Trigger>
+            <span className="text-xs text-muted">{dayjs(record.updatedAt).locale(locale).fromNow()}</span>
+          </Tooltip.Trigger>
+          <Tooltip.Content>{dayjs(record.updatedAt).format("DD/MM/YYYY HH:mm")}</Tooltip.Content>
+        </Tooltip>
+      </Table.Cell>
+      <Table.Cell>
+        <div className="flex gap-1">
+          <Button
+            variant="ghost"
+            isIconOnly
+            size="sm"
+            aria-label={t("delete")}
+            className="text-[var(--text-primary)]"
+            onPress={() => onEdit(record)}
+          >
+            <Pencil size={14} />
+          </Button>
+          <ConfirmDialog
+            title={t("deleteConfirm")}
+            confirmLabel={t("delete")}
+            confirmVariant="danger"
+            onConfirm={() => onDelete(record.id)}
+            trigger={
+              <Button variant="ghost" isIconOnly size="sm" aria-label={t("deleteAria")}>
+                <Trash2 size={14} className="text-red-500" />
+              </Button>
+            }
+          />
+        </div>
+      </Table.Cell>
+    </Table.Row>
+  );
+});
 
 export default function TestCaseTable({
   testCases,
@@ -33,109 +155,95 @@ export default function TestCaseTable({
   onPageChange,
   onEdit,
   onDelete,
+  onStatusChange,
+  onPriorityChange,
+  onTypeChange,
 }: TestCaseTableProps) {
-  const columns: ColumnsType<TestCase> = [
-    {
-      title: "ชื่อ Test Case",
-      dataIndex: "title",
-      key: "title",
-      render: (text: string, record: TestCase) => (
-        <Space>
-          {record.isAiGenerated && (
-            <Tooltip title="สร้างด้วย AI">
-              <RobotOutlined style={{ color: "#6366f1", fontSize: 12 }} />
-            </Tooltip>
-          )}
-          <span style={{ fontWeight: 500 }}>{text}</span>
-        </Space>
-      ),
-    },
-    {
-      title: "สถานะ",
-      dataIndex: "status",
-      key: "status",
-      width: 120,
-      render: (status: keyof typeof STATUS_CONFIG) => {
-        const cfg = STATUS_CONFIG[status];
-        return <Tag color={cfg.color}>{cfg.label}</Tag>;
-      },
-    },
-    {
-      title: "ความสำคัญ",
-      dataIndex: "priority",
-      key: "priority",
-      width: 100,
-      render: (p: keyof typeof PRIORITY_CONFIG) => {
-        const cfg = PRIORITY_CONFIG[p];
-        return <Tag color={cfg.color}>{cfg.label}</Tag>;
-      },
-    },
-    {
-      title: "ประเภท",
-      dataIndex: "testType",
-      key: "testType",
-      width: 110,
-      render: (t: keyof typeof TYPE_CONFIG) => {
-        const cfg = TYPE_CONFIG[t];
-        return (
-          <Tag color={cfg.color} style={{ fontSize: 11 }}>
-            {cfg.label}
-          </Tag>
-        );
-      },
-    },
-    {
-      title: "อัปเดต",
-      dataIndex: "updatedAt",
-      key: "updatedAt",
-      width: 110,
-      render: (v: string) => (
-        <Tooltip title={dayjs(v).format("DD/MM/YYYY HH:mm")}>
-          <span style={{ opacity: 0.5, fontSize: 12 }}>{dayjs(v).fromNow()}</span>
-        </Tooltip>
-      ),
-    },
-    {
-      title: "",
-      key: "action",
-      width: 80,
-      render: (_: unknown, record: TestCase) => (
-        <Space size={4}>
-          <Button
-            type="text"
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => onEdit(record)}
-          />
-          <Popconfirm
-            title="ลบ test case นี้?"
-            onConfirm={() => onDelete(record.id)}
-            okText="ลบ"
-            cancelText="ยกเลิก"
-          >
-            <Button type="text" danger size="small" icon={<DeleteOutlined />} />
-          </Popconfirm>
-        </Space>
-      ),
-    },
-  ];
+  const t = useTranslations("testCases");
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const paginationItems = useMemo(() => {
+    const start = Math.max(1, page - 3);
+    const end = Math.min(totalPages, page + 3);
+    return Array.from({ length: end - start + 1 }, (_, index) => start + index);
+  }, [page, totalPages]);
 
   return (
-    <Table
-      columns={columns}
-      dataSource={testCases}
-      rowKey="id"
-      loading={isLoading}
-      size="middle"
-      pagination={{
-        current: page,
-        pageSize,
-        total,
-        showSizeChanger: true,
-        showTotal: (t) => `ทั้งหมด ${t} รายการ`,
-        onChange: onPageChange,
-      }}
-      locale={{ emptyText: "ยังไม่มี test case ในโฟลเดอร์นี้" }}
-    />
+    <div className="flex flex-col flex-1 min-h-0">
+      {isLoading ? (
+        <div className="flex justify-center py-12">
+          <Spinner size="lg" />
+        </div>
+      ) : testCases.length === 0 ? (
+        <div className="flex flex-col items-center py-16 text-center px-4">
+          <p className="font-medium mb-1">{t("empty")}</p>
+          <p className="text-sm text-muted max-w-xs">
+            {t("emptyHint")}
+          </p>
+        </div>
+      ) : (
+        <Table className="flex-1">
+          <Table.ScrollContainer>
+            <Table.Content aria-label="Test cases" className="min-w-[760px] w-full table-fixed">
+              <Table.Header>
+                <Table.Column isRowHeader className="w-auto">{t("colName")}</Table.Column>
+                <Table.Column className="w-[130px]">{t("colStatus")}</Table.Column>
+                <Table.Column className="w-[100px]">{t("colPriority")}</Table.Column>
+                <Table.Column className="w-[130px]">{t("colType")}</Table.Column>
+                <Table.Column className="w-[110px]">{t("colUpdated")}</Table.Column>
+                <Table.Column className="w-[80px]" />
+              </Table.Header>
+              <Table.Body>
+                {testCases.map((record) => (
+                  <TestCaseRow
+                    key={record.id}
+                    record={record}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                    onStatusChange={onStatusChange}
+                    onPriorityChange={onPriorityChange}
+                    onTypeChange={onTypeChange}
+                  />
+                ))}
+              </Table.Body>
+            </Table.Content>
+          </Table.ScrollContainer>
+          <Table.Footer>
+            <div className="flex items-center justify-between px-4 py-2">
+              <p className="text-xs text-muted">{t("totalItems", { count: total })}</p>
+              <Pagination>
+                <Pagination.Content>
+                  <Pagination.Item>
+                    <Pagination.Previous
+                      isDisabled={page <= 1}
+                      onPress={() => onPageChange(page - 1, pageSize)}
+                    >
+                      <Pagination.PreviousIcon />
+                    </Pagination.Previous>
+                  </Pagination.Item>
+                  {paginationItems.map((pageNumber) => (
+                    <Pagination.Item key={pageNumber}>
+                      <Pagination.Link
+                        isActive={pageNumber === page}
+                        onPress={() => onPageChange(pageNumber, pageSize)}
+                      >
+                        {pageNumber}
+                      </Pagination.Link>
+                    </Pagination.Item>
+                  ))}
+                  <Pagination.Item>
+                    <Pagination.Next
+                      isDisabled={page >= totalPages}
+                      onPress={() => onPageChange(page + 1, pageSize)}
+                    >
+                      <Pagination.NextIcon />
+                    </Pagination.Next>
+                  </Pagination.Item>
+                </Pagination.Content>
+              </Pagination>
+            </div>
+          </Table.Footer>
+        </Table>
+      )}
+    </div>
   );
 }

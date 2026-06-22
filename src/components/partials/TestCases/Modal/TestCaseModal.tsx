@@ -1,23 +1,85 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Modal,
-  Form,
-  Input,
-  Select,
+  TextField,
+  Label,
+  InputGroup,
+  TextArea,
   Button,
-  Space,
-} from "antd";
-import { message } from "@/lib/antd-static";
+} from "@heroui/react";
+import { ControlledModal } from "@/components/ui/ControlledModal";
+import { message } from "@/lib/toast";
+import { getApiErrorMessage } from "@/lib/api-error";
 import type { TestCase, TestCaseFormValues, ModalMode } from "@/types/app/testCase";
 
-const { TextArea } = Input;
+function TagInput({
+  value = [],
+  onChange,
+  disabled,
+}: {
+  value?: string[];
+  onChange?: (v: string[]) => void;
+  disabled?: boolean;
+}) {
+  const t = useTranslations("testCaseModal");
+  const [input, setInput] = useState("");
+
+  const addTag = () => {
+    const tag = input.trim();
+    if (tag && !value.includes(tag)) onChange?.([...value, tag]);
+    setInput("");
+  };
+
+  return (
+    <div
+      className={`border border-gray-300 dark:border-[#3e3e42] rounded-md p-1 flex flex-wrap gap-1 min-h-9 ${
+        disabled ? "bg-gray-100 dark:bg-[#2d2d2d]" : "bg-white dark:bg-[#1e1e1e]"
+      }`}
+    >
+      {value.map((tag) => (
+        <span
+          key={tag}
+          className="bg-gray-100 dark:bg-[#2d2d2d] border border-gray-200 dark:border-[#3e3e42] rounded px-2 py-0.5 text-sm inline-flex items-center gap-1.5"
+        >
+          {tag}
+          {!disabled && (
+            <button
+              type="button"
+              onClick={() => onChange?.(value.filter((x) => x !== tag))}
+              className="cursor-pointer text-gray-400 text-xs leading-none"
+            >
+              ×
+            </button>
+          )}
+        </span>
+      ))}
+      {!disabled && (
+        <input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === ",") {
+              e.preventDefault();
+              addTag();
+            } else if (e.key === "Backspace" && !input && value.length > 0) {
+              onChange?.(value.slice(0, -1));
+            }
+          }}
+          onBlur={addTag}
+          placeholder={value.length === 0 ? t("tagPlaceholder") : ""}
+          className="border-none outline-none flex-1 min-w-[120px] text-sm bg-transparent py-0.5"
+        />
+      )}
+    </div>
+  );
+}
 
 interface TestCaseModalProps {
   open: boolean;
   mode: ModalMode;
-  repoId: string;
   folderId?: string | null;
   data?: TestCase | null;
   onClose: () => void;
@@ -36,112 +98,125 @@ export default function TestCaseModal({
   onUpdate,
   isLoading,
 }: TestCaseModalProps) {
-  const [form] = Form.useForm<TestCaseFormValues>();
+  const t = useTranslations("testCaseModal");
   const isView = mode === "view";
+
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [expectedResult, setExpectedResult] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
 
   useEffect(() => {
     if (open) {
       if (data) {
-        form.setFieldsValue({
-          title: data.title,
-          description: data.description ?? undefined,
-          expectedResult: data.expectedResult ?? undefined,
-          testType: data.testType,
-          status: data.status,
-          priority: data.priority,
-          tags: data.tags,
-          folderId: data.folderId ?? folderId ?? undefined,
-        });
+        setTitle(data.title);
+        setDescription(data.description ?? "");
+        setExpectedResult(data.expectedResult ?? "");
+        setTags(data.tags ?? []);
       } else {
-        form.resetFields();
-        if (folderId) form.setFieldValue("folderId", folderId);
-        form.setFieldsValue({ testType: "manual", status: "not_tested", priority: "medium" });
+        setTitle("");
+        setDescription("");
+        setExpectedResult("");
+        setTags([]);
       }
     }
-  }, [open, data, folderId, form]);
+  }, [open, data]);
 
   const handleOk = async () => {
-    const values = await form.validateFields();
+    if (!title.trim()) {
+      message.warning(t("titleRequired"));
+      return;
+    }
+    const values: TestCaseFormValues = {
+      title: title.trim(),
+      description: description || undefined,
+      expectedResult: expectedResult || undefined,
+      testType: data?.testType ?? "manual",
+      status: data?.status ?? "not_tested",
+      priority: data?.priority ?? "medium",
+      tags,
+      folderId: data?.folderId ?? folderId ?? undefined,
+    };
     try {
       if (mode === "edit" && data) {
         await onUpdate(data.id, values);
-        message.success("อัปเดต test case สำเร็จ");
+        message.success(t("updateSuccess"));
       } else {
         await onCreate(values);
-        message.success("สร้าง test case สำเร็จ");
+        message.success(t("createSuccess"));
       }
       onClose();
-    } catch {
-      message.error("เกิดข้อผิดพลาด กรุณาลองใหม่");
+    } catch (error) {
+      message.error(getApiErrorMessage(error, t("error")));
     }
   };
 
+  const modalTitle =
+    mode === "create" ? t("titleCreate") : mode === "edit" ? t("titleEdit") : t("titleView");
+
   return (
-    <Modal
-      open={open}
-      onCancel={onClose}
-      title={mode === "create" ? "สร้าง Test Case ใหม่" : mode === "edit" ? "แก้ไข Test Case" : "รายละเอียด"}
-      width={700}
-      footer={
-        isView ? (
-          <Button onClick={onClose}>ปิด</Button>
-        ) : (
-          <Space>
-            <Button onClick={onClose}>ยกเลิก</Button>
-            <Button type="primary" onClick={handleOk} loading={isLoading}>
-              บันทึก
-            </Button>
-          </Space>
-        )
-      }
-    >
-      <Form form={form} layout="vertical" disabled={isView} requiredMark={false}>
-        <Form.Item name="title" label="ชื่อ Test Case" rules={[{ required: true, message: "กรุณากรอกชื่อ" }]}>
-          <Input placeholder="เช่น ทดสอบ login ด้วย email ที่ไม่ถูกต้อง" />
-        </Form.Item>
+    <ControlledModal open={open} onClose={onClose}>
+      <Modal.Backdrop>
+        <Modal.Container size="lg">
+          <Modal.Dialog>
+            <Modal.Header>
+              <Modal.Heading>{modalTitle}</Modal.Heading>
+              <Modal.CloseTrigger />
+            </Modal.Header>
+            <Modal.Body className="flex flex-col gap-4">
+              <TextField value={title} onChange={setTitle} isRequired isDisabled={isView}>
+                <Label>{t("nameLabel")}</Label>
+                <InputGroup>
+                  <InputGroup.Input placeholder={t("namePlaceholder")} />
+                </InputGroup>
+              </TextField>
 
-        <Form.Item name="description" label="คำอธิบาย">
-          <TextArea rows={3} placeholder="บรรยายสิ่งที่ต้องการทดสอบ..." />
-        </Form.Item>
+              <div className="flex flex-col gap-1">
+                <Label>{t("descLabel")}</Label>
+                <TextArea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  disabled={isView}
+                  rows={3}
+                  placeholder={t("descPlaceholder")}
+                />
+              </div>
 
-        <Form.Item name="expectedResult" label="ผลลัพธ์ที่คาดหวัง">
-          <TextArea rows={3} placeholder="ระบบควรแสดง..." />
-        </Form.Item>
+              <div className="flex flex-col gap-1">
+                <Label>{t("expectedLabel")}</Label>
+                <TextArea
+                  value={expectedResult}
+                  onChange={(e) => setExpectedResult(e.target.value)}
+                  disabled={isView}
+                  rows={3}
+                  placeholder={t("expectedPlaceholder")}
+                />
+              </div>
 
-        <Space style={{ width: "100%" }} styles={{ item: { flex: 1 } }}>
-          <Form.Item name="testType" label="ประเภท" rules={[{ required: true }]} style={{ flex: 1 }}>
-            <Select options={[
-              { value: "manual", label: "Manual" },
-              { value: "automated", label: "Automated" },
-              { value: "ui", label: "UI" },
-              { value: "api", label: "API" },
-              { value: "integration", label: "Integration" },
-            ]} />
-          </Form.Item>
-
-          <Form.Item name="status" label="สถานะ" rules={[{ required: true }]} style={{ flex: 1 }}>
-            <Select options={[
-              { value: "not_tested", label: "ยังไม่ทดสอบ" },
-              { value: "pass", label: "ผ่าน" },
-              { value: "fail", label: "ไม่ผ่าน" },
-              { value: "blocked", label: "ติดขัด" },
-            ]} />
-          </Form.Item>
-
-          <Form.Item name="priority" label="ความสำคัญ" rules={[{ required: true }]} style={{ flex: 1 }}>
-            <Select options={[
-              { value: "low", label: "ต่ำ" },
-              { value: "medium", label: "กลาง" },
-              { value: "high", label: "สูง" },
-              { value: "critical", label: "วิกฤต" },
-            ]} />
-          </Form.Item>
-        </Space>
-
-        <Form.Item name="tags" label="แท็ก">
-          <Select mode="tags" placeholder="พิมพ์แล้วกด Enter เพื่อเพิ่มแท็ก" style={{ width: "100%" }} />
-        </Form.Item>
-      </Form>
-    </Modal>
+              <div className="flex flex-col gap-1">
+                <Label>{t("tagsLabel")}</Label>
+                <TagInput value={tags} onChange={setTags} disabled={isView} />
+              </div>
+            </Modal.Body>
+            <Modal.Footer>
+              {isView ? (
+                <Button slot="close" variant="secondary">
+                  {t("close")}
+                </Button>
+              ) : (
+                <>
+                  <Button slot="close" variant="secondary">
+                    {t("cancel")}
+                  </Button>
+                  <Button variant="primary" isDisabled={isLoading} onPress={handleOk}>
+                    {isLoading ? t("saving") : t("save")}
+                  </Button>
+                </>
+              )}
+            </Modal.Footer>
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
+    </ControlledModal>
   );
 }

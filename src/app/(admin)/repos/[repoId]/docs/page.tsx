@@ -1,4 +1,5 @@
-import { DocsContent } from "@/components/partials/Docs";
+import { ClientOnly } from "@/components/ui/ClientOnly";
+import DocsContent from "@/components/partials/Docs/DocsContent";
 
 export default async function DocsPage({
   params,
@@ -6,5 +7,9 @@ export default async function DocsPage({
   params: Promise<{ repoId: string }>;
 }) {
   const { repoId } = await params;
-  return <DocsContent repoId={repoId} />;
+  return (
+    <ClientOnly>
+      <DocsContent repoId={repoId} />
+    </ClientOnly>
+  );
 }

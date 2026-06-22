@@ -1,197 +1,469 @@
 "use client";
 
-import { useState } from "react";
-import {
-  Table,
-  Tag,
-  Button,
-  Alert,
-  Space,
-  Typography,
-  Tooltip,
-  Spin,
-  Card,
-  Collapse,
-} from "antd";
-import { message } from "@/lib/antd-static";
-import { RobotOutlined, ThunderboltOutlined } from "@ant-design/icons";
-import type { ColumnsType } from "antd/es/table";
+import { Alert, Card, Chip, Input, ListBox, Select, Spinner, Table } from "@heroui/react";
 import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/th";
+import relativeTime from "dayjs/plugin/relativeTime";
+import { Bot, GitBranch, GitPullRequest, Send, Zap } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
+import { useEffect, useMemo, useState } from "react";
 import { useCommitList } from "@/hooks/analysis";
+import { useRepoSettings } from "@/hooks/settings";
+import { getApiErrorMessage } from "@/lib/api-error";
+import { message } from "@/lib/toast";
 import type { CommitItem, RiskLevel } from "@/types/app/analysis";
 
 dayjs.extend(relativeTime);
-dayjs.locale("th");
-
-const RISK_CONFIG: Record<RiskLevel, { color: string; label: string }> = {
-  low: { color: "green", label: "ต่ำ" },
-  medium: { color: "orange", label: "กลาง" },
-  high: { color: "red", label: "สูง" },
-  critical: { color: "volcano", label: "วิกฤต" },
-};
 
 interface AnalysisContentProps {
   repoId: string;
 }
 
-const { Paragraph, Text } = Typography;
-
 export default function AnalysisContent({ repoId }: AnalysisContentProps) {
-  const [selectedShas, setSelectedShas] = useState<string[]>([]);
-  const { commits, total, isLoading, analyze, isAnalyzing, getWhatToTest, whatToTestResult, isLoadingWhatToTest } =
-    useCommitList(repoId, { pageSize: 30 });
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [analyzingIds, setAnalyzingIds] = useState<Set<string>>(new Set());
+  const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
+  const [pullRequestNumber, setPullRequestNumber] = useState("");
+  const locale = useLocale();
+  const t = useTranslations("analysis");
+  const { settings } = useRepoSettings(repoId);
+
+  useEffect(() => {
+    dayjs.locale(locale);
+  }, [locale]);
+
+  const riskConfig: Record<RiskLevel, { color: "success" | "warning" | "danger" | "accent"; label: string }> = {
+    low: { color: "success", label: t("risk.low") },
+    medium: { color: "warning", label: t("risk.medium") },
+    high: { color: "danger", label: t("risk.high") },
+    critical: { color: "danger", label: t("risk.critical") },
+  };
+
+  const {
+    commits,
+    total,
+    isLoading,
+    branches,
+    branchesLoading,
+    analyze,
+    getWhatToTest,
+    whatToTestResult,
+    isLoadingWhatToTest,
+    reviewPullRequest,
+    pullRequestReviewResult,
+    isReviewingPullRequest,
+    reviewAndCommentPullRequest,
+    isPostingPullRequestReview,
+  } = useCommitList(repoId, { pageSize: 30, branch: selectedBranch ?? undefined });
+
+  useEffect(() => {
+    setSelected(new Set());
+  }, [selectedBranch]);
+
+  useEffect(() => {
+    if (!selectedBranch && branches.length > 0) {
+      setSelectedBranch(branches[0].name);
+    }
+  }, [branches, selectedBranch]);
+
+  const selectedShas = useMemo(() => Array.from(selected), [selected]);
+  const allSelected = commits.length > 0 && commits.every((commit) => selected.has(commit.commitSha));
+
+  const toggleOne = (sha: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(sha)) next.delete(sha);
+      else next.add(sha);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    setSelected(allSelected ? new Set() : new Set(commits.map((commit) => commit.commitSha)));
+  };
 
   const handleAnalyze = async (commitSha: string) => {
+    if (settings?.aiOfflineMode) {
+      message.warning(t("offlineWarn"));
+      return;
+    }
+
+    setAnalyzingIds((prev) => new Set(prev).add(commitSha));
+
     try {
-      await analyze(commitSha);
-      message.success("วิเคราะห์ commit สำเร็จ");
-    } catch {
-      message.error("วิเคราะห์ไม่สำเร็จ");
+      const result = await analyze(commitSha);
+      message.success(result?.source === "heuristic" ? t("toastHeuristic") : t("toastAnalyzeSuccess"));
+    } catch (error) {
+      message.error(getApiErrorMessage(error, t("toastAnalyzeFail")));
+    } finally {
+      setAnalyzingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(commitSha);
+        return next;
+      });
     }
   };
 
   const handleWhatToTest = async () => {
-    if (selectedShas.length === 0) {
-      message.warning("กรุณาเลือก commit ที่ต้องการวิเคราะห์");
+    if (settings?.aiOfflineMode) {
+      message.warning(t("offlineWarn"));
       return;
     }
+    if (selectedShas.length === 0) {
+      message.warning(t("toastSelectCommit"));
+      return;
+    }
+
     try {
-      await getWhatToTest(selectedShas);
-    } catch {
-      message.error("เกิดข้อผิดพลาด กรุณาลองใหม่");
+      const result = await getWhatToTest(selectedShas);
+      message.success(result?.source === "heuristic" ? t("toastHeuristicRecommend") : t("toastRecommendSuccess"));
+    } catch (error) {
+      message.error(getApiErrorMessage(error, t("toastAiServiceError")));
     }
   };
 
-  const columns: ColumnsType<CommitItem> = [
-    {
-      title: "Commit",
-      key: "commit",
-      render: (_, record) => (
-        <div>
-          <div style={{ fontFamily: "monospace", fontSize: 12, opacity: 0.6 }}>{record.commitSha.slice(0, 7)}</div>
-          <div style={{ fontWeight: 500, fontSize: 13 }}>{record.commitMessage}</div>
-          <div style={{ fontSize: 11, opacity: 0.5 }}>{record.authorName} · {dayjs(record.committedAt).fromNow()}</div>
-        </div>
-      ),
-    },
-    {
-      title: "การเปลี่ยนแปลง",
-      key: "changes",
-      width: 140,
-      render: (_, r) => (
-        <Space orientation="vertical" size={2}>
-          <Text style={{ fontSize: 12 }}>📁 {r.filesChanged} ไฟล์</Text>
-          <Space size={4}>
-            <Text style={{ fontSize: 11, color: "#16a34a" }}>+{r.additions}</Text>
-            <Text style={{ fontSize: 11, color: "#dc2626" }}>-{r.deletions}</Text>
-          </Space>
-        </Space>
-      ),
-    },
-    {
-      title: "ความเสี่ยง",
-      dataIndex: "riskLevel",
-      key: "riskLevel",
-      width: 90,
-      render: (v: RiskLevel | null) =>
-        v ? (
-          <Tag color={RISK_CONFIG[v].color}>{RISK_CONFIG[v].label}</Tag>
-        ) : (
-          <Tag>ยังไม่วิเคราะห์</Tag>
-        ),
-    },
-    {
-      title: "AI Summary",
-      dataIndex: "aiSummary",
-      key: "aiSummary",
-      render: (v: string | null) =>
-        v ? (
-          <Paragraph style={{ margin: 0, fontSize: 12 }} ellipsis={{ rows: 2, expandable: true, symbol: "อ่านเพิ่ม" }}>
-            {v}
-          </Paragraph>
-        ) : (
-          <Text type="secondary" style={{ fontSize: 12 }}>ยังไม่มี AI summary</Text>
-        ),
-    },
-    {
-      title: "",
-      key: "action",
-      width: 110,
-      render: (_, record) =>
-        !record.analyzedAt ? (
-          <Button
-            size="small"
-            icon={<RobotOutlined />}
-            loading={isAnalyzing}
-            onClick={() => handleAnalyze(record.commitSha)}
-          >
-            วิเคราะห์
-          </Button>
-        ) : (
-          <Tooltip title={`วิเคราะห์เมื่อ ${dayjs(record.analyzedAt).fromNow()}`}>
-            <Tag color="green" style={{ cursor: "default" }}>✓ วิเคราะห์แล้ว</Tag>
-          </Tooltip>
-        ),
-    },
-  ];
+  const handlePullRequestReview = async () => {
+    if (settings?.aiOfflineMode) {
+      message.warning(t("offlineWarn"));
+      return;
+    }
+
+    const prNumber = Number(pullRequestNumber);
+    if (!Number.isInteger(prNumber) || prNumber <= 0) {
+      message.warning(t("toastInvalidPr"));
+      return;
+    }
+
+    try {
+      const result = await reviewPullRequest(prNumber);
+      message.success(result?.source === "heuristic" ? t("toastPrFallback") : t("toastPrDone"));
+    } catch (error) {
+      message.error(getApiErrorMessage(error, t("toastPrFail")));
+    }
+  };
+
+  const handlePostPullRequestReview = async () => {
+    if (settings?.aiOfflineMode) {
+      message.warning(t("offlineWarn"));
+      return;
+    }
+
+    const prNumber = Number(pullRequestNumber);
+    if (!Number.isInteger(prNumber) || prNumber <= 0) {
+      message.warning(t("toastInvalidPr"));
+      return;
+    }
+
+    try {
+      await reviewAndCommentPullRequest(prNumber);
+      message.success(t("toastPrPosted"));
+    } catch (error) {
+      message.error(getApiErrorMessage(error, t("toastPrPostFail")));
+    }
+  };
+
+  const renderRisk = (value: RiskLevel | null) =>
+    value && riskConfig[value] ? (
+      <Chip color={riskConfig[value].color} size="sm" variant="soft">
+        <Chip.Label>{riskConfig[value].label}</Chip.Label>
+      </Chip>
+    ) : (
+      <Chip size="sm" variant="soft">
+        <Chip.Label>{t("notAnalyzed")}</Chip.Label>
+      </Chip>
+    );
+
+  const renderAction = (record: CommitItem) => {
+    const isAnalyzed = Boolean(record.analyzedAt);
+    const isAnalyzing = analyzingIds.has(record.commitSha);
+
+    const analyzeBtn = (label?: string) => (
+      <button
+        type="button"
+        disabled={isAnalyzing || settings?.aiOfflineMode}
+        onClick={(event) => {
+          event.stopPropagation();
+          void handleAnalyze(record.commitSha);
+        }}
+        className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-2.5 py-1.5 text-xs font-medium text-[var(--text-primary)] cursor-pointer hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#3e3e42] dark:hover:bg-[#2a2d2e]"
+      >
+        {isAnalyzing ? <Spinner size="sm" color="current" /> : <Bot size={14} />}
+        {label}
+      </button>
+    );
+
+    if (!isAnalyzed) return analyzeBtn(t("analyze"));
+
+    const analyzedTitle = record.analyzedAt
+      ? t("analyzedAt", { time: dayjs(record.analyzedAt).fromNow() })
+      : t("analyzedDone");
+
+    return (
+      <div className="flex flex-col items-start gap-1.5 min-w-[100px]">
+        <Chip color="success" size="sm" variant="soft" title={analyzedTitle}>
+          <Chip.Label>{t("analyzed")}</Chip.Label>
+        </Chip>
+        <button
+          type="button"
+          disabled={isAnalyzing || settings?.aiOfflineMode}
+          title={t("reanalyzeTitle")}
+          onClick={(event) => {
+            event.stopPropagation();
+            void handleAnalyze(record.commitSha);
+          }}
+          className="inline-flex items-center gap-1 text-xs text-muted cursor-pointer hover:text-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isAnalyzing ? <Spinner size="sm" color="current" /> : <Bot size={12} />}
+          {t("again")}
+        </button>
+      </div>
+    );
+  };
 
   return (
-    <div>
-      {/* What to test assistant */}
-      <Card style={{ marginBottom: 16, borderRadius: 8 }} styles={{ body: { padding: 16 } }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-          <ThunderboltOutlined style={{ color: "#6366f1", fontSize: 20 }} />
-          <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 600 }}>ควรทดสอบอะไรหลังจาก commits เหล่านี้?</div>
-            <div style={{ fontSize: 12, opacity: 0.6 }}>เลือก commit จากตารางแล้วถาม AI</div>
-          </div>
-          <Button
-            type="primary"
-            icon={<RobotOutlined />}
-            loading={isLoadingWhatToTest}
-            onClick={handleWhatToTest}
-            disabled={selectedShas.length === 0}
-          >
-            ถาม AI ({selectedShas.length} commits)
-          </Button>
-        </div>
+    <div className="flex flex-col gap-4">
+      {settings?.aiOfflineMode && (
+        <Alert status="warning">
+          <Alert.Indicator />
+          <Alert.Content>
+            
+            
+          </Alert.Content>
+        </Alert>
+      )}
 
-        {whatToTestResult && (
-          <Alert
-            style={{ marginTop: 12 }}
-            type="info"
-            title={
-              <div>
-                <div style={{ fontWeight: 600, marginBottom: 8 }}>คำแนะนำจาก AI</div>
-                <ul style={{ margin: 0, paddingLeft: 20 }}>
-                  {whatToTestResult.recommendations.map((r, i) => (
-                    <li key={i} style={{ marginBottom: 4, fontSize: 13 }}>{r}</li>
-                  ))}
-                </ul>
-                {whatToTestResult.reasoning && (
-                  <div style={{ marginTop: 8, fontSize: 12, opacity: 0.7 }}>{whatToTestResult.reasoning}</div>
-                )}
-              </div>
-            }
-          />
-        )}
+      <Card>
+        <Card.Content className="flex flex-wrap items-center gap-3 p-4">
+          <GitBranch className="size-5 text-sky-500 shrink-0" />
+          <div className="flex-1 min-w-[200px]">
+            <p className="font-semibold text-sm">{t("selectBranch")}</p>
+            <p className="text-xs text-muted">{t("selectBranchDesc")}</p>
+          </div>
+          <Select
+            className="min-w-[200px]"
+            placeholder={t("selectBranchPlaceholder")}
+            selectedKey={selectedBranch}
+            onSelectionChange={(key) => setSelectedBranch(key ? String(key) : null)}
+            isDisabled={branchesLoading}
+          >
+            <Select.Trigger>
+              <Select.Value />
+              <Select.Indicator />
+            </Select.Trigger>
+            <Select.Popover>
+              <ListBox>
+                {(branches ?? []).map((branch) => (
+                  <ListBox.Item key={branch.name} id={branch.name} textValue={branch.name}>
+                    {branch.name}
+                    <ListBox.ItemIndicator />
+                  </ListBox.Item>
+                ))}
+              </ListBox>
+            </Select.Popover>
+          </Select>
+        </Card.Content>
       </Card>
 
-      <Table
-        columns={columns}
-        dataSource={commits}
-        rowKey="commitSha"
-        loading={isLoading}
-        rowSelection={{
-          selectedRowKeys: selectedShas,
-          onChange: (keys) => setSelectedShas(keys as string[]),
-          getCheckboxProps: (record) => ({ value: record.commitSha }),
-        }}
-        size="middle"
-        pagination={{ total, showTotal: (t) => `${t} commits` }}
-      />
+      <Card>
+        <Card.Content className="p-4">
+          <div className="mb-4 flex flex-wrap items-center gap-3">
+            <GitPullRequest className="size-5 text-emerald-500 shrink-0" />
+            <div className="flex-1 min-w-[220px]">
+              <p className="font-semibold text-sm">{t("reviewPrTitle")}</p>
+              <p className="text-xs text-muted">{t("reviewPrDesc")}</p>
+            </div>
+            <Input
+              aria-label={t("prNumberAria")}
+              value={pullRequestNumber}
+              onChange={(event) => setPullRequestNumber(event.target.value)}
+              placeholder={t("prPlaceholder")}
+              className="w-[120px]"
+            />
+            <button
+              type="button"
+              disabled={isReviewingPullRequest || settings?.aiOfflineMode}
+              onClick={() => void handlePullRequestReview()}
+              className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white cursor-pointer hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isReviewingPullRequest ? <Spinner size="sm" color="current" /> : <Bot size={16} />}
+              {t("reviewPr")}
+            </button>
+            <button
+              type="button"
+              disabled={isPostingPullRequestReview || settings?.aiOfflineMode}
+              onClick={() => void handlePostPullRequestReview()}
+              className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white cursor-pointer hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isPostingPullRequestReview ? <Spinner size="sm" color="current" /> : <Send size={16} />}
+              {t("postToGithub")}
+            </button>
+          </div>
+
+          {pullRequestReviewResult && (
+            <Alert status="success" className="mb-3">
+              <Alert.Indicator />
+              <Alert.Content>
+                <Alert.Title>
+                  {t("prSummary")}{" "}
+                  <Chip color={riskConfig[pullRequestReviewResult.riskLevel].color} size="sm" variant="soft">
+                    <Chip.Label>{riskConfig[pullRequestReviewResult.riskLevel].label}</Chip.Label>
+                  </Chip>
+                </Alert.Title>
+                <Alert.Description>
+                  <p className="mb-2 text-sm">{pullRequestReviewResult.summary}</p>
+                  <p className="mb-2 text-xs text-muted">
+                    {t("recommendation")} <strong>{pullRequestReviewResult.mergeRecommendation}</strong>
+                  </p>
+                  {pullRequestReviewResult.findings?.length > 0 ? (
+                    <ul className="mt-1 list-disc pl-5 text-sm">
+                      {pullRequestReviewResult.findings.map((finding, index) => (
+                        <li key={`${finding.file ?? "file"}-${index}`} className="mb-2">
+                          <strong>{finding.title}</strong>
+                          {finding.file ? ` (${finding.file})` : ""}
+                          {`: ${finding.comment}`}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <span className="text-sm text-muted">{t("noFindings")}</span>
+                  )}
+                </Alert.Description>
+              </Alert.Content>
+            </Alert>
+          )}
+
+          <div className="flex flex-wrap items-center gap-3">
+            <Zap className="size-5 text-indigo-500 shrink-0" />
+            <div className="flex-1 min-w-[200px]">
+              <p className="font-semibold text-sm">{t("whatToTest")}</p>
+              <p className="text-xs text-muted">{t("whatToTestDesc")}</p>
+            </div>
+            <button
+              type="button"
+              disabled={selectedShas.length === 0 || isLoadingWhatToTest || settings?.aiOfflineMode}
+              onClick={() => void handleWhatToTest()}
+              className="inline-flex items-center gap-2 rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white cursor-pointer hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isLoadingWhatToTest ? <Spinner size="sm" color="current" /> : <Bot size={16} />}
+              {t("askAi", { count: selectedShas.length })}
+            </button>
+          </div>
+
+          {whatToTestResult && (
+            <Alert status="accent" className="mt-3">
+              <Alert.Indicator />
+              <Alert.Content>
+                <Alert.Title>{t("aiRecommend")}</Alert.Title>
+                <Alert.Description>
+                  {whatToTestResult.recommendations?.length > 0 ? (
+                    <ul className="mt-1 list-disc pl-5 text-sm">
+                      {whatToTestResult.recommendations.map((recommendation, index) => (
+                        <li key={index} className="mb-1">
+                          {recommendation}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <span className="text-sm text-muted">{t("noRecommend")}</span>
+                  )}
+                  {whatToTestResult.reasoning && (
+                    <p className="mt-2 text-xs text-muted">
+                      <strong>{t("reasoning")}</strong> {whatToTestResult.reasoning}
+                    </p>
+                  )}
+                </Alert.Description>
+              </Alert.Content>
+            </Alert>
+          )}
+        </Card.Content>
+      </Card>
+
+      <Card>
+        <Card.Content className="p-0">
+          {isLoading ? (
+            <div className="flex justify-center py-12">
+              <Spinner size="lg" />
+            </div>
+          ) : !selectedBranch ? (
+            <div className="flex flex-col items-center py-16 text-center px-4">
+              <GitBranch size={48} className="opacity-20 mb-4 text-sky-500" />
+              <p className="font-medium mb-1">{t("selectBranchEmpty")}</p>
+              <p className="text-sm text-muted max-w-sm">{t("selectBranchEmptyDesc")}</p>
+            </div>
+          ) : commits.length === 0 ? (
+            <div className="flex flex-col items-center py-16 text-center px-4">
+              <GitBranch size={48} className="opacity-20 mb-4" />
+              <p className="font-medium mb-1">{t("noCommits")}</p>
+              <p className="text-sm text-muted">{t("noCommitsDesc")}</p>
+            </div>
+          ) : (
+            <Table>
+              <Table.ScrollContainer>
+                <Table.Content aria-label="Commits analysis table" className="min-w-[800px]">
+                  <Table.Header>
+                    <Table.Column className="w-10 pr-0">
+                      <input
+                        type="checkbox"
+                        aria-label="Select all"
+                        checked={allSelected}
+                        onChange={toggleAll}
+                        className="size-4 cursor-pointer appearance-auto accent-sky-600"
+                      />
+                    </Table.Column>
+                    <Table.Column isRowHeader>{t("colCommit")}</Table.Column>
+                    <Table.Column>{t("colChanges")}</Table.Column>
+                    <Table.Column>{t("colRisk")}</Table.Column>
+                    <Table.Column>{t("colSummary")}</Table.Column>
+                    <Table.Column className="min-w-[110px] w-[110px]" />
+                  </Table.Header>
+                  <Table.Body>
+                    {commits.map((record) => (
+                      <Table.Row key={record.commitSha} id={record.commitSha}>
+                        <Table.Cell className="pr-0">
+                          <input
+                            type="checkbox"
+                            aria-label={`Select ${record.commitSha.slice(0, 7)}`}
+                            checked={selected.has(record.commitSha)}
+                            onChange={() => toggleOne(record.commitSha)}
+                            className="size-4 cursor-pointer appearance-auto accent-sky-600"
+                          />
+                        </Table.Cell>
+                        <Table.Cell>
+                          <div className="font-mono text-xs text-muted">{record.commitSha.slice(0, 7)}</div>
+                          <div className="font-medium text-sm">{record.commitMessage ?? t("noMessage")}</div>
+                          <div className="text-xs text-muted">
+                            {record.authorName ?? t("unknown")}
+                            {record.committedAt ? ` · ${dayjs(record.committedAt).fromNow()}` : ""}
+                          </div>
+                        </Table.Cell>
+                        <Table.Cell>
+                          <div className="text-xs">{t("files", { count: record.filesChanged })}</div>
+                          <div className="flex gap-1 text-xs">
+                            <span className="text-green-600">+{record.additions}</span>
+                            <span className="text-red-600">-{record.deletions}</span>
+                          </div>
+                        </Table.Cell>
+                        <Table.Cell>{renderRisk(record.riskLevel)}</Table.Cell>
+                        <Table.Cell>
+                          {record.aiSummary ? (
+                            <p className="text-xs line-clamp-2">{record.aiSummary}</p>
+                          ) : (
+                            <span className="text-xs text-muted">{t("noSummary")}</span>
+                          )}
+                        </Table.Cell>
+                        <Table.Cell>{renderAction(record)}</Table.Cell>
+                      </Table.Row>
+                    ))}
+                  </Table.Body>
+                </Table.Content>
+              </Table.ScrollContainer>
+              <Table.Footer>
+                <p className="px-4 py-2 text-xs text-muted">{t("totalCommits", { count: total })}</p>
+              </Table.Footer>
+            </Table>
+          )}
+        </Card.Content>
+      </Card>
     </div>
   );
 }

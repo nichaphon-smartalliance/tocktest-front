@@ -14,16 +14,15 @@ export interface Repository {
 export interface GithubToken {
   id: string;
   label: string;
+  provider: string;
+  githubLogin: string | null;
   scopes: string[];
   isActive: boolean;
   lastTestedAt: string | null;
+  expiresAt: string | null;
   createdAt: string;
 }
 
-export interface AddTokenFormValues {
-  label: string;
-  token: string;
-}
 
 export interface RepoFilterParams {
   search?: string;

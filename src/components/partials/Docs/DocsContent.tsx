@@ -1,170 +1,345 @@
 "use client";
 
-import { useState } from "react";
-import {
-  Button,
-  Space,
-  Tag,
-  Spin,
-  Empty,
-  Timeline,
-  Typography,
-  Tooltip,
-  Popconfirm,
-} from "antd";
-import { message } from "@/lib/antd-static";
-import { EditOutlined, SaveOutlined, CloseOutlined, RobotOutlined, HistoryOutlined } from "@ant-design/icons";
+import { Alert, Button, Chip, Spinner, Switch, TextArea } from "@heroui/react";
 import dayjs from "dayjs";
 import "dayjs/locale/th";
+import dynamic from "next/dynamic";
+import { useLocale, useTranslations } from "next-intl";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Bot, Code2, FileText, History, Pencil, RefreshCw, Save, Sparkles, Trash2, X } from "lucide-react";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { TiptapEditor } from "@/components/ui/TiptapEditor";
 import { useProjectDoc } from "@/hooks/docs";
+import { useRepoSettings } from "@/hooks/settings";
+import { getApiErrorMessage } from "@/lib/api-error";
+import { message } from "@/lib/toast";
 
-dayjs.locale("th");
-
-const { Text } = Typography;
+const ReactMarkdown = dynamic(() => import("react-markdown"), { ssr: false });
 
 interface DocsContentProps {
   repoId: string;
+}
+
+function safeUrlTransform(url: string): string {
+  if (/^data:image\//i.test(url)) return url;
+  const colon = url.indexOf(":");
+  if (colon < 0) return url;
+  const proto = url.slice(0, colon).toLowerCase();
+  return ["https", "http", "mailto"].includes(proto) ? url : "";
 }
 
 export default function DocsContent({ repoId }: DocsContentProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState("");
   const [showHistory, setShowHistory] = useState(false);
+  const [showSource, setShowSource] = useState(false);
+  const lastSyncedAtRef = useRef<string | null>(null);
+  const locale = useLocale();
+  const t = useTranslations("docs");
+  const t2 = useTranslations("testCases.folder");
 
-  const { doc, isLoading, versions, update, isUpdating, autoUpdate, isAutoUpdating } =
-    useProjectDoc(repoId);
+  const {
+    doc,
+    status,
+    isLoading,
+    versions,
+    update,
+    isUpdating,
+    generate,
+    isGenerating,
+    refresh,
+    isRefreshing,
+    autoUpdate,
+    isAutoUpdating,
+    deleteDoc,
+    isDeleting,
+  } = useProjectDoc(repoId);
+  const { settings, update: updateSettings, isUpdating: isUpdatingSettings } = useRepoSettings(repoId);
 
-  const startEdit = () => {
-    setEditContent(doc?.content ?? "");
-    setIsEditing(true);
-  };
+  useEffect(() => {
+    dayjs.locale(locale);
+  }, [locale]);
+
+  useEffect(() => {
+    if (!status || !settings?.docsAutoSync || !status.isStale) return;
+    if (status.status === "queued" || status.status === "running") return;
+    void refresh().catch(() => undefined);
+  }, [refresh, settings?.docsAutoSync, status]);
+
+  useEffect(() => {
+    if (!status?.lastGeneratedAt) return;
+    if (status.lastGeneratedAt === lastSyncedAtRef.current) return;
+    lastSyncedAtRef.current = status.lastGeneratedAt;
+    if (status.status === "success") {
+      message.success(status.message ?? t("toastUpdated"));
+    }
+  }, [status, t]);
+
+  const statusTone = useMemo(() => {
+    switch (status?.status) {
+      case "success":
+        return "success";
+      case "error":
+        return "danger";
+      case "queued":
+      case "running":
+        return "warning";
+      default:
+        return "accent";
+    }
+  }, [status?.status]);
 
   const handleSave = async () => {
     try {
       await update(editContent);
-      message.success("บันทึก Docs สำเร็จ");
+      message.success(t("toastSaved"));
       setIsEditing(false);
-    } catch {
-      message.error("บันทึกไม่สำเร็จ");
+    } catch (error) {
+      message.error(getApiErrorMessage(error, t("toastSaveFail")));
+    }
+  };
+
+  const handleGenerate = async () => {
+    try {
+      await generate();
+      message.success(t("toastBuildQueued"));
+    } catch (error) {
+      message.error(getApiErrorMessage(error, t("toastBuildFail")));
+    }
+  };
+
+  const handleRefresh = async () => {
+    try {
+      await refresh();
+      message.success(t("toastRefreshQueued"));
+    } catch (error) {
+      message.error(getApiErrorMessage(error, t("toastRefreshFail")));
     }
   };
 
   const handleAutoUpdate = async () => {
     try {
       await autoUpdate();
-      message.success("AI อัปเดต Docs สำเร็จ");
-    } catch {
-      message.error("AI อัปเดตไม่สำเร็จ");
+      message.success(t("toastAutoQueued"));
+    } catch (error) {
+      message.error(getApiErrorMessage(error, t("toastAutoFail")));
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await deleteDoc();
+      message.success(t("toastRemoved"));
+      setIsEditing(false);
+      setShowHistory(false);
+    } catch (error) {
+      message.error(getApiErrorMessage(error, t("toastDeleteFail")));
+    }
+  };
+
+  const handleToggleAutoSync = async (selected: boolean) => {
+    try {
+      await updateSettings({ docsAutoSync: selected });
+      message.success(selected ? t("toastAutoSyncOn") : t("toastAutoSyncOff"));
+    } catch (error) {
+      message.error(getApiErrorMessage(error, t("toastAutoSyncFail")));
+    }
+  };
+
+  const handleToggleOffline = async (selected: boolean) => {
+    try {
+      await updateSettings({ aiOfflineMode: selected });
+      message.success(selected ? t("toastOfflineOn") : t("toastOfflineOff"));
+    } catch (error) {
+      message.error(getApiErrorMessage(error, t("toastOfflineFail")));
     }
   };
 
   return (
-    <div style={{ display: "flex", gap: 16 }}>
-      {/* Doc content */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        {/* Toolbar */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+    <div className="flex gap-4">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-4 flex-wrap">
           {doc && (
-            <Tag>v{doc.version}</Tag>
+            <Chip size="sm" variant="soft">
+              <Chip.Label>v{doc.version}</Chip.Label>
+            </Chip>
           )}
-          <Text type="secondary" style={{ fontSize: 12 }}>
-            {doc ? `อัปเดตเมื่อ ${dayjs(doc.updatedAt).format("DD MMM YYYY HH:mm")}` : ""}
-          </Text>
-          <div style={{ flex: 1 }} />
+          {status && (
+            <Chip size="sm" variant="soft" color={statusTone}>
+              <Chip.Label>{status.status}</Chip.Label>
+            </Chip>
+          )}
+          <span className="text-xs text-muted">
+            {status?.lastGeneratedAt
+              ? t("lastGenerated", { date: dayjs(status.lastGeneratedAt).format("DD MMM YYYY HH:mm") })
+              : doc
+                ? t("updated", { date: dayjs(doc.updatedAt).format("DD MMM YYYY HH:mm") })
+                : ""}
+          </span>
+          <div className="flex-1" />
 
-          {!isEditing ? (
-            <Space>
-              <Popconfirm
-                title="AI จะวิเคราะห์ code และอัปเดต Docs อัตโนมัติ ดำเนินการหรือไม่?"
-                onConfirm={handleAutoUpdate}
-                okText="ดำเนินการ"
-                cancelText="ยกเลิก"
-              >
-                <Button icon={<RobotOutlined />} loading={isAutoUpdating}>
-                  AI Auto Update
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button variant="secondary" size="sm" isDisabled={isGenerating || isEditing} onPress={() => void handleGenerate()}>
+              <Sparkles size={14} />
+              {t("buildDocs")}
+            </Button>
+            <Button variant="secondary" size="sm" isDisabled={isRefreshing || isEditing} onPress={() => void handleRefresh()}>
+              <RefreshCw size={14} className={isRefreshing ? "animate-spin" : ""} />
+              {t("refresh")}
+            </Button>
+            <Button variant="secondary" size="sm" isDisabled={isAutoUpdating || isEditing} onPress={() => void handleAutoUpdate()}>
+              <Bot size={14} />
+              {t("autoUpdate")}
+            </Button>
+            <Button variant="secondary" size="sm" onPress={() => setShowHistory((value) => !value)}>
+              <History size={14} />
+              {t("history")}
+            </Button>
+            {!isEditing ? (
+              <Button variant="primary" size="sm" onPress={() => {
+                setEditContent(doc?.content ?? "");
+                setIsEditing(true);
+              }}>
+                <Pencil size={14} />
+                {doc ? t("edit") : t2("createBtn")}
+              </Button>
+            ) : (
+              <>
+                <Button variant="secondary" size="sm" onPress={() => setIsEditing(false)}>
+                  <X size={14} />
+                  {t("cancel")}
                 </Button>
-              </Popconfirm>
-              <Button icon={<HistoryOutlined />} onClick={() => setShowHistory((v) => !v)}>
-                ประวัติ
-              </Button>
-              <Button type="primary" icon={<EditOutlined />} onClick={startEdit}>
-                แก้ไข
-              </Button>
-            </Space>
-          ) : (
-            <Space>
-              <Button icon={<CloseOutlined />} onClick={() => setIsEditing(false)}>
-                ยกเลิก
-              </Button>
-              <Button type="primary" icon={<SaveOutlined />} loading={isUpdating} onClick={handleSave}>
-                บันทึก
-              </Button>
-            </Space>
-          )}
+                <Button variant="primary" size="sm" isDisabled={isUpdating} onPress={() => void handleSave()}>
+                  <Save size={14} />
+                  {isUpdating ? "Saving..." : t("save")}
+                </Button>
+              </>
+            )}
+            {doc && (
+              <ConfirmDialog
+                title={t("deleteTitle")}
+                description={t("deleteDesc")}
+                confirmLabel={t("deleteConfirm")}
+                confirmVariant="danger"
+                onConfirm={handleDelete}
+                trigger={
+                  <Button variant="danger" size="sm" isDisabled={isDeleting}>
+                    <Trash2 size={14} />
+                    {t("delete")}
+                  </Button>
+                }
+              />
+            )}
+          </div>
         </div>
 
-        <Spin spinning={isLoading}>
-          {!isLoading && !doc ? (
-            <Empty
-              description="ยังไม่มี Project Docs"
-              style={{ padding: "60px 0" }}
-            >
-              <Button type="primary" onClick={startEdit}>สร้าง Docs</Button>
-            </Empty>
-          ) : isEditing ? (
-            <textarea
+        <div className="grid gap-3 mb-4 lg:grid-cols-3">
+
+
+
+          <Switch.Control>
+            <Switch.Thumb />
+          </Switch.Control>
+          <Switch.Content>
+
+
+          </Switch.Content>
+
+
+        </div>
+
+        {status && (
+          <Alert status={statusTone} className="mb-4">
+            <Alert.Indicator />
+            <Alert.Content>
+              <Alert.Title>{t("pipelineTitle")}</Alert.Title>
+              <Alert.Description>
+                <p className="text-sm">{status.message ?? t("ready")}</p>
+                <p className="text-xs text-muted mt-1">
+                  {status.isStale ? t("stale") : t("upToDate")}
+                </p>
+              </Alert.Description>
+            </Alert.Content>
+          </Alert>
+        )}
+
+        {isLoading ? (
+          <div className="flex justify-center py-20">
+            <Spinner size="lg" />
+          </div>
+        ) : isEditing ? (
+          <div className="flex flex-col gap-3">
+            <TiptapEditor
               value={editContent}
-              onChange={(e) => setEditContent(e.target.value)}
-              style={{
-                width: "100%",
-                minHeight: 500,
-                padding: 16,
-                fontFamily: "'Fira Code', monospace",
-                fontSize: 14,
-                lineHeight: 1.6,
-                border: "1px solid #d1d5db",
-                borderRadius: 8,
-                resize: "vertical",
-                outline: "none",
-              }}
-              placeholder="เขียน Docs ในรูปแบบ Markdown..."
+              onChange={setEditContent}
+              placeholder={t("richEditorPlaceholder")}
             />
-          ) : (
-            <div
-              style={{
-                padding: 24,
-                border: "1px solid #e5e7eb",
-                borderRadius: 8,
-                minHeight: 400,
-                whiteSpace: "pre-wrap",
-                fontFamily: "inherit",
-                lineHeight: 1.8,
-                fontSize: 14,
+            <div>
+              <Button variant="secondary" size="sm" onPress={() => setShowSource((value) => !value)}>
+                <Code2 size={14} />
+                {showSource ? t("hideSource") : t("showSource")}
+              </Button>
+              {showSource && (
+                <TextArea
+                  value={editContent}
+                  onChange={(event) => setEditContent(event.target.value)}
+                  className="mt-2 min-h-[300px] min-w-[100%] font-mono text-sm"
+                  placeholder={t("editorPlaceholder")}
+                />
+              )}
+            </div>
+          </div>
+        ) : !doc ? (
+          <div className="flex flex-col items-center py-16 text-center">
+            <FileText size={48} className="opacity-20 mb-4" />
+            <p className="text-muted">{t("empty")}</p>
+          </div>
+        ) : (
+          <div className="markdown-body p-6 border border-gray-200 dark:border-[#3e3e42] rounded-lg min-h-[400px] text-sm leading-relaxed bg-white dark:bg-[#1e1e1e]">
+            <ReactMarkdown
+              urlTransform={safeUrlTransform}
+              components={{
+                code(props) {
+                  const { children, className } = props;
+                  return (
+                    <code className={className ? className : "rounded bg-gray-100 dark:bg-[#2d2d2d] px-1.5 py-0.5"}>
+                      {children}
+                    </code>
+                  );
+                },
+                pre(props) {
+                  return (
+                    <pre className="overflow-x-auto rounded-lg bg-gray-950 text-gray-100 p-4 text-xs leading-6">
+                      {props.children}
+                    </pre>
+                  );
+                },
               }}
             >
-              {doc?.content || "ยังไม่มีเนื้อหา"}
-            </div>
-          )}
-        </Spin>
+              {doc?.content != "" || doc?.content != null ? doc?.content : "empty"} 
+            </ReactMarkdown>
+          </div>
+        )}
       </div>
 
-      {/* Version history */}
       {showHistory && (
-        <div style={{ width: 240, flexShrink: 0 }}>
-          <div style={{ fontWeight: 600, marginBottom: 12, fontSize: 13 }}>ประวัติเวอร์ชัน</div>
-          <Timeline
-            items={versions.map((v) => ({
-              children: (
-                <div>
-                  <div style={{ fontWeight: 500 }}>v{v.version}</div>
-                  <div style={{ fontSize: 11, opacity: 0.6 }}>
-                    {dayjs(v.updatedAt).format("DD/MM/YYYY HH:mm")}
-                  </div>
-                </div>
-              ),
-              color: v.version === doc?.version ? "blue" : "gray",
-            }))}
-          />
+        <div className="w-64 shrink-0">
+          <div className="font-semibold mb-3 text-sm">{t("versionHistory")}</div>
+          <div className="flex flex-col gap-3 border-l-2 border-gray-200 dark:border-[#3e3e42] pl-4">
+            {versions.map((version) => (
+              <div
+                key={version.version}
+                className={`relative ${version.version === doc?.version ? "text-indigo-600 dark:text-indigo-400" : "text-muted"}`}
+              >
+                <div
+                  className={`absolute -left-[21px] top-1.5 size-2.5 rounded-full ${version.version === doc?.version ? "bg-indigo-500" : "bg-gray-300 dark:bg-[#5a5a5a]"
+                    }`}
+                />
+                <div className="font-medium text-sm">v{version.version}</div>
+                <div className="text-xs opacity-70">{dayjs(version.updatedAt).format("DD/MM/YYYY HH:mm")}</div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

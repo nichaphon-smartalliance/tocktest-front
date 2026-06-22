@@ -1,67 +1,118 @@
 "use client";
 
-import { Card, Tag, Tooltip } from "antd";
-import { LockOutlined, GlobalOutlined } from "@ant-design/icons";
-import { GitBranch, Clock } from "lucide-react";
+import { Card, Chip } from "@heroui/react";
+import { Lock, Globe, Package, GitBranch, Clock, CheckCircle2, AlertTriangle, Ban, CircleDashed } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/th";
 import type { Repository } from "@/types/app/repository";
 
 dayjs.extend(relativeTime);
-dayjs.locale("th");
 
 interface RepoCardProps {
   repo: Repository;
+  qaStats?: {
+    testCaseCount: number;
+    passCount: number;
+    failCount: number;
+    blockedCount: number;
+    notTestedCount: number;
+  };
 }
 
-export default function RepoCard({ repo }: RepoCardProps) {
+export default function RepoCard({ repo, qaStats }: RepoCardProps) {
   const router = useRouter();
+  const t = useTranslations("repoCard");
+  const locale = useLocale();
+  const fromNow = (date: string) => dayjs(date).locale(locale).fromNow();
 
   return (
     <Card
-      hoverable
+      role="link"
+      tabIndex={0}
+      aria-label={t("openAria", { name: repo.fullName })}
+      className="surface-card surface-card-hover h-full rounded-2xl cursor-pointer focus-visible:outline-2 focus-visible:outline-indigo-500"
       onClick={() => router.push(`/repos/${repo.id}/test-cases`)}
-      style={{ borderRadius: 12, height: "100%" }}
-      styles={{ body: { padding: 20 } }}
+      onKeyDown={(e: React.KeyboardEvent) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          router.push(`/repos/${repo.id}/test-cases`);
+        }
+      }}
     >
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 12 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: 20 }}>📦</span>
-          <Tooltip title={repo.fullName}>
-            <span style={{ fontWeight: 600, fontSize: 14, maxWidth: 140, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>
+      <Card.Content className="p-5">
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center gap-2 min-w-0">
+            <Package size={20} className="text-indigo-500 shrink-0" />
+            <span
+              className="font-semibold text-sm truncate max-w-[140px] block"
+              title={repo.fullName}
+            >
               {repo.name}
             </span>
-          </Tooltip>
+          </div>
+          <Chip
+            size="sm"
+            variant="soft"
+            color={repo.isPrivate ? undefined : "success"}
+          >
+            <Chip.Label className="flex items-center gap-1">
+              {repo.isPrivate ? <Lock size={10} /> : <Globe size={10} />}
+              {repo.isPrivate ? t("private") : t("public")}
+            </Chip.Label>
+          </Chip>
         </div>
-        <Tag
-          icon={repo.isPrivate ? <LockOutlined /> : <GlobalOutlined />}
-          color={repo.isPrivate ? "default" : "green"}
-          style={{ borderRadius: 6, fontSize: 11 }}
-        >
-          {repo.isPrivate ? "Private" : "Public"}
-        </Tag>
-      </div>
 
-      <p style={{ margin: "0 0 12px", opacity: 0.5, fontSize: 12, minHeight: 36, lineHeight: "18px" }}>
-        {repo.description || "ไม่มีคำอธิบาย"}
-      </p>
+        <p className="text-xs text-muted mb-3 min-h-[36px] line-clamp-2">
+          {repo.description || t("noDescription")}
+        </p>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, opacity: 0.6 }}>
-          <GitBranch size={12} />
-          <span>{repo.defaultBranch}</span>
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-1.5 text-xs text-muted">
+            <GitBranch size={12} />
+            <span>{repo.defaultBranch}</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-xs text-muted">
+            <Clock size={12} />
+            <span>
+              {repo.lastSyncedAt
+                ? t("syncedAgo", { time: fromNow(repo.lastSyncedAt) })
+                : t("notSynced")}
+            </span>
+          </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, opacity: 0.6 }}>
-          <Clock size={12} />
-          <span>
-            {repo.lastSyncedAt
-              ? `ซิงค์ ${dayjs(repo.lastSyncedAt).fromNow()}`
-              : "ยังไม่ได้ซิงค์"}
-          </span>
+
+        <div className="mt-3 pt-3 border-t border-gray-100 dark:border-[#3e3e42]">
+          {qaStats && qaStats.testCaseCount > 0 ? (
+            <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+              <div className="flex items-center gap-1.5 text-xs">
+                <CheckCircle2 size={11} className="text-emerald-500 shrink-0" />
+                <span className="text-muted">{t("statusPass")}</span>
+                <span className="ml-auto font-semibold tabular-nums">{qaStats.passCount}</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-xs">
+                <AlertTriangle size={11} className="text-red-500 shrink-0" />
+                <span className="text-muted">{t("statusFail")}</span>
+                <span className="ml-auto font-semibold tabular-nums">{qaStats.failCount}</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-xs">
+                <Ban size={11} className="text-amber-500 shrink-0" />
+                <span className="text-muted">{t("statusBlocked")}</span>
+                <span className="ml-auto font-semibold tabular-nums">{qaStats.blockedCount}</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-xs">
+                <CircleDashed size={11} className="text-gray-400 shrink-0" />
+                <span className="text-muted">{t("statusWaiting")}</span>
+                <span className="ml-auto font-semibold tabular-nums">{qaStats.notTestedCount}</span>
+              </div>
+            </div>
+          ) : (
+            <span className="text-xs text-muted">{t("noTestCases")}</span>
+          )}
         </div>
-      </div>
+      </Card.Content>
     </Card>
   );
 }

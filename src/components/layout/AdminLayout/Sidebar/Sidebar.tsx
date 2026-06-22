@@ -1,84 +1,220 @@
 "use client";
 
-import { Layout, Menu } from "antd";
-import { LayoutDashboard } from "lucide-react";
+import { Chip } from "@heroui/react";
+import {
+  Bot,
+  BotOff,
+  ChevronRight,
+  Github,
+  LayoutDashboard,
+} from "lucide-react";
+import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
-import type { Session } from "next-auth";
+import { useAiHealth } from "@/hooks/ai/useAiHealth";
+import { useQaSummary } from "@/hooks/dashboard";
+import { useRepositoryList } from "@/hooks/repository";
+import type { QaRecentRepoResponse } from "@/types/api/main/dashboard";
+import type { ClientSession } from "@/types/app/session";
 
-const { Sider } = Layout;
+const EXPANDED_W = 260;
+const COLLAPSED_W = 64;
+
+const MAIN_NAV = [
+  { key: "/dashboard", icon: LayoutDashboard, labelKey: "dashboard" },
+] as const;
+
+function SectionLabel({ children, collapsed }: { children: string; collapsed: boolean }) {
+  if (collapsed) return null;
+
+  return (
+    <p className="px-3 pt-3 pb-1 text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+      {children}
+    </p>
+  );
+}
+
+
+function RecentRepoList({
+  repos,
+  summary,
+  collapsed,
+  activeRepoId,
+}: {
+  repos: { id: string; fullName: string }[];
+  summary: { recentRepos?: QaRecentRepoResponse[] } | null | undefined;
+  collapsed: boolean;
+  activeRepoId?: string;
+}) {
+  const router = useRouter();
+  const t = useTranslations("sidebar");
+  if (collapsed) return null;
+  if (repos.length === 0) return null;
+
+  const statsMap = new Map((summary?.recentRepos ?? []).map((repo) => [repo.id, repo]));
+
+  return (
+    <>
+      <SectionLabel collapsed={collapsed}>{t("recentRepos")}</SectionLabel>
+      <div className="px-2 flex flex-col gap-0.5 mb-2">
+        {repos.map((repo) => {
+          const stats = statsMap.get(repo.id);
+          const active = repo.id === activeRepoId;
+          const shortName = repo.fullName.split("/").pop() ?? repo.fullName;
+
+          return (
+            <button
+              key={repo.id}
+              type="button"
+              title={repo.fullName}
+              onClick={() => router.push(`/repos/${repo.id}/test-cases`)}
+              className={`flex items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs transition-colors cursor-pointer w-full ${
+                active
+                  ? "bg-indigo-500/10 dark:bg-[#37373d] text-indigo-600 dark:text-[#4fc1ff]"
+                  : "text-gray-600 hover:bg-gray-100 dark:text-[#cccccc] dark:hover:bg-[#2a2d2e]"
+              }`}
+            >
+              <Github size={13} className="shrink-0 opacity-60" />
+              <div className="min-w-0 flex-1">
+                <div className="font-medium truncate">{shortName}</div>
+                {stats && stats.testCaseCount > 0 && (
+                  <div className="text-xs text-muted mt-0.5">
+                    {t("cases", { count: stats.testCaseCount })}
+                    {stats.failCount > 0 && (
+                      <span className="text-red-500 ml-1">· {t("fail", { count: stats.failCount })}</span>
+                    )}
+                  </div>
+                )}
+              </div>
+              <ChevronRight size={12} className="shrink-0 opacity-40" />
+            </button>
+          );
+        })}
+      </div>
+    </>
+  );
+}
 
 interface SidebarProps {
   collapsed: boolean;
-  session: Session;
+  session: ClientSession;
 }
 
 export default function Sidebar({ collapsed, session }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { summary } = useQaSummary();
+  const { repositories: recentRepos } = useRepositoryList({ page: 1, pageSize: 5 });
+  const { aiAvailable } = useAiHealth();
+  const t = useTranslations("sidebar");
+  const tNav = useTranslations("nav");
 
-  const menuItems = [
-    {
-      key: "/dashboard",
-      icon: <LayoutDashboard size={16} />,
-      label: "แดชบอร์ด",
-    },
-  ];
+  const repoMatch = pathname.match(/^\/repos\/([^/]+)/);
+  const activeRepoId = repoMatch?.[1];
 
-  const selectedKey = menuItems.find((item) => pathname.startsWith(item.key))?.key ?? "/dashboard";
+  const selectedKey =
+    MAIN_NAV.find((item) => pathname === item.key || pathname.startsWith(`${item.key}/`))?.key ??
+    (pathname.startsWith("/repos/") ? undefined : "/dashboard");
+
+  const failCount = summary?.byStatus.fail ?? 0;
 
   return (
-    <Sider
-      trigger={null}
-      collapsible
-      collapsed={collapsed}
-      width={220}
-      style={{ height: "100vh", position: "sticky", top: 0, borderRight: "1px solid #e5e7eb" }}
+    <aside
+      className="shell-sidebar sticky top-0 flex h-screen flex-col border-r border-[var(--border-subtle)] bg-[var(--bg-sider)] transition-[width] duration-200 overflow-hidden"
+      style={{ width: collapsed ? COLLAPSED_W : EXPANDED_W }}
     >
-      {/* Logo */}
-      <div
-        style={{
-          height: 64,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: collapsed ? "center" : "flex-start",
-          padding: collapsed ? 0 : "0 20px",
-          borderBottom: "1px solid #e5e7eb",
-          cursor: "pointer",
-        }}
+      <button
+        type="button"
         onClick={() => router.push("/dashboard")}
+        className="flex h-16 shrink-0 items-center border-b border-white/10 bg-gradient-to-r from-indigo-600 via-indigo-500 to-sky-500 dark:from-[#007acc] dark:via-[#007acc] dark:to-[#007acc] px-4 cursor-pointer"
+        style={{ justifyContent: collapsed ? "center" : "flex-start", padding: collapsed ? 0 : undefined }}
       >
-        <span style={{ fontSize: 20 }}>🧪</span>
-        {!collapsed && (
-          <span style={{ marginLeft: 10, fontWeight: 700, fontSize: 16, color: "#6366f1" }}>
-            TockTest
-          </span>
+        {collapsed ? (
+          <span className="text-lg font-bold text-white tracking-tight">T</span>
+        ) : (
+          <div className="text-left">
+            <span className="text-base font-bold text-white tracking-tight block">TockTest</span>
+            <span className="text-xs text-indigo-100/80">{t("aiQaPlatform")}</span>
+          </div>
         )}
+      </button>
+
+      <div className="flex-1 overflow-y-auto overflow-x-hidden">
+        <SectionLabel collapsed={collapsed}>{t("main")}</SectionLabel>
+        <nav className="flex flex-col gap-1 px-2 pb-1.5">
+          {MAIN_NAV.map(({ key, icon: Icon, labelKey }) => {
+            const active = selectedKey === key;
+            const label = tNav(labelKey);
+
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => router.push(key)}
+                title={collapsed ? label : undefined}
+                className={`relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors cursor-pointer ${
+                  active
+                  ? "bg-indigo-500/14 dark:bg-[#37373d] font-semibold text-indigo-600 shadow-sm dark:text-[#4fc1ff] dark:shadow-none"
+                  : "text-gray-600 hover:bg-white/40 dark:text-[#cccccc] dark:hover:bg-[#2a2d2e]"
+                }`}
+                style={{ justifyContent: collapsed ? "center" : "flex-start" }}
+              >
+                <Icon size={16} className="shrink-0" />
+                {!collapsed && <span>{label}</span>}
+                {collapsed && key === "/dashboard" && failCount > 0 && (
+                  <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500" />
+                )}
+              </button>
+            );
+          })}
+        </nav>
+
+        <RecentRepoList repos={recentRepos} summary={summary} collapsed={collapsed} activeRepoId={activeRepoId} />
       </div>
 
-      <Menu
-        mode="inline"
-        selectedKeys={[selectedKey]}
-        items={menuItems}
-        style={{ border: "none", marginTop: 8 }}
-        onClick={({ key }) => router.push(key)}
-      />
+        <div className="shrink-0 border-t border-[var(--border-subtle)] px-3 py-3">
+        {!collapsed && (
+          <div className="flex flex-wrap gap-1.5 mb-3">
+            <Chip size="sm" variant="soft" color={aiAvailable === true ? "success" : aiAvailable === false ? "warning" : "accent"}>
+              <Chip.Label className="text-xs flex items-center gap-1">
+                {aiAvailable === false ? <BotOff size={10} /> : <Bot size={10} />}
+                {aiAvailable === true ? t("aiOnline") : aiAvailable === false ? t("aiOffline") : t("aiUnknown")}
+              </Chip.Label>
+            </Chip>
+            <Chip size="sm" variant="soft" color={summary?.hasGithubToken ? "success" : "danger"}>
+              <Chip.Label className="text-xs flex items-center gap-1">
+                <Github size={10} />
+                {summary?.hasGithubToken ? t("githubOk") : t("githubNoToken")}
+              </Chip.Label>
+            </Chip>
+          </div>
+        )}
 
-      {/* User info at bottom */}
-      {!collapsed && (
-        <div
-          style={{
-            position: "absolute",
-            bottom: 16,
-            left: 16,
-            right: 16,
-            fontSize: 12,
-            opacity: 0.6,
-          }}
-        >
-          <div style={{ fontWeight: 600, marginBottom: 2 }}>{session.user.name}</div>
-          <div>{session.user.email}</div>
-        </div>
-      )}
-    </Sider>
+        {!collapsed ? (
+          <div className="text-xs text-[var(--text-muted)]">
+            <div className="flex items-center gap-2">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 font-semibold text-sm">
+                {session.user.name?.charAt(0)?.toUpperCase() ?? "U"}
+              </span>
+              <div className="min-w-0">
+                <div className="font-semibold text-[var(--text-primary)] truncate">{session.user.name}</div>
+                <div className="truncate text-xs">{session.user.email}</div>
+              </div>
+            </div>
+            {session.user.role === "admin" && (
+              <Chip size="sm" variant="soft" color="accent" className="mt-2">
+                <Chip.Label className="text-xs">{t("admin")}</Chip.Label>
+              </Chip>
+            )}
+          </div>
+        ) : (
+          <div
+            className="mx-auto flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 font-semibold text-sm"
+            title={session.user.name}
+          >
+            {session.user.name?.charAt(0)?.toUpperCase() ?? "U"}
+          </div>
+        )}
+      </div>
+    </aside>
   );
 }

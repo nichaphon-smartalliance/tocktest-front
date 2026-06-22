@@ -1,7 +1,15 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getGithubTokens, createGithubToken, deleteGithubToken, syncRepositories } from "@/services/repository.service";
+import { getApiErrorMessage } from "@/lib/api-error";
+import { message } from "@/lib/toast";
+import {
+  getGithubTokens,
+  createGithubToken,
+  deleteGithubToken,
+  syncRepositories,
+  getGithubOAuthConnectUrl,
+} from "@/services/repository.service";
 
 export const GITHUB_TOKENS_QUERY_KEY = ["githubTokens"] as const;
 
@@ -29,6 +37,15 @@ export const useGithubTokens = () => {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["repositoryList"] }),
   });
 
+  const connectGithub = async () => {
+    try {
+      const url = await getGithubOAuthConnectUrl();
+      if (url) window.location.href = url;
+    } catch (error) {
+      message.error(getApiErrorMessage(error, "Failed to connect GitHub."));
+    }
+  };
+
   return {
     tokens: data ?? [],
     isLoading,
@@ -38,5 +55,6 @@ export const useGithubTokens = () => {
     isDeleting: deleteMutation.isPending,
     syncRepositories: syncMutation.mutateAsync,
     isSyncing: syncMutation.isPending,
+    connectGithub,
   };
 };

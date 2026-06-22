@@ -1,4 +1,5 @@
-import { AnalysisContent } from "@/components/partials/Analysis";
+import { ClientOnly } from "@/components/ui/ClientOnly";
+import AnalysisContent from "@/components/partials/Analysis/AnalysisContent";
 
 export default async function AnalysisPage({
   params,
@@ -6,5 +7,9 @@ export default async function AnalysisPage({
   params: Promise<{ repoId: string }>;
 }) {
   const { repoId } = await params;
-  return <AnalysisContent repoId={repoId} />;
+  return (
+    <ClientOnly>
+      <AnalysisContent repoId={repoId} />
+    </ClientOnly>
+  );
 }

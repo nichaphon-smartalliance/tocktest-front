@@ -12,3 +12,14 @@ export interface DocVersion {
   updatedAt: string;
   updatedBy: string | null;
 }
+
+export interface DocStatus {
+  status: "idle" | "queued" | "running" | "success" | "error";
+  message: string | null;
+  lastGeneratedAt: string | null;
+  lastCommitSha: string | null;
+  lastSourceSha: string | null;
+  autoSync: boolean;
+  offlineMode: boolean;
+  isStale: boolean;
+}

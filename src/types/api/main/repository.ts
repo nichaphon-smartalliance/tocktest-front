@@ -16,9 +16,12 @@ export interface RepositoryResponse {
 export interface GithubTokenResponse {
   id: string;
   label: string;
+  provider: string;
+  githubLogin: string | null;
   scopes: string[];
   isActive: boolean;
   lastTestedAt: string | null;
+  expiresAt: string | null;
   createdAt: string;
 }
 

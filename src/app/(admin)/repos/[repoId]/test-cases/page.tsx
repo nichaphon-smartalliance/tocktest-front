@@ -1,4 +1,5 @@
-import { TestCasesContent } from "@/components/partials/TestCases";
+import { ClientOnly } from "@/components/ui/ClientOnly";
+import TestCasesContent from "@/components/partials/TestCases/TestCasesContent";
 
 export default async function TestCasesPage({
   params,
@@ -6,5 +7,9 @@ export default async function TestCasesPage({
   params: Promise<{ repoId: string }>;
 }) {
   const { repoId } = await params;
-  return <TestCasesContent repoId={repoId} />;
+  return (
+    <ClientOnly>
+      <TestCasesContent repoId={repoId} />
+    </ClientOnly>
+  );
 }

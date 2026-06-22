@@ -47,11 +47,6 @@ export interface TestCaseFormValues {
   tags?: string[];
 }
 
-export interface AiGenerateFormValues {
-  fromDate?: string;
-  toDate?: string;
-  commitShas?: string[];
-}
 
 export interface GeneratedTestCasePreview {
   title: string;
