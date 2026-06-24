@@ -20,7 +20,7 @@ export const authOptions: AuthOptions = {
         if (!credentials?.email || !credentials?.password) return null;
         try {
           const res = await axios.post(
-            `${process.env.BACKEND_URL}/api/v1/auth/login`,
+            `${process.env.BACKEND_URL}/auth/login`,
             { email: credentials.email, password: credentials.password },
             { timeout: 8000 },
           );
@@ -39,7 +39,7 @@ export const authOptions: AuthOptions = {
     async signIn({ user, account, profile }) {
       if (account?.provider === "github") {
         try {
-          const res = await axios.post(`${process.env.BACKEND_URL}/api/v1/auth/github`, {
+          const res = await axios.post(`${process.env.BACKEND_URL}/auth/github`, {
             accessToken: account.access_token,
           });
           const { accessToken, user: backendUser } = res.data?.data ?? {};
