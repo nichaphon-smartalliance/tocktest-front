@@ -9,7 +9,7 @@
     "prebuild": "node scripts/copy-heroui-css.mjs",
     "dev": "next dev -p 4003",
     "dev:clean": "node -e \"require('fs').rmSync('.next',{recursive:true,force:true})\" && next dev -p 4003",
-    "build": "next build",
+    "build": "next build && node scripts/copy-standalone-assets.mjs",
     "start": "next start -p 3012",
     "lint": "next lint",
     "type-check": "tsc --noEmit"
