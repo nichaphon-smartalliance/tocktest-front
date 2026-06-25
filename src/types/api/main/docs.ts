@@ -8,12 +8,9 @@ export interface ProjectDocResponse {
   updatedAt: string;
 }
 
-export interface DocVersionResponse {
-  id: string;
-  version: number;
-  updatedAt: string;
-  updatedBy: string | null;
-}
+export type DocVersionResponse =
+  | { kind: 'version'; id: string; version: number; updatedAt: string; updatedBy: string | null }
+  | { kind: 'deleted'; id: string; email: string; deletedAt: string };
 
 export interface DocStatusResponse {
   status: "idle" | "queued" | "running" | "success" | "error";

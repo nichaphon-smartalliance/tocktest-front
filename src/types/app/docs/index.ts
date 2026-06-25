@@ -6,12 +6,9 @@ export interface ProjectDoc {
   updatedAt: string;
 }
 
-export interface DocVersion {
-  id: string;
-  version: number;
-  updatedAt: string;
-  updatedBy: string | null;
-}
+export type DocVersion =
+  | { kind: 'version'; id: string; version: number; updatedAt: string; updatedBy: string | null }
+  | { kind: 'deleted'; id: string; email: string; deletedAt: string };
 
 export interface DocStatus {
   status: "idle" | "queued" | "running" | "success" | "error";
