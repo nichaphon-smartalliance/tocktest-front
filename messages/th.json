@@ -141,7 +141,7 @@
     "colType": "ประเภท",
     "colUpdated": "อัปเดต",
     "empty": "ยังไม่มี test case",
-    "emptyHint": "กด \"Test Case ใหม่\" เพื่อสร้างเอง หรือ \"สร้างด้วย AI\" ให้ระบบช่วยร่าง",
+    "emptyHint": "กด \"Test Case ใหม่\" เพื่อสร้างเอง หรือ \"สร้างด้วย AI\"",
     "totalItems": "ทั้งหมด {count} รายการ",
     "edit": "แก้ไข",
     "delete": "ลบ",
