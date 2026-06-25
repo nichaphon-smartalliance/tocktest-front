@@ -326,19 +326,29 @@ export default function DocsContent({ repoId }: DocsContentProps) {
         <div className="w-64 shrink-0">
           <div className="font-semibold mb-3 text-sm">{t("versionHistory")}</div>
           <div className="flex flex-col gap-3 border-l-2 border-gray-200 dark:border-[#3e3e42] pl-4">
-            {versions.map((version) => (
-              <div
-                key={version.version}
-                className={`relative ${version.version === doc?.version ? "text-indigo-600 dark:text-indigo-400" : "text-muted"}`}
-              >
+            {versions.map((entry) =>
+              entry.kind === 'deleted' ? (
+                <div key={entry.id} className="relative text-red-500 dark:text-red-400">
+                  <div className="absolute -left-[21px] top-1.5 size-2.5 rounded-full bg-red-400" />
+                  <div className="font-medium text-sm">Deleted</div>
+                  <div className="text-xs opacity-70">{entry.email}</div>
+                  <div className="text-xs opacity-70">{dayjs(entry.deletedAt).format("DD/MM/YYYY HH:mm")}</div>
+                </div>
+              ) : (
                 <div
-                  className={`absolute -left-[21px] top-1.5 size-2.5 rounded-full ${version.version === doc?.version ? "bg-indigo-500" : "bg-gray-300 dark:bg-[#5a5a5a]"
+                  key={entry.id}
+                  className={`relative ${entry.version === doc?.version ? "text-indigo-600 dark:text-indigo-400" : "text-muted"}`}
+                >
+                  <div
+                    className={`absolute -left-[21px] top-1.5 size-2.5 rounded-full ${
+                      entry.version === doc?.version ? "bg-indigo-500" : "bg-gray-300 dark:bg-[#5a5a5a]"
                     }`}
-                />
-                <div className="font-medium text-sm">v{version.version}</div>
-                <div className="text-xs opacity-70">{dayjs(version.updatedAt).format("DD/MM/YYYY HH:mm")}</div>
-              </div>
-            ))}
+                  />
+                  <div className="font-medium text-sm">v{entry.version}</div>
+                  <div className="text-xs opacity-70">{dayjs(entry.updatedAt).format("DD/MM/YYYY HH:mm")}</div>
+                </div>
+              )
+            )}
           </div>
         </div>
       )}
