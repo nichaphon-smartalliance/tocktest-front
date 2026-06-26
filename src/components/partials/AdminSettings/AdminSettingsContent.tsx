@@ -12,6 +12,8 @@ import {
   ChevronDown,
   ChevronUp,
   Download,
+  Eye,
+  EyeOff,
   Github,
   Link2,
   Package,
@@ -54,6 +56,9 @@ export default function AdminSettingsContent() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showCurrentPw, setShowCurrentPw] = useState(false);
+  const [showNewPw, setShowNewPw] = useState(false);
+  const [showConfirmPw, setShowConfirmPw] = useState(false);
   const [defaultPageSize, setDefaultPageSize] = useState("20");
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [preferredLanguage, setPreferredLanguage] = useState("th");
@@ -329,21 +334,49 @@ export default function AdminSettingsContent() {
           <Card.Content className="px-5 py-4 flex flex-col gap-4">
             <TextField value={currentPassword} onChange={setCurrentPassword} isRequired>
               <Label>{t("currentPassword")}</Label>
-              <InputGroup>
-                <InputGroup.Input type="password" autoComplete="current-password" />
-              </InputGroup>
+              <div className="relative w-full">
+                <InputGroup className="w-full">
+                  <InputGroup.Input type={showCurrentPw ? "text" : "password"} autoComplete="current-password" className="" />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPw((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  >
+                    {showCurrentPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </InputGroup>
+
+              </div>
             </TextField>
             <TextField value={newPassword} onChange={setNewPassword} isRequired>
               <Label>{t("newPassword")}</Label>
-              <InputGroup>
-                <InputGroup.Input type="password" autoComplete="new-password" />
-              </InputGroup>
+              <div className="relative w-full">
+                <InputGroup className="w-full">
+                  <InputGroup.Input type={showNewPw ? "text" : "password"} autoComplete="new-password" />
+                </InputGroup >
+                <button
+                  type="button"
+                  onClick={() => setShowNewPw((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  {showNewPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
             </TextField>
             <TextField value={confirmPassword} onChange={setConfirmPassword} isRequired>
               <Label>{t("confirmPassword")}</Label>
-              <InputGroup>
-                <InputGroup.Input type="password" autoComplete="new-password" />
-              </InputGroup>
+              <div className="relative w-full">
+                <InputGroup className="w-full">
+                  <InputGroup.Input type={showConfirmPw ? "text" : "password"} autoComplete="new-password" />
+                </InputGroup>
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPw((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  {showConfirmPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
             </TextField>
             <Button variant="primary" isDisabled={isChanging} onPress={() => void handleChangePassword()}>
               {isChanging ? t("changingPassword") : t("changePasswordBtn")}
