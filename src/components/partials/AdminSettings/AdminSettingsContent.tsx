@@ -31,7 +31,7 @@ import { type ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { AddTokenModal } from "@/components/partials/Dashboard/Modal";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useAiHealth } from "@/hooks/ai/useAiHealth";
-import { useGithubAppInstallationRepositories, useGithubAppSetup, useJobStats } from "@/hooks/dashboard";
+import { useGithubAppInstallationRepositories, useGithubAppSetup } from "@/hooks/dashboard";
 import { useGithubTokens } from "@/hooks/repository";
 import { useChangePassword, useUserProfile, useUserSettings } from "@/hooks/user";
 import { setUserLocale } from "@/i18n/locale";
@@ -76,7 +76,6 @@ export default function AdminSettingsContent() {
   const { settings, isLoading: settingsLoading, update: updateSettings, isUpdating: settingsUpdating } = useUserSettings();
   const { tokens, isLoading: tokensLoading, deleteToken, connectGithub } = useGithubTokens();
   const { setup: githubAppSetup, installations, installApp } = useGithubAppSetup();
-  const { data: jobStats } = useJobStats();
   const { aiAvailable } = useAiHealth();
 
 
@@ -639,21 +638,6 @@ export default function AdminSettingsContent() {
                   <Chip.Label>{process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4004"}</Chip.Label>
                 </Chip>
               </div>
-              {jobStats && (
-                <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-                  {[
-                    { label: t("jobPending"), value: jobStats.pending, color: "text-amber-600" },
-                    { label: t("jobProcessing"), value: jobStats.processing, color: "text-sky-600" },
-                    { label: t("jobCompleted"), value: jobStats.completed, color: "text-emerald-600" },
-                    { label: t("jobFailed"), value: jobStats.failed, color: "text-rose-600" },
-                  ].map((item) => (
-                    <div key={item.label} className="rounded-lg border border-gray-200 px-4 py-3 dark:border-[#3e3e42]">
-                      <p className={`m-0 text-lg font-semibold ${item.color}`}>{item.value}</p>
-                      <p className="m-0 text-xs text-muted">{item.label}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
             </Card.Content>
           </Card>
 
