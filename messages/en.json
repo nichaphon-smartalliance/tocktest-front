@@ -141,7 +141,7 @@
     "colType": "Type",
     "colUpdated": "Updated",
     "empty": "No test cases yet",
-    "emptyHint": "Click \"New Test Case\" to create one, or \"Generate with AI\" to let the system draft them",
+    "emptyHint": "Click \"New Test Case\" to create one, or \"Generate with AI\"",
     "totalItems": "{count} items total",
     "edit": "Edit",
     "delete": "Delete",
