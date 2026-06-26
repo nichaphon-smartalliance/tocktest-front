@@ -29,7 +29,7 @@ import { type ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { AddTokenModal } from "@/components/partials/Dashboard/Modal";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useAiHealth } from "@/hooks/ai/useAiHealth";
-import { useGithubAppInstallationRepositories, useGithubAppSetup, useJobStats, useRecentJobs } from "@/hooks/dashboard";
+import { useGithubAppInstallationRepositories, useGithubAppSetup, useJobStats } from "@/hooks/dashboard";
 import { useGithubTokens } from "@/hooks/repository";
 import { useChangePassword, useUserProfile, useUserSettings } from "@/hooks/user";
 import { setUserLocale } from "@/i18n/locale";
@@ -72,8 +72,8 @@ export default function AdminSettingsContent() {
   const { tokens, isLoading: tokensLoading, deleteToken, connectGithub } = useGithubTokens();
   const { setup: githubAppSetup, installations, installApp } = useGithubAppSetup();
   const { data: jobStats } = useJobStats();
-  const { data: recentJobs } = useRecentJobs();
   const { aiAvailable } = useAiHealth();
+
 
   useEffect(() => {
     dayjs.locale(locale);
@@ -618,58 +618,6 @@ export default function AdminSettingsContent() {
                     </div>
                   ))}
                 </div>
-              )}
-            </Card.Content>
-          </Card>
-
-          <Card className="rounded-xl">
-            <Card.Header className="px-5 py-4 border-b border-gray-200 dark:border-[#3e3e42]">
-              <Card.Title className="text-base font-semibold m-0">{t("recentJobs")}</Card.Title>
-            </Card.Header>
-            <Card.Content className="p-0">
-              {!recentJobs?.length ? (
-                <div className="px-5 py-6 text-sm text-muted">{t("noJobs")}</div>
-              ) : (
-                <Table>
-                  <Table.ScrollContainer>
-                    <Table.Content aria-label="Recent background jobs">
-                      <Table.Header>
-                        <Table.Column isRowHeader>{t("jobType")}</Table.Column>
-                        <Table.Column>{t("jobStatus")}</Table.Column>
-                        <Table.Column>{t("jobAttempts")}</Table.Column>
-                        <Table.Column>{t("jobCreated")}</Table.Column>
-                      </Table.Header>
-                      <Table.Body>
-                        {recentJobs.slice(0, 8).map((job) => (
-                          <Table.Row key={job.id} id={job.id}>
-                            <Table.Cell>
-                              <span className="font-medium">{job.type}</span>
-                            </Table.Cell>
-                            <Table.Cell>
-                              <Chip
-                                size="sm"
-                                variant="soft"
-                                color={
-                                  job.status === "completed"
-                                    ? "success"
-                                    : job.status === "failed"
-                                      ? "danger"
-                                      : job.status === "processing"
-                                        ? "accent"
-                                        : "warning"
-                                }
-                              >
-                                <Chip.Label>{job.status}</Chip.Label>
-                              </Chip>
-                            </Table.Cell>
-                            <Table.Cell>{job.attempts}/{job.maxAttempts}</Table.Cell>
-                            <Table.Cell>{dayjs(job.createdAt).format("DD/MM HH:mm")}</Table.Cell>
-                          </Table.Row>
-                        ))}
-                      </Table.Body>
-                    </Table.Content>
-                  </Table.ScrollContainer>
-                </Table>
               )}
             </Card.Content>
           </Card>
