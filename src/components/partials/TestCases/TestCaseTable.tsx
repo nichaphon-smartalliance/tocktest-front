@@ -89,7 +89,7 @@ const TestCaseRow = memo(function TestCaseRow({
           onChange={(status) => onStatusChange(record.id, status)}
         />
       </Table.Cell>
-      <Table.Cell className="w-[100px]">
+      <Table.Cell className="w-[120px]">
         <InlineChipPicker
           value={record.priority}
           options={priorityOptions}
@@ -187,7 +187,7 @@ export default function TestCaseTable({
               <Table.Header>
                 <Table.Column isRowHeader className="w-auto">{t("colName")}</Table.Column>
                 <Table.Column className="w-[130px]">{t("colStatus")}</Table.Column>
-                <Table.Column className="w-[100px]">{t("colPriority")}</Table.Column>
+                <Table.Column className="w-[120px]">{t("colPriority")}</Table.Column>
                 <Table.Column className="w-[130px]">{t("colType")}</Table.Column>
                 <Table.Column className="w-[110px]">{t("colUpdated")}</Table.Column>
                 <Table.Column className="w-[80px]" />

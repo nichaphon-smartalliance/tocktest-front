@@ -128,6 +128,6 @@ export function configToChipOptions<T extends string>(
 
 export const CHIP_PICKER_WIDTH = {
   status: "w-[6.75rem]",
-  priority: "w-[4.25rem]",
+  priority: "w-[6.5rem]",
   type: "w-[7.25rem]",
 } as const;
