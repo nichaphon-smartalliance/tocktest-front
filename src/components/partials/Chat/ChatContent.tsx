@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Button, Card, Spinner, Alert } from "@heroui/react";
+import { Button, Card } from "@heroui/react";
 import { Send, Bot, User, RefreshCw } from "lucide-react";
 import { chatWithRepoApi } from "@/lib/api/api-main";
 import { getApiErrorMessage } from "@/lib/api-error";
 import ReactMarkdown from "react-markdown";
+
+type ChatLang = "th" | "en";
 
 interface Message {
   role: "user" | "assistant";
@@ -18,23 +20,65 @@ interface ChatContentProps {
   repoName?: string;
 }
 
-const STARTERS = [
-  "What areas should I test first in this repo?",
-  "Generate a Cypress test for the login flow",
-  "What are the highest-risk recent changes?",
-  "Suggest test cases for the most recent commits",
-];
+const LANG_KEY = "tocktest_chat_lang";
+
+const TEXTS = {
+  th: {
+    title: "QA Chatbot",
+    headerSub: "วางแผนการทดสอบ, code review และกลยุทธ์ QA",
+    emptyHint: "ฉันรู้จัก test case, commit ล่าสุด และ docs ของโปรเจกต์คุณ ถามอะไรก็ได้",
+    starters: [
+      "ควรทดสอบส่วนไหนก่อนใน repo นี้?",
+      "สร้าง Cypress test สำหรับ login flow",
+      "การเปลี่ยนแปลงล่าสุดที่เสี่ยงสุดคืออะไร?",
+      "แนะนำ test case สำหรับ commit ล่าสุด",
+    ],
+    clearTitle: "ล้างบทสนทนา",
+    inputPlaceholder: "ถามเกี่ยวกับการทดสอบ, คุณภาพโค้ด หรือไอเดีย test case... (กด Enter เพื่อส่ง)",
+    langLabel: "ภาษาที่ตอบ",
+    error: "ไม่ได้รับคำตอบจาก AI ตรวจสอบว่า AI service กำลังทำงานอยู่",
+  },
+  en: {
+    title: "QA Chatbot",
+    headerSub: "Test planning, code review, QA strategy",
+    emptyHint: "I know your test cases, recent commits, and project docs. Ask me anything.",
+    starters: [
+      "What areas should I test first in this repo?",
+      "Generate a Cypress test for the login flow",
+      "What are the highest-risk recent changes?",
+      "Suggest test cases for the most recent commits",
+    ],
+    clearTitle: "Clear conversation",
+    inputPlaceholder: "Ask about testing, code quality, or test case ideas... (Enter to send)",
+    langLabel: "Reply language",
+    error: "Failed to get AI response. Make sure AI service is running.",
+  },
+} as const;
+
+function getInitialLang(): ChatLang {
+  if (typeof window === "undefined") return "th";
+  const stored = localStorage.getItem(LANG_KEY);
+  return stored === "en" ? "en" : "th";
+}
 
 export default function ChatContent({ repoId, repoName }: ChatContentProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [chatLang, setChatLang] = useState<ChatLang>(getInitialLang);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const t = TEXTS[chatLang];
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  const handleLangChange = (lang: ChatLang) => {
+    setChatLang(lang);
+    localStorage.setItem(LANG_KEY, lang);
+  };
 
   const send = async (text?: string) => {
     const content = (text ?? input).trim();
@@ -47,13 +91,13 @@ export default function ChatContent({ repoId, repoName }: ChatContentProps) {
 
     try {
       const history = messages.slice(-8).map((m) => ({ role: m.role, content: m.content }));
-      const res = await chatWithRepoApi(repoId, { message: content, history });
+      const res = await chatWithRepoApi(repoId, { message: content, history, language: chatLang });
       const reply = res.data?.data?.response ?? "";
       setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
     } catch (err) {
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: getApiErrorMessage(err, "Failed to get AI response. Make sure AI service is running."), error: true },
+        { role: "assistant", content: getApiErrorMessage(err, t.error), error: true },
       ]);
     } finally {
       setLoading(false);
@@ -68,27 +112,86 @@ export default function ChatContent({ repoId, repoName }: ChatContentProps) {
     }
   };
 
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+    e.target.style.height = "auto";
+    e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
+  };
+
   return (
     <div className="flex flex-col h-full max-w-5xl mx-auto w-full">
-      <div className="mb-4">
-        <h1 className="text-xl font-semibold">QA Chatbot</h1>
-        <p className="text-sm text-muted mt-0.5">
-          Ask questions about {repoName ?? "this repo"} — test planning, code review, and QA strategy.
-        </p>
-      </div>
-
       <Card className="rounded-xl flex flex-col" style={{ minHeight: "600px" }}>
-        <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3" style={{ minHeight: 0, maxHeight: "calc(100vh - 280px)" }}>
+
+        {/* ── Header ── */}
+        <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-gray-200 dark:border-[#3e3e42] shrink-0">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="shrink-0 h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center">
+              <Bot size={16} className="text-white" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-semibold text-sm text-[var(--text-primary)]">{t.title}</span>
+                {repoName && (
+                  <span className="inline-flex items-center rounded-md bg-indigo-500/10 dark:bg-indigo-500/15 px-1.5 py-0.5 text-[11px] font-medium text-indigo-600 dark:text-indigo-400">
+                    {repoName}
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-[var(--text-muted)] leading-tight mt-0.5">{t.headerSub}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            {/* TH / EN pill toggle */}
+            <div
+              role="group"
+              aria-label={t.langLabel}
+              className="flex rounded-lg bg-gray-100 dark:bg-[#2d2d2d] p-0.5 gap-0.5"
+            >
+              {(["th", "en"] as ChatLang[]).map((lang) => (
+                <button
+                  key={lang}
+                  type="button"
+                  onClick={() => handleLangChange(lang)}
+                  aria-pressed={chatLang === lang}
+                  className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-all cursor-pointer ${
+                    chatLang === lang
+                      ? "bg-white dark:bg-[#3c3c3c] text-indigo-600 dark:text-[#4fc1ff] shadow-sm"
+                      : "text-gray-500 dark:text-[#858585] hover:text-gray-700 dark:hover:text-[#cccccc]"
+                  }`}
+                >
+                  {lang === "th" ? "TH" : "EN"}
+                </button>
+              ))}
+            </div>
+
+            {/* Clear — only when messages exist */}
+            {messages.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setMessages([])}
+                title={t.clearTitle}
+                className="h-8 w-8 rounded-lg border border-gray-200 dark:border-[#3e3e42] flex items-center justify-center text-[var(--text-muted)] hover:bg-gray-100 dark:hover:bg-[#2a2d2e] transition-colors"
+              >
+                <RefreshCw size={13} />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* ── Messages ── */}
+        <div
+          className="flex-1 overflow-y-auto p-4 flex flex-col gap-3"
+          style={{ minHeight: 0, maxHeight: "calc(100vh - 280px)" }}
+        >
           {messages.length === 0 && (
             <div className="flex flex-col gap-3 my-auto py-8">
               <div className="flex justify-center mb-2">
                 <Bot size={40} className="text-indigo-400" />
               </div>
-              <p className="text-sm text-center text-muted">
-                I know your test cases, recent commits, and project docs. Ask me anything.
-              </p>
+              <p className="text-sm text-center text-muted">{t.emptyHint}</p>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 mt-2">
-                {STARTERS.map((s) => (
+                {t.starters.map((s) => (
                   <button
                     key={s}
                     type="button"
@@ -104,7 +207,11 @@ export default function ChatContent({ repoId, repoName }: ChatContentProps) {
 
           {messages.map((msg, i) => (
             <div key={i} className={`flex gap-2.5 ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
-              <div className={`shrink-0 h-7 w-7 rounded-full flex items-center justify-center text-white ${msg.role === "user" ? "bg-indigo-500" : "bg-gray-600 dark:bg-[#5a5a5a]"}`}>
+              <div
+                className={`shrink-0 h-7 w-7 rounded-full flex items-center justify-center text-white ${
+                  msg.role === "user" ? "bg-indigo-500" : "bg-gray-600 dark:bg-[#5a5a5a]"
+                }`}
+              >
                 {msg.role === "user" ? <User size={14} /> : <Bot size={14} />}
               </div>
               <div
@@ -142,23 +249,14 @@ export default function ChatContent({ repoId, repoName }: ChatContentProps) {
           <div ref={bottomRef} />
         </div>
 
+        {/* ── Input ── */}
         <div className="border-t border-gray-200 dark:border-[#3e3e42] p-3 flex gap-2 items-end">
-          {messages.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setMessages([])}
-              className="shrink-0 h-9 w-9 rounded-lg border border-gray-200 dark:border-[#3e3e42] flex items-center justify-center text-muted hover:bg-gray-100 dark:hover:bg-[#2a2d2e] transition-colors"
-              title="Clear conversation"
-            >
-              <RefreshCw size={14} />
-            </button>
-          )}
           <textarea
             ref={textareaRef}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={handleTextareaChange}
             onKeyDown={handleKeyDown}
-            placeholder="Ask about testing, code quality, or test case ideas... (Enter to send)"
+            placeholder={t.inputPlaceholder}
             rows={1}
             className="flex-1 resize-none rounded-xl border border-gray-200 dark:border-[#3e3e42] bg-transparent dark:bg-[#3c3c3c] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-[#007acc] transition-shadow"
             style={{ minHeight: "38px", maxHeight: "120px", overflowY: "auto" }}

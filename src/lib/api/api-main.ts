@@ -186,6 +186,6 @@ export const importGithubAppInstallationRepositoryApi = (installationId: string,
 // ── QA Chatbot ────────────────────────────────────────────────────────────
 export const chatWithRepoApi = (
   repoId: string,
-  body: { message: string; history?: { role: 'user' | 'assistant'; content: string }[] },
+  body: { message: string; history?: { role: 'user' | 'assistant'; content: string }[]; language?: 'th' | 'en' },
 ) => mainClient.post<ApiResponse<{ response: string; repoId: string }>>(`/repositories/${repoId}/chat`, body, { timeout: 60_000 });
 
