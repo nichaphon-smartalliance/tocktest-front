@@ -539,15 +539,17 @@ export default function AdminSettingsContent() {
           </Card>
 
           <Card className="rounded-xl">
-            <Card.Header className="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-[#3e3e42]">
-              <div>
-                <Card.Title className="text-base font-semibold m-0">GitHub Tokens</Card.Title>
-                <p className="text-xs text-muted mt-0.5">{t("tokensDesc")}</p>
+            <Card.Header className="px-5 py-4 border-b border-gray-200 dark:border-[#3e3e42]">
+              <div className="flex items-center justify-between w-full">
+                <div>
+                  <Card.Title className="text-base font-semibold m-0">GitHub Tokens</Card.Title>
+                  <p className="text-xs text-muted mt-0.5">{t("tokensDesc")}</p>
+                </div>
+                <Button size="sm" variant="secondary" onPress={() => setAddTokenOpen(true)}>
+                  <Plus size={14} />
+                  {t("addToken")}
+                </Button>
               </div>
-              <Button size="sm" variant="secondary" onPress={() => setAddTokenOpen(true)}>
-                <Plus size={14} />
-                {t("addToken")}
-              </Button>
             </Card.Header>
             <Card.Content className="p-0">
               {tokensLoading ? (
