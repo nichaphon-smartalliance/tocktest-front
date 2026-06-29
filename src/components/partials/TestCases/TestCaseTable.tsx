@@ -112,7 +112,7 @@ const TestCaseRow = memo(function TestCaseRow({
       <Table.Cell>
         <Tooltip>
           <Tooltip.Trigger>
-            <span className="text-xs text-muted">{dayjs(record.updatedAt).locale(locale).fromNow()}</span>
+            <span className="text-xs text-muted whitespace-nowrap">{dayjs(record.updatedAt).locale(locale).fromNow()}</span>
           </Tooltip.Trigger>
           <Tooltip.Content>{dayjs(record.updatedAt).format("DD/MM/YYYY HH:mm")}</Tooltip.Content>
         </Tooltip>
