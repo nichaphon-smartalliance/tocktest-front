@@ -31,6 +31,7 @@ interface TestCaseTableProps {
 
 interface TestCaseRowProps {
   record: TestCase;
+  
   onEdit: (tc: TestCase) => void;
   onDelete: (id: string) => void;
   onStatusChange: (id: string, status: TestStatus) => Promise<void>;
