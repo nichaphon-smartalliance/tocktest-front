@@ -14,6 +14,7 @@ const updateTestCaseListItem = (
   data: TestCaseListResponse | undefined,
   id: string,
   updater: (item: TestCase) => TestCase,
+  sortByUpdated = false,
 ) => {
   if (!data?.items?.length) return data;
 
@@ -24,7 +25,13 @@ const updateTestCaseListItem = (
     return updater(item);
   });
 
-  return changed ? { ...data, items } : data;
+  if (!changed) return data;
+
+  const sorted = sortByUpdated
+    ? [...items].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+    : items;
+
+  return { ...data, items: sorted };
 };
 
 const adjustQaSummaryForStatusChange = (
@@ -85,7 +92,7 @@ export const useTestCaseList = (repoId: string, params?: TestCaseFilterParams) =
       }
 
       qc.setQueriesData<TestCaseListResponse>({ queryKey: [...TEST_CASE_LIST_QUERY_KEY, repoId] }, (current) =>
-        updateTestCaseListItem(current, id, (item) => ({ ...item, ...values })),
+        updateTestCaseListItem(current, id, (item) => ({ ...item, ...values, updatedAt: new Date().toISOString() }), true),
       );
 
       if (previous?.status && values.status && previous.status !== values.status) {
@@ -98,7 +105,7 @@ export const useTestCaseList = (repoId: string, params?: TestCaseFilterParams) =
     },
     onSuccess: (updated) => {
       qc.setQueriesData<TestCaseListResponse>({ queryKey: [...TEST_CASE_LIST_QUERY_KEY, repoId] }, (current) =>
-        updateTestCaseListItem(current, updated.id, () => updated),
+        updateTestCaseListItem(current, updated.id, () => updated, true),
       );
       qc.invalidateQueries({ queryKey: QA_SUMMARY_QUERY_KEY });
     },
