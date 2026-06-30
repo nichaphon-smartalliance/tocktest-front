@@ -8,9 +8,9 @@ export const useAiHealth = () => {
   const { data, isLoading } = useQuery({
     queryKey: ["aiHealth"],
     queryFn: async () => (await aiHealthApi()).data?.data ?? { available: false },
-    refetchInterval: 5 * 60_000,
-    staleTime: 5 * 60_000,
-    retry: false,
+    refetchInterval: 30_000,
+    staleTime: 15_000,
+    retry: 1,
   });
   return {
     aiAvailable: isLoading ? null : (data?.available ?? false),

@@ -5,7 +5,7 @@
       "name": "tocktest-front",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
-      "port": 3000
+      "port": 4003
     }
   ]
 }
