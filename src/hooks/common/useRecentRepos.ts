@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 const STORAGE_KEY = "tock:recent-repos";
 const MAX = 5;
+const UPDATE_EVENT = "tock:recent-repos-updated";
 
 export interface RecentRepoEntry {
   id: string;
@@ -27,6 +28,9 @@ export function useRecentRepos() {
 
   useEffect(() => {
     setRecent(readStorage());
+    const handler = () => setRecent(readStorage());
+    window.addEventListener(UPDATE_EVENT, handler);
+    return () => window.removeEventListener(UPDATE_EVENT, handler);
   }, []);
 
   return { recent };
@@ -41,5 +45,6 @@ export function trackRecentRepo(id: string, fullName: string) {
       MAX,
     );
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    window.dispatchEvent(new Event(UPDATE_EVENT));
   } catch {}
 }

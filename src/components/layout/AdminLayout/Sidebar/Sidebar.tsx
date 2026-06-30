@@ -12,7 +12,7 @@ import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
 import { useAiHealth } from "@/hooks/ai/useAiHealth";
 import { useQaSummary } from "@/hooks/dashboard";
-import { useRepositoryList } from "@/hooks/repository";
+import { useRecentRepos } from "@/hooks/common/useRecentRepos";
 import type { QaRecentRepoResponse } from "@/types/api/main/dashboard";
 import type { ClientSession } from "@/types/app/session";
 
@@ -103,7 +103,7 @@ export default function Sidebar({ collapsed, session }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { summary } = useQaSummary();
-  const { repositories: recentRepos } = useRepositoryList({ page: 1, pageSize: 5 });
+  const { recent: recentRepos } = useRecentRepos();
   const { aiAvailable } = useAiHealth();
   const t = useTranslations("sidebar");
   const tNav = useTranslations("nav");
