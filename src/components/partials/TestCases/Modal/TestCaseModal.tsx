@@ -49,7 +49,7 @@ function TagInput({
             <button
               type="button"
               onClick={() => onChange?.(value.filter((x) => x !== tag))}
-              className="cursor-pointer text-gray-400 text-xs leading-none"
+              className="cursor-pointer text-gray-400 hover:text-gray-600 dark:text-[#858585] dark:hover:text-[#cccccc] text-xs leading-none"
             >
               ×
             </button>
