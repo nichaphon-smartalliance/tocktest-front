@@ -297,3 +297,13 @@ select,
   pointer-events: none;
 }
 .tiptap-editor img.ProseMirror-selectednode { outline: 2px solid var(--accent-primary); }
+
+/* ── Chat history: subtle entrance for list items / panels ── */
+@keyframes chatFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+.chat-fade-in { animation: chatFadeIn 200ms ease-out both; }
+@media (prefers-reduced-motion: reduce) {
+  .chat-fade-in { animation: none; }
+}
