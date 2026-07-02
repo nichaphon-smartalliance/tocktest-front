@@ -46,7 +46,11 @@ export default function ConversationItem({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const title = conversation.title || t("untitled");
-  const preview = previewOf(conversation) ?? t("emptyPreview");
+  const rawPreview = previewOf(conversation);
+  const preview = rawPreview ?? t("emptyPreview");
+  // Hide the preview when it just repeats the title (e.g. a chat with only the
+  // first user message, from which the title was derived).
+  const hidePreview = rawPreview !== null && rawPreview === conversation.title;
   const time = dayjs(conversation.updatedAt).locale(locale).fromNow();
 
   useEffect(() => {
@@ -112,22 +116,22 @@ export default function ConversationItem({
             type="button"
             onClick={onSelect}
             aria-current={active ? "true" : undefined}
-            className="flex w-full cursor-pointer flex-col gap-0.5 px-3 py-2.5 pr-9 text-left"
+            className="flex w-full min-w-0 cursor-pointer flex-col gap-0.5 px-3 py-2.5 pr-9 text-left"
           >
-            <span className="flex items-center gap-1.5">
+            <span className="flex min-w-0 items-center gap-1.5">
               {conversation.pinned && (
                 <Pin size={11} className="shrink-0 text-indigo-500 dark:text-[#4fc1ff]" aria-hidden />
               )}
               <span
-                className={`truncate text-sm font-medium ${
+                className={`min-w-0 flex-1 truncate text-sm font-medium ${
                   active ? "text-indigo-700 dark:text-[#4fc1ff]" : "text-[var(--text-primary)]"
                 }`}
               >
                 {title}
               </span>
             </span>
-            <span className="truncate text-xs text-muted">{preview}</span>
-            <span className="text-[11px] text-muted/80">{time}</span>
+            {!hidePreview && <span className="truncate text-xs text-muted">{preview}</span>}
+            <span className="text-[11px] text-muted">{time}</span>
           </button>
 
           <div className="absolute right-1.5 top-1.5 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
