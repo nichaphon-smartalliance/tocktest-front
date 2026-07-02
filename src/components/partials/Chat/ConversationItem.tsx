@@ -22,10 +22,22 @@ interface ConversationItemProps {
   onTogglePin: () => void;
 }
 
+/** Strips markdown syntax so code/formatted replies read as plain text in the preview line. */
+function stripMarkdown(text: string): string {
+  return text
+    .replace(/```[\s\S]*?```/g, " ")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/(\*\*|__)(.*?)\1/g, "$2")
+    .replace(/(?<!\*)\*(?!\*)([^*]+)\*(?!\*)/g, "$1")
+    .replace(/^[ \t]*[-*+]\s+/gm, "")
+    .replace(/^[ \t]*\d+\.\s+/gm, "");
+}
+
 function previewOf(conversation: Conversation): string | null {
   const last = conversation.messages[conversation.messages.length - 1];
   if (!last) return null;
-  return last.content.replace(/\s+/g, " ").trim() || null;
+  return stripMarkdown(last.content).replace(/\s+/g, " ").trim() || null;
 }
 
 export default function ConversationItem({
