@@ -13,7 +13,7 @@ import {
 import { ControlledModal } from "@/components/ui/ControlledModal";
 import { message } from "@/lib/toast";
 import { getApiErrorMessage } from "@/lib/api-error";
-import { Bot, Calendar, WifiOff, Check, GitCommitHorizontal } from "lucide-react";
+import { Bot, Calendar, WifiOff, Check, GitCommitHorizontal, Info } from "lucide-react";
 import dayjs from "dayjs";
 import "dayjs/locale/th";
 import { useAiGenerateTestCases } from "@/hooks/testCase";
@@ -180,13 +180,13 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
               {/* ── Step 1: Filter ── */}
               {step === "filter" && (
                 <>
-                  <Alert status="accent">
-                    <Alert.Indicator />
-                    <Alert.Content>
-                      <Alert.Title>{t("alertTitle")}</Alert.Title>
-                      <Alert.Description>{t("alertDesc")}</Alert.Description>
-                    </Alert.Content>
-                  </Alert>
+                  <div className="flex items-start gap-3 rounded-xl bg-[var(--surface-overlay)] px-4 py-3">
+                    <Info size={18} className="mt-0.5 shrink-0 text-[var(--accent-primary)]" />
+                    <div className="flex flex-col gap-1">
+                      <p className="text-sm font-medium text-[var(--text-primary)]">{t("alertTitle")}</p>
+                      <p className="text-xs leading-relaxed text-muted">{t("alertDesc")}</p>
+                    </div>
+                  </div>
 
                   <div className="flex flex-col gap-1.5">
                     <Label htmlFor="ai-branch">{t("branch")}</Label>
