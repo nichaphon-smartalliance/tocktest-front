@@ -71,11 +71,12 @@ export default function RepoLayoutContent({ repoId, children }: RepoLayoutConten
             <button
               key={key}
               type="button"
+              aria-current={active ? "page" : undefined}
               onClick={() => router.push(`/repos/${repoId}/${key}`)}
-              className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
+              className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px cursor-pointer ${
                 active
-                  
-                  
+                  ? "border-indigo-500 text-indigo-600 dark:border-[#4fc1ff] dark:text-[#4fc1ff]"
+                  : "border-transparent text-muted hover:text-[var(--text-primary)] hover:border-gray-300 dark:hover:border-[#3e3e42]"
               }`}
             >
               <Icon size={14} />
