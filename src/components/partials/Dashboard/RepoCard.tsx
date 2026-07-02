@@ -44,10 +44,10 @@ export default function RepoCard({ repo, qaStats }: RepoCardProps) {
     >
       <Card.Content className="p-5">
         <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center gap-2 min-w-0">
+          <div className="flex items-start gap-2 min-w-0">
             <Package size={20} className="text-indigo-500 shrink-0" />
             <span
-              className="font-semibold text-sm truncate max-w-[140px] block"
+              className="font-semibold text-sm break-words min-w-0"
               title={repo.fullName}
             >
               {repo.name}
