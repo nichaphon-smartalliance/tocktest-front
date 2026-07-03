@@ -172,7 +172,7 @@ export default function ChatContent({
               </button>
             )}
             <div className="shrink-0 h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center">
-              <Bot size={16} className="text-white" />
+              <Bot size={16} className="text-[#ffffff]" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
@@ -252,7 +252,7 @@ export default function ChatContent({
           {messages.map((msg) => (
             <div key={msg.id} className={`flex gap-2.5 ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
               <div
-                className={`shrink-0 h-7 w-7 rounded-full flex items-center justify-center text-white ${
+                className={`shrink-0 h-7 w-7 rounded-full flex items-center justify-center text-[#ffffff] ${
                   msg.role === "user" ? "bg-indigo-500" : "bg-gray-600 dark:bg-[#5a5a5a]"
                 }`}
               >
@@ -261,14 +261,14 @@ export default function ChatContent({
               <div
                 className={`rounded-2xl px-3.5 py-2.5 text-sm break-words ${
                   msg.role === "user"
-                    ? "max-w-[80%] bg-indigo-500 text-white rounded-tr-sm"
+                    ? "max-w-[80%] bg-indigo-500 text-[#ffffff] rounded-tr-sm"
                     : msg.error
                     ? "max-w-[92%] bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-tl-sm"
                     : "max-w-[92%] bg-gray-100 dark:bg-[#2d2d2d] text-gray-900 dark:text-[#d4d4d4] rounded-tl-sm"
                 }`}
               >
                 {msg.role === "assistant" ? (
-                  <div className="prose prose-sm dark:prose-invert max-w-none break-words [&_:not(pre)>code]:whitespace-pre-wrap [&_:not(pre)>code]:break-words [&>pre]:overflow-x-auto [&>pre]:text-xs">
+                  <div className="markdown-body text-sm break-words [&_:not(pre)>code]:whitespace-pre-wrap [&_:not(pre)>code]:break-words [&_pre]:text-xs [&>:first-child]:mt-0 [&>:last-child]:mb-0">
                     <ReactMarkdown>{msg.content}</ReactMarkdown>
                   </div>
                 ) : (
@@ -281,7 +281,7 @@ export default function ChatContent({
           {loading && (
             <div className="flex gap-2.5">
               <div className="shrink-0 h-7 w-7 rounded-full bg-gray-600 dark:bg-[#5a5a5a] flex items-center justify-center">
-                <Bot size={14} className="text-white" />
+                <Bot size={14} className="text-[#ffffff]" />
               </div>
               <div className="rounded-2xl rounded-tl-sm bg-gray-100 dark:bg-[#2d2d2d] px-4 py-2.5 flex items-center gap-1.5">
                 <span className="inline-block h-1.5 w-1.5 rounded-full bg-gray-400 dark:bg-[#858585] animate-bounce" style={{ animationDelay: "0ms" }} />
