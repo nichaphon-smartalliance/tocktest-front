@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Plus, Search, Bot, Lightbulb } from "lucide-react";
+import { Plus, Search, Bot } from "lucide-react";
 import type { Conversation } from "@/types/app/chat";
 import ConversationItem from "./ConversationItem";
 
@@ -14,8 +14,6 @@ interface ChatHistorySidebarProps {
   onSelect: (id: string) => void;
   onRename: (id: string, title: string) => void;
   onDelete: (id: string) => void;
-  /** Start a fresh chat seeded with a suggested question. */
-  onSuggestion?: (text: string) => void;
   /** Called after selecting/creating so a mobile drawer can close itself. */
   afterNavigate?: () => void;
 }
@@ -28,12 +26,10 @@ export default function ChatHistorySidebar({
   onSelect,
   onRename,
   onDelete,
-  onSuggestion,
   afterNavigate,
 }: ChatHistorySidebarProps) {
   const t = useTranslations("chatHistory");
   const [query, setQuery] = useState("");
-  const suggestions = (t.raw("suggestions") as string[] | undefined) ?? [];
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -52,11 +48,6 @@ export default function ChatHistorySidebar({
 
   const handleSelect = (id: string) => {
     onSelect(id);
-    afterNavigate?.();
-  };
-
-  const handleSuggestion = (text: string) => {
-    onSuggestion?.(text);
     afterNavigate?.();
   };
 
@@ -139,26 +130,6 @@ export default function ChatHistorySidebar({
           </>
         )}
       </div>
-
-      {/* ── Fixed footer: suggested prompts (separate from chats) ── */}
-      {suggestions.length > 0 && (
-        <div className="shrink-0 border-t border-[#E5E7EB] bg-[#F8F7FF]/60 px-4 py-3 dark:border-[#3e3e42] dark:bg-transparent">
-          <p className={sectionLabel}>{t("suggested")}</p>
-          <div className="flex flex-col gap-1">
-            {suggestions.map((s) => (
-              <button
-                key={s}
-                type="button"
-                onClick={() => handleSuggestion(s)}
-                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-[13px] text-gray-600 transition-colors duration-200 hover:bg-[#ECE9FF] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#6D5DFC]/40 cursor-pointer dark:text-[#cccccc] dark:hover:bg-[#2a2d2e]"
-              >
-                <Lightbulb size={14} className="shrink-0 text-[#6D5DFC] dark:text-[#4fc1ff]" aria-hidden />
-                <span className="min-w-0 flex-1 truncate">{s}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

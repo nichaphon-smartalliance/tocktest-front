@@ -291,12 +291,6 @@
     "untitled": "New chat",
     "emptyTitle": "No conversations yet",
     "emptyHint": "Start asking questions about this repository.",
-    "suggested": "Suggested",
-    "suggestions": [
-      "What areas should I test first?",
-      "Generate a Cypress login test",
-      "What are the riskiest recent changes?"
-    ],
     "noResults": "No chats match your search",
     "actionsAria": "Conversation actions",
     "rename": "Rename",

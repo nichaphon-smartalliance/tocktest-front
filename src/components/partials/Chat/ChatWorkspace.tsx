@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useConversations } from "@/hooks/chat/useConversations";
 import { useRepository } from "@/hooks/repository";
@@ -29,7 +29,6 @@ export default function ChatWorkspace({ repoId }: ChatWorkspaceProps) {
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [focusSignal, setFocusSignal] = useState(0);
-  const [pendingPrompt, setPendingPrompt] = useState<{ text: string; nonce: number } | null>(null);
 
   useEffect(() => {
     if (!drawerOpen) return;
@@ -45,14 +44,6 @@ export default function ChatWorkspace({ repoId }: ChatWorkspaceProps) {
     setFocusSignal((n) => n + 1);
   };
 
-  // A sidebar suggestion starts a fresh chat and auto-sends the question.
-  const handleSuggestion = (text: string) => {
-    newConversation();
-    setPendingPrompt({ text, nonce: Date.now() });
-  };
-
-  const clearPending = useCallback(() => setPendingPrompt(null), []);
-
   const sidebar = (afterNavigate?: () => void) => (
     <ChatHistorySidebar
       conversations={conversations}
@@ -62,7 +53,6 @@ export default function ChatWorkspace({ repoId }: ChatWorkspaceProps) {
       onSelect={selectConversation}
       onRename={renameConversation}
       onDelete={deleteConversation}
-      onSuggestion={handleSuggestion}
       afterNavigate={afterNavigate}
     />
   );
@@ -70,7 +60,7 @@ export default function ChatWorkspace({ repoId }: ChatWorkspaceProps) {
   return (
     <div className="flex h-[calc(100vh-13rem)] min-h-[520px] gap-4">
       {/* Desktop / tablet: persistent sidebar */}
-      <aside className="hidden w-[280px] shrink-0 overflow-hidden rounded-2xl border border-gray-200 bg-[var(--bg-panel)] lg:flex dark:border-[#3e3e42]">
+      <aside className="hidden w-[320px] shrink-0 overflow-hidden rounded-2xl border border-gray-200 bg-[var(--bg-panel)] lg:flex dark:border-[#3e3e42]">
         {sidebar()}
       </aside>
 
@@ -86,8 +76,6 @@ export default function ChatWorkspace({ repoId }: ChatWorkspaceProps) {
           onClear={clearActive}
           onOpenHistory={() => setDrawerOpen(true)}
           focusSignal={focusSignal}
-          pendingPrompt={pendingPrompt}
-          onPromptConsumed={clearPending}
         />
       </div>
 
