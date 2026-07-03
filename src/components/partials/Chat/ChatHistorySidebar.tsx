@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Button } from "@heroui/react";
 import { Plus, Search, MessageSquarePlus } from "lucide-react";
 import type { Conversation } from "@/types/app/chat";
 import ConversationItem from "./ConversationItem";
@@ -55,16 +54,16 @@ export default function ChatHistorySidebar({
   return (
     <div className="flex h-full flex-col">
       <div className="flex flex-col gap-2 p-2.5 pb-2">
-        <Button
-          variant="primary"
-          fullWidth
-          onPress={handleNew}
+        <button
+          type="button"
+          onClick={handleNew}
           aria-label={t("newChatAria")}
-          className="rounded-lg"
+          style={{ color: "#ffffff" }}
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium transition-colors hover:bg-indigo-500 active:bg-indigo-700 cursor-pointer dark:bg-[#0e639c] dark:hover:bg-[#1177bb]"
         >
-          <Plus size={16} />
-          {t("newChat")}
-        </Button>
+          <Plus size={16} style={{ color: "#ffffff" }} />
+          <span style={{ color: "#ffffff" }}>{t("newChat")}</span>
+        </button>
 
         <div className="relative">
           <Search
