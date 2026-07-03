@@ -15,8 +15,6 @@ interface ChatHistorySidebarProps {
   onSelect: (id: string) => void;
   onRename: (id: string, title: string) => void;
   onDelete: (id: string) => void;
-  onDuplicate: (id: string) => void;
-  onTogglePin: (id: string) => void;
   /** Called after selecting/creating so a mobile drawer can close itself. */
   afterNavigate?: () => void;
 }
@@ -29,8 +27,6 @@ export default function ChatHistorySidebar({
   onSelect,
   onRename,
   onDelete,
-  onDuplicate,
-  onTogglePin,
   afterNavigate,
 }: ChatHistorySidebarProps) {
   const t = useTranslations("chatHistory");
@@ -58,13 +54,13 @@ export default function ChatHistorySidebar({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex flex-col gap-3 p-3">
+      <div className="flex flex-col gap-2 p-2.5 pb-2">
         <Button
           variant="primary"
           fullWidth
           onPress={handleNew}
           aria-label={t("newChatAria")}
-          className="rounded-xl"
+          className="rounded-lg"
         >
           <Plus size={16} />
           {t("newChat")}
@@ -72,8 +68,8 @@ export default function ChatHistorySidebar({
 
         <div className="relative">
           <Search
-            size={15}
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]"
+            size={14}
+            className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]"
             aria-hidden
           />
           <input
@@ -82,7 +78,7 @@ export default function ChatHistorySidebar({
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t("searchPlaceholder")}
             aria-label={t("searchAria")}
-            className="w-full rounded-lg border border-gray-200 bg-transparent py-2 pl-9 pr-3 text-sm outline-none transition-shadow focus:ring-2 focus:ring-indigo-500/40 dark:border-[#3e3e42] dark:bg-[#1e1e1e]"
+            className="w-full rounded-lg border border-gray-200 bg-transparent py-1.5 pl-8 pr-2.5 text-[13px] outline-none transition-shadow focus:ring-2 focus:ring-indigo-500/40 dark:border-[#3e3e42] dark:bg-[#1e1e1e]"
           />
         </div>
       </div>
@@ -108,25 +104,28 @@ export default function ChatHistorySidebar({
           <p className="text-xs text-muted">{t("noResults")}</p>
         </div>
       ) : (
-        <ul
-          className="flex flex-1 flex-col gap-1 overflow-y-auto px-2 pb-3"
-          aria-label={t("history")}
-        >
-          {filtered.map((c) => (
-            <li key={c.id}>
-              <ConversationItem
-                conversation={c}
-                active={c.id === activeId}
-                locale={locale}
-                onSelect={() => handleSelect(c.id)}
-                onRename={(title) => onRename(c.id, title)}
-                onDelete={() => onDelete(c.id)}
-                onDuplicate={() => onDuplicate(c.id)}
-                onTogglePin={() => onTogglePin(c.id)}
-              />
-            </li>
-          ))}
-        </ul>
+        <>
+          <p className="px-4 pb-1 pt-1.5 text-[11px] font-medium uppercase tracking-wide text-muted/80">
+            {t("history")}
+          </p>
+          <ul
+            className="flex flex-1 flex-col gap-px overflow-y-auto px-1.5 pb-2"
+            aria-label={t("history")}
+          >
+            {filtered.map((c) => (
+              <li key={c.id}>
+                <ConversationItem
+                  conversation={c}
+                  active={c.id === activeId}
+                  locale={locale}
+                  onSelect={() => handleSelect(c.id)}
+                  onRename={(title) => onRename(c.id, title)}
+                  onDelete={() => onDelete(c.id)}
+                />
+              </li>
+            ))}
+          </ul>
+        </>
       )}
     </div>
   );

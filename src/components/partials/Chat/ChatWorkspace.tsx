@@ -23,8 +23,6 @@ export default function ChatWorkspace({ repoId }: ChatWorkspaceProps) {
     selectConversation,
     renameConversation,
     deleteConversation,
-    duplicateConversation,
-    togglePin,
     setMessagesFor,
     clearActive,
   } = useConversations(repoId);
@@ -55,8 +53,6 @@ export default function ChatWorkspace({ repoId }: ChatWorkspaceProps) {
       onSelect={selectConversation}
       onRename={renameConversation}
       onDelete={deleteConversation}
-      onDuplicate={duplicateConversation}
-      onTogglePin={togglePin}
       afterNavigate={afterNavigate}
     />
   );

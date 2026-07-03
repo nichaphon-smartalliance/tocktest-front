@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AlertDialog, Button, Dropdown } from "@heroui/react";
 import { useTranslations } from "next-intl";
-import { MoreHorizontal, Pencil, Copy, Pin, PinOff, Trash2 } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/th";
@@ -18,8 +18,6 @@ interface ConversationItemProps {
   onSelect: () => void;
   onRename: (title: string) => void;
   onDelete: () => void;
-  onDuplicate: () => void;
-  onTogglePin: () => void;
 }
 
 /** Strips markdown syntax so code/formatted replies read as plain text in the preview line. */
@@ -47,8 +45,6 @@ export default function ConversationItem({
   onSelect,
   onRename,
   onDelete,
-  onDuplicate,
-  onTogglePin,
 }: ConversationItemProps) {
   const t = useTranslations("chatHistory");
   const tc = useTranslations("common");
@@ -91,101 +87,84 @@ export default function ConversationItem({
 
   const handleAction = (key: React.Key) => {
     if (key === "rename") startRename();
-    else if (key === "pin") onTogglePin();
-    else if (key === "duplicate") onDuplicate();
     else if (key === "delete") setDeleteOpen(true);
   };
 
+  if (editing) {
+    return (
+      <input
+        ref={inputRef}
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commitRename}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            commitRename();
+          } else if (e.key === "Escape") {
+            e.preventDefault();
+            cancelRename();
+          }
+        }}
+        aria-label={t("renameAria")}
+        className="w-full rounded-lg border border-indigo-400 bg-white px-2.5 py-2 text-[13px] outline-none focus:ring-2 focus:ring-indigo-500/40 dark:border-[#4fc1ff] dark:bg-[#1e1e1e]"
+      />
+    );
+  }
+
   return (
     <div
-      className={`chat-fade-in group relative rounded-xl border transition-colors ${
-        active
-          ? "border-indigo-300 bg-indigo-500/10 dark:border-transparent dark:bg-[#37373d]"
-          : "border-transparent hover:bg-gray-100 dark:hover:bg-[#2a2d2e]"
+      className={`chat-fade-in group relative flex items-center rounded-lg transition-colors ${
+        active ? "bg-indigo-500/14 dark:bg-[#37373d]" : "hover:bg-gray-100 dark:hover:bg-[#2a2d2e]"
       }`}
     >
-      {editing ? (
-        <input
-          ref={inputRef}
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onBlur={commitRename}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              commitRename();
-            } else if (e.key === "Escape") {
-              e.preventDefault();
-              cancelRename();
-            }
-          }}
-          aria-label={t("renameAria")}
-          className="w-full rounded-xl border border-indigo-400 bg-white px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500/40 dark:border-[#4fc1ff] dark:bg-[#1e1e1e]"
-        />
-      ) : (
-        <>
-          <button
-            type="button"
-            onClick={onSelect}
-            aria-current={active ? "true" : undefined}
-            className="flex w-full min-w-0 cursor-pointer flex-col gap-0.5 px-3 py-2.5 pr-9 text-left"
-          >
-            <span className="flex min-w-0 items-center gap-1.5">
-              {conversation.pinned && (
-                <Pin size={11} className="shrink-0 text-indigo-500 dark:text-[#4fc1ff]" aria-hidden />
-              )}
-              <span
-                className={`min-w-0 flex-1 truncate text-sm font-medium ${
-                  active ? "text-indigo-700 dark:text-[#4fc1ff]" : "text-[var(--text-primary)]"
-                }`}
-              >
-                {title}
-              </span>
-            </span>
-            {!hidePreview && <span className="truncate text-xs text-muted">{preview}</span>}
-            <span className="text-[11px] text-muted">{time}</span>
-          </button>
+      <button
+        type="button"
+        onClick={onSelect}
+        aria-current={active ? "true" : undefined}
+        className="min-w-0 flex-1 cursor-pointer px-2.5 py-2 text-left"
+      >
+        <span
+          className={`block truncate text-[13px] leading-5 ${
+            active ? "font-semibold text-indigo-600 dark:text-[#4fc1ff]" : "font-medium text-[var(--text-primary)]"
+          }`}
+        >
+          {title}
+        </span>
+        <span className="mt-0.5 flex items-center gap-1.5">
+          {!hidePreview && (
+            <span className="min-w-0 flex-1 truncate text-xs leading-4 text-muted">{preview}</span>
+          )}
+          <span className="shrink-0 whitespace-nowrap text-[11px] leading-4 text-muted/70">{time}</span>
+        </span>
+      </button>
 
-          <div className="absolute right-1.5 top-1.5 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
-            <Dropdown>
-              <Dropdown.Trigger
-                aria-label={t("actionsAria")}
-                className="inline-flex h-7 w-7 items-center justify-center rounded-lg border-0 bg-transparent text-[var(--text-muted)] cursor-pointer hover:bg-gray-200/70 dark:hover:bg-[#3e3e42]"
-              >
-                <MoreHorizontal size={15} />
-              </Dropdown.Trigger>
-              <Dropdown.Popover>
-                <Dropdown.Menu onAction={handleAction} aria-label={t("actionsAria")}>
-                  <Dropdown.Item id="rename" textValue={t("rename")}>
-                    <span className="flex items-center gap-2">
-                      <Pencil size={14} />
-                      {t("rename")}
-                    </span>
-                  </Dropdown.Item>
-                  <Dropdown.Item id="pin" textValue={conversation.pinned ? t("unpin") : t("pin")}>
-                    <span className="flex items-center gap-2">
-                      {conversation.pinned ? <PinOff size={14} /> : <Pin size={14} />}
-                      {conversation.pinned ? t("unpin") : t("pin")}
-                    </span>
-                  </Dropdown.Item>
-                  <Dropdown.Item id="duplicate" textValue={t("duplicate")}>
-                    <span className="flex items-center gap-2">
-                      <Copy size={14} />
-                      {t("duplicate")}
-                    </span>
-                  </Dropdown.Item>
-                  <Dropdown.Item id="delete" textValue={t("delete")} variant="danger">
-                    <span className="flex items-center gap-2">
-                      <Trash2 size={14} />
-                      {t("delete")}
-                    </span>
-                  </Dropdown.Item>
-                </Dropdown.Menu>
-              </Dropdown.Popover>
-            </Dropdown>
-          </div>
-        </>
-      )}
+      <div className="shrink-0 pr-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
+        <Dropdown>
+          <Dropdown.Trigger
+            aria-label={t("actionsAria")}
+            className="inline-flex h-7 w-7 items-center justify-center rounded-md border-0 bg-transparent text-[var(--text-muted)] cursor-pointer hover:bg-gray-200/70 dark:hover:bg-[#3e3e42]"
+          >
+            <MoreHorizontal size={15} />
+          </Dropdown.Trigger>
+          <Dropdown.Popover>
+            <Dropdown.Menu onAction={handleAction} aria-label={t("actionsAria")}>
+              <Dropdown.Item id="rename" textValue={t("rename")}>
+                <span className="flex items-center gap-2">
+                  <Pencil size={14} />
+                  {t("rename")}
+                </span>
+              </Dropdown.Item>
+              <Dropdown.Item id="delete" textValue={t("delete")} variant="danger">
+                <span className="flex items-center gap-2">
+                  <Trash2 size={14} />
+                  {t("delete")}
+                </span>
+              </Dropdown.Item>
+            </Dropdown.Menu>
+          </Dropdown.Popover>
+        </Dropdown>
+      </div>
 
       <AlertDialog isOpen={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialog.Backdrop>
