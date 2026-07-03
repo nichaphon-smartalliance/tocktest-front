@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AlertDialog, Button, Dropdown } from "@heroui/react";
 import { useTranslations } from "next-intl";
-import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { MessageSquare, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/th";
@@ -18,24 +18,6 @@ interface ConversationItemProps {
   onSelect: () => void;
   onRename: (title: string) => void;
   onDelete: () => void;
-}
-
-/** Strips markdown syntax so code/formatted replies read as plain text in the preview line. */
-function stripMarkdown(text: string): string {
-  return text
-    .replace(/```[\s\S]*?```/g, " ")
-    .replace(/`([^`]+)`/g, "$1")
-    .replace(/^#{1,6}\s+/gm, "")
-    .replace(/(\*\*|__)(.*?)\1/g, "$2")
-    .replace(/(?<!\*)\*(?!\*)([^*]+)\*(?!\*)/g, "$1")
-    .replace(/^[ \t]*[-*+]\s+/gm, "")
-    .replace(/^[ \t]*\d+\.\s+/gm, "");
-}
-
-function previewOf(conversation: Conversation): string | null {
-  const last = conversation.messages[conversation.messages.length - 1];
-  if (!last) return null;
-  return stripMarkdown(last.content).replace(/\s+/g, " ").trim() || null;
 }
 
 export default function ConversationItem({
@@ -54,11 +36,6 @@ export default function ConversationItem({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const title = conversation.title || t("untitled");
-  const rawPreview = previewOf(conversation);
-  const preview = rawPreview ?? t("emptyPreview");
-  // Hide the preview when it just repeats the title (e.g. a chat with only the
-  // first user message, from which the title was derived).
-  const hidePreview = rawPreview !== null && rawPreview === conversation.title;
   const time = dayjs(conversation.updatedAt).locale(locale).fromNow();
 
   useEffect(() => {
@@ -107,43 +84,49 @@ export default function ConversationItem({
           }
         }}
         aria-label={t("renameAria")}
-        className="w-full rounded-lg border border-indigo-400 bg-white px-2.5 py-2 text-[13px] outline-none focus:ring-2 focus:ring-indigo-500/40 dark:border-[#4fc1ff] dark:bg-[#1e1e1e]"
+        className="w-full rounded-[10px] border border-[#6D5DFC] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#6D5DFC]/40 dark:border-[#4fc1ff] dark:bg-[#1e1e1e]"
       />
     );
   }
 
   return (
     <div
-      className={`chat-fade-in group relative flex items-center rounded-lg transition-colors ${
-        active ? "bg-indigo-500/14 dark:bg-[#37373d]" : "hover:bg-gray-100 dark:hover:bg-[#2a2d2e]"
+      className={`chat-fade-in group relative flex items-center rounded-[10px] border-l-4 transition-colors duration-200 ${
+        active
+          ? "border-[#6D5DFC] bg-[#F6F4FF] shadow-sm dark:border-[#4fc1ff] dark:bg-[#37373d]"
+          : "border-transparent hover:bg-[#ECE9FF] dark:hover:bg-[#2a2d2e]"
       }`}
     >
       <button
         type="button"
         onClick={onSelect}
         aria-current={active ? "true" : undefined}
-        className="min-w-0 flex-1 cursor-pointer px-2.5 py-2 text-left"
+        className="flex min-w-0 flex-1 items-center gap-2.5 cursor-pointer px-3 py-2.5 text-left"
       >
-        <span
-          className={`block truncate text-[13px] leading-5 ${
-            active ? "font-semibold text-indigo-600 dark:text-[#4fc1ff]" : "font-medium text-[var(--text-primary)]"
-          }`}
-        >
-          {title}
-        </span>
-        <span className="mt-0.5 flex items-center gap-1.5">
-          {!hidePreview && (
-            <span className="min-w-0 flex-1 truncate text-xs leading-4 text-muted">{preview}</span>
-          )}
-          <span className="shrink-0 whitespace-nowrap text-[11px] leading-4 text-muted/70">{time}</span>
+        <MessageSquare
+          size={16}
+          className={`shrink-0 ${active ? "text-[#6D5DFC] dark:text-[#4fc1ff]" : "text-[var(--text-muted)]"}`}
+          aria-hidden
+        />
+        <span className="min-w-0 flex-1">
+          <span
+            className={`block truncate text-sm leading-5 ${
+              active
+                ? "font-semibold text-[#6D5DFC] dark:text-[#4fc1ff]"
+                : "font-medium text-[var(--text-primary)]"
+            }`}
+          >
+            {title}
+          </span>
+          <span className="mt-0.5 block truncate text-xs leading-4 text-muted">{time}</span>
         </span>
       </button>
 
-      <div className="shrink-0 pr-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
+      <div className="shrink-0 pr-1.5 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
         <Dropdown>
           <Dropdown.Trigger
             aria-label={t("actionsAria")}
-            className="inline-flex h-7 w-7 items-center justify-center rounded-md border-0 bg-transparent text-[var(--text-muted)] cursor-pointer hover:bg-gray-200/70 dark:hover:bg-[#3e3e42]"
+            className="inline-flex h-7 w-7 items-center justify-center rounded-md border-0 bg-transparent text-[var(--text-muted)] cursor-pointer hover:bg-black/5 dark:hover:bg-[#3e3e42]"
           >
             <MoreHorizontal size={15} />
           </Dropdown.Trigger>

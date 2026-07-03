@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Plus, Search, MessageSquarePlus } from "lucide-react";
+import { Plus, Search, Bot, Lightbulb } from "lucide-react";
 import type { Conversation } from "@/types/app/chat";
 import ConversationItem from "./ConversationItem";
 
@@ -14,6 +14,8 @@ interface ChatHistorySidebarProps {
   onSelect: (id: string) => void;
   onRename: (id: string, title: string) => void;
   onDelete: (id: string) => void;
+  /** Start a fresh chat seeded with a suggested question. */
+  onSuggestion?: (text: string) => void;
   /** Called after selecting/creating so a mobile drawer can close itself. */
   afterNavigate?: () => void;
 }
@@ -26,10 +28,12 @@ export default function ChatHistorySidebar({
   onSelect,
   onRename,
   onDelete,
+  onSuggestion,
   afterNavigate,
 }: ChatHistorySidebarProps) {
   const t = useTranslations("chatHistory");
   const [query, setQuery] = useState("");
+  const suggestions = (t.raw("suggestions") as string[] | undefined) ?? [];
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -51,9 +55,18 @@ export default function ChatHistorySidebar({
     afterNavigate?.();
   };
 
+  const handleSuggestion = (text: string) => {
+    onSuggestion?.(text);
+    afterNavigate?.();
+  };
+
+  const sectionLabel =
+    "px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#6B7280] dark:text-[var(--text-muted)]";
+
   return (
     <div className="flex h-full flex-col">
-      <div className="flex flex-col gap-2 p-2.5 pb-2">
+      {/* ── Fixed header: new chat + search ── */}
+      <div className="flex flex-col gap-2.5 p-4 pb-3">
         <button
           type="button"
           onClick={handleNew}
@@ -67,8 +80,8 @@ export default function ChatHistorySidebar({
 
         <div className="relative">
           <Search
-            size={14}
-            className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]"
+            size={15}
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]"
             aria-hidden
           />
           <input
@@ -77,54 +90,74 @@ export default function ChatHistorySidebar({
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t("searchPlaceholder")}
             aria-label={t("searchAria")}
-            className="w-full rounded-lg border border-gray-200 bg-transparent py-1.5 pl-8 pr-2.5 text-[13px] outline-none transition-shadow focus:ring-2 focus:ring-indigo-500/40 dark:border-[#3e3e42] dark:bg-[#1e1e1e]"
+            className="h-10 w-full rounded-lg border border-[#E5E7EB] bg-transparent pl-9 pr-3 text-sm outline-none transition-shadow focus:border-[#6D5DFC] focus:ring-2 focus:ring-[#6D5DFC]/25 dark:border-[#3e3e42] dark:bg-[#1e1e1e]"
           />
         </div>
       </div>
 
-      {conversations.length === 0 ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
-          <MessageSquarePlus size={40} className="text-indigo-400/70" aria-hidden />
-          <div>
-            <p className="text-sm font-medium text-[var(--text-primary)]">{t("emptyTitle")}</p>
-            <p className="mt-1 text-xs text-muted">{t("emptyHint")}</p>
+      {/* ── Scrollable chat list ── */}
+      <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">
+        {conversations.length === 0 ? (
+          <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#F6F4FF] dark:bg-[#2a2d2e]">
+              <Bot size={24} className="text-[#6D5DFC] dark:text-[#4fc1ff]" aria-hidden />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-[var(--text-primary)]">{t("emptyTitle")}</p>
+              <p className="mt-1 text-xs text-muted">{t("emptyHint")}</p>
+            </div>
+            <button
+              type="button"
+              onClick={handleNew}
+              className="mt-1 inline-flex items-center gap-1.5 rounded-lg border border-[#ECE9FF] px-3 py-1.5 text-xs font-medium text-[#6D5DFC] transition-colors hover:bg-[#F6F4FF] dark:border-[#3e3e42] dark:text-[#4fc1ff] dark:hover:bg-[#2a2d2e]"
+            >
+              <Plus size={14} />
+              {t("newChat")}
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={handleNew}
-            className="mt-1 inline-flex items-center gap-1.5 rounded-lg border border-indigo-200 px-3 py-1.5 text-xs font-medium text-indigo-600 transition-colors hover:bg-indigo-50 dark:border-[#3e3e42] dark:text-[#4fc1ff] dark:hover:bg-[#2a2d2e]"
-          >
-            <Plus size={14} />
-            {t("newChat")}
-          </button>
-        </div>
-      ) : filtered.length === 0 ? (
-        <div className="flex flex-1 items-center justify-center px-6 text-center">
-          <p className="text-xs text-muted">{t("noResults")}</p>
-        </div>
-      ) : (
-        <>
-          <p className="px-4 pb-1 pt-1.5 text-[11px] font-medium uppercase tracking-wide text-muted/80">
-            {t("history")}
-          </p>
-          <ul
-            className="flex flex-1 flex-col gap-px overflow-y-auto px-1.5 pb-2"
-            aria-label={t("history")}
-          >
-            {filtered.map((c) => (
-              <li key={c.id}>
-                <ConversationItem
-                  conversation={c}
-                  active={c.id === activeId}
-                  locale={locale}
-                  onSelect={() => handleSelect(c.id)}
-                  onRename={(title) => onRename(c.id, title)}
-                  onDelete={() => onDelete(c.id)}
-                />
-              </li>
+        ) : filtered.length === 0 ? (
+          <div className="flex h-full items-center justify-center px-6 text-center">
+            <p className="text-xs text-muted">{t("noResults")}</p>
+          </div>
+        ) : (
+          <>
+            <p className={`${sectionLabel} pt-2`}>{t("history")}</p>
+            <ul className="flex flex-col gap-1.5" aria-label={t("history")}>
+              {filtered.map((c) => (
+                <li key={c.id}>
+                  <ConversationItem
+                    conversation={c}
+                    active={c.id === activeId}
+                    locale={locale}
+                    onSelect={() => handleSelect(c.id)}
+                    onRename={(title) => onRename(c.id, title)}
+                    onDelete={() => onDelete(c.id)}
+                  />
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </div>
+
+      {/* ── Fixed footer: suggested prompts (separate from chats) ── */}
+      {suggestions.length > 0 && (
+        <div className="shrink-0 border-t border-[#E5E7EB] bg-[#F8F7FF]/60 px-4 py-3 dark:border-[#3e3e42] dark:bg-transparent">
+          <p className={sectionLabel}>{t("suggested")}</p>
+          <div className="flex flex-col gap-1">
+            {suggestions.map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => handleSuggestion(s)}
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-[13px] text-gray-600 transition-colors duration-200 hover:bg-[#ECE9FF] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#6D5DFC]/40 cursor-pointer dark:text-[#cccccc] dark:hover:bg-[#2a2d2e]"
+              >
+                <Lightbulb size={14} className="shrink-0 text-[#6D5DFC] dark:text-[#4fc1ff]" aria-hidden />
+                <span className="min-w-0 flex-1 truncate">{s}</span>
+              </button>
             ))}
-          </ul>
-        </>
+          </div>
+        </div>
       )}
     </div>
   );

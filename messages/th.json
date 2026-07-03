@@ -289,9 +289,14 @@
     "searchPlaceholder": "ค้นหาแชท",
     "searchAria": "ค้นหาประวัติแชท",
     "untitled": "แชทใหม่",
-    "emptyPreview": "ยังไม่มีข้อความ",
-    "emptyTitle": "เริ่มบทสนทนาแรกของคุณ",
-    "emptyHint": "แชทของคุณกับผู้ช่วย QA จะแสดงที่นี่",
+    "emptyTitle": "ยังไม่มีบทสนทนา",
+    "emptyHint": "เริ่มถามเกี่ยวกับ repository นี้ได้เลย",
+    "suggested": "แนะนำ",
+    "suggestions": [
+      "ควรทดสอบส่วนไหนก่อนใน repo นี้?",
+      "สร้าง Cypress test สำหรับ login flow",
+      "การเปลี่ยนแปลงล่าสุดที่เสี่ยงที่สุดคืออะไร?"
+    ],
     "noResults": "ไม่พบแชทที่ตรงกับการค้นหา",
     "actionsAria": "การจัดการบทสนทนา",
     "rename": "เปลี่ยนชื่อ",

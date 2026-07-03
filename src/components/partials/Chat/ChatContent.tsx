@@ -23,6 +23,10 @@ interface ChatContentProps {
   onOpenHistory?: () => void;
   /** Bumped by the workspace to move focus into the input (e.g. on "New chat"). */
   focusSignal?: number;
+  /** A suggestion picked from the sidebar; auto-sent once into the fresh chat. */
+  pendingPrompt?: { text: string; nonce: number } | null;
+  /** Fired after the pending prompt has been sent so the workspace can clear it. */
+  onPromptConsumed?: () => void;
 }
 
 const LANG_KEY = "tocktest_chat_lang";
@@ -86,6 +90,8 @@ export default function ChatContent({
   onClear,
   onOpenHistory,
   focusSignal,
+  pendingPrompt,
+  onPromptConsumed,
 }: ChatContentProps) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -140,6 +146,18 @@ export default function ChatContent({
       textareaRef.current?.focus();
     }
   };
+
+  // Keep a live ref to send() so the pending-prompt effect always calls the
+  // latest closure (with the just-activated conversation id) without re-firing.
+  const sendRef = useRef(send);
+  useEffect(() => {
+    sendRef.current = send;
+  });
+  useEffect(() => {
+    if (!pendingPrompt) return;
+    void sendRef.current(pendingPrompt.text);
+    onPromptConsumed?.();
+  }, [pendingPrompt, onPromptConsumed]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
