@@ -91,10 +91,10 @@ export default function ConversationItem({
 
   return (
     <div
-      className={`chat-fade-in group relative flex items-center rounded-[10px] border-l-4 transition-colors duration-200 ${
+      className={`chat-fade-in group relative flex items-center overflow-hidden rounded-[10px] transition-colors duration-200 ${
         active
-          ? "border-[#6D5DFC] bg-[#F6F4FF] shadow-sm dark:border-[#4fc1ff] dark:bg-[#37373d]"
-          : "border-transparent hover:bg-[#ECE9FF] dark:hover:bg-[#2a2d2e]"
+          ? "bg-[#F6F4FF] shadow-sm dark:bg-[#37373d]"
+          : "hover:bg-[#ECE9FF] dark:hover:bg-[#2a2d2e]"
       }`}
     >
       <button

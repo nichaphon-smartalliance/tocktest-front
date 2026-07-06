@@ -63,7 +63,7 @@ export default function ChatHistorySidebar({
           onClick={handleNew}
           aria-label={t("newChatAria")}
           style={{ color: "#ffffff" }}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium transition-colors hover:bg-indigo-500 active:bg-indigo-700 cursor-pointer dark:bg-[#0e639c] dark:hover:bg-[#1177bb]"
+          className="flex w-70 items-center justify-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium transition-colors hover:bg-indigo-500 active:bg-indigo-700 cursor-pointer dark:bg-[#0e639c] dark:hover:bg-[#1177bb]"
         >
           <Plus size={16} style={{ color: "#ffffff" }} />
           <span style={{ color: "#ffffff" }}>{t("newChat")}</span>
@@ -81,7 +81,7 @@ export default function ChatHistorySidebar({
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t("searchPlaceholder")}
             aria-label={t("searchAria")}
-            className="h-10 w-full rounded-lg border border-[#E5E7EB] bg-transparent pl-9 pr-3 text-sm outline-none transition-shadow focus:border-[#6D5DFC] focus:ring-2 focus:ring-[#6D5DFC]/25 dark:border-[#3e3e42] dark:bg-[#1e1e1e]"
+            className="h-10 w-70 rounded-lg border border-[#E5E7EB] bg-transparent pl-9 pr-3 text-sm outline-none transition-shadow focus:border-[#6D5DFC] focus:ring-2 focus:ring-[#6D5DFC]/25 dark:border-[#3e3e42] dark:bg-[#1e1e1e]"
           />
         </div>
       </div>
@@ -113,7 +113,7 @@ export default function ChatHistorySidebar({
         ) : (
           <>
             <p className={`${sectionLabel} pt-2`}>{t("history")}</p>
-            <ul className="flex flex-col gap-1.5" aria-label={t("history")}>
+            <ul className="flex w-70 flex-col gap-1.5" aria-label={t("history")}>
               {filtered.map((c) => (
                 <li key={c.id}>
                   <ConversationItem
