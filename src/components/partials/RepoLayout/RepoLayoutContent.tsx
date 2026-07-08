@@ -63,7 +63,7 @@ export default function RepoLayoutContent({ repoId, children }: RepoLayoutConten
         </Breadcrumbs.Item>
       </Breadcrumbs>
 
-      <nav className="flex gap-1 border-b border-gray-200 dark:border-[#3e3e42] mb-0" aria-label="Repository sections">
+      <nav className="flex gap-1 border-b border-[var(--border-subtle)] mb-0" aria-label="Repository sections">
         {TAB_ITEMS.map(({ key, labelKey, icon: Icon }) => {
           const active = activeTab === key;
 

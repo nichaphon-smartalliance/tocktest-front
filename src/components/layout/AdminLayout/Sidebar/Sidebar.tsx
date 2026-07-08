@@ -1,16 +1,14 @@
 "use client";
 
-import { Chip } from "@heroui/react";
 import {
-  Bot,
-  BotOff,
+  ChevronDown,
   ChevronRight,
   Github,
   LayoutDashboard,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
-import { useAiHealth } from "@/hooks/ai/useAiHealth";
+import { useState } from "react";
 import { useQaSummary } from "@/hooks/dashboard";
 import { useRecentRepos } from "@/hooks/common/useRecentRepos";
 import type { QaRecentRepoResponse } from "@/types/api/main/dashboard";
@@ -47,16 +45,20 @@ function RecentRepoList({
 }) {
   const router = useRouter();
   const t = useTranslations("sidebar");
+  const [expanded, setExpanded] = useState(false);
   if (collapsed) return null;
   if (repos.length === 0) return null;
 
   const statsMap = new Map((summary?.recentRepos ?? []).map((repo) => [repo.id, repo]));
+  const VISIBLE = 5;
+  const hasMore = repos.length > VISIBLE;
+  const visibleRepos = expanded ? repos : repos.slice(0, VISIBLE);
 
   return (
     <>
       <SectionLabel collapsed={collapsed}>{t("recentRepos")}</SectionLabel>
       <div className="px-2 flex flex-col gap-0.5 mb-2">
-        {repos.map((repo) => {
+        {visibleRepos.map((repo) => {
           const stats = statsMap.get(repo.id);
           const active = repo.id === activeRepoId;
           const shortName = repo.fullName.split("/").pop() ?? repo.fullName;
@@ -89,6 +91,20 @@ function RecentRepoList({
             </button>
           );
         })}
+
+        {hasMore && (
+          <button
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            className="flex items-center justify-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-indigo-600 dark:text-[#4fc1ff] hover:bg-gray-100 dark:hover:bg-[#2a2d2e] transition-colors cursor-pointer w-full"
+          >
+            {expanded ? t("viewLess") : t("viewAll")}
+            <ChevronDown
+              size={13}
+              className={`shrink-0 transition-transform ${expanded ? "rotate-180" : ""}`}
+            />
+          </button>
+        )}
       </div>
     </>
   );
@@ -99,12 +115,11 @@ interface SidebarProps {
   session: ClientSession;
 }
 
-export default function Sidebar({ collapsed, session }: SidebarProps) {
+export default function Sidebar({ collapsed }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { summary } = useQaSummary();
   const { recent: recentRepos } = useRecentRepos();
-  const { aiAvailable } = useAiHealth();
   const t = useTranslations("sidebar");
   const tNav = useTranslations("nav");
 
@@ -151,7 +166,7 @@ export default function Sidebar({ collapsed, session }: SidebarProps) {
                 type="button"
                 onClick={() => router.push(key)}
                 title={collapsed ? label : undefined}
-                className={`relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors cursor-pointer ${
+                className={`mt-2 relative flex items-center gap-2 rounded-lg px-4 py-3 text-sm transition-colors cursor-pointer ${
                   active
                   ? "bg-indigo-500/14 dark:bg-[#37373d] font-semibold text-indigo-600 shadow-sm dark:text-[#4fc1ff] dark:shadow-none"
                   : "text-gray-600 hover:bg-white/40 dark:text-[#cccccc] dark:hover:bg-[#2a2d2e]"
@@ -169,51 +184,6 @@ export default function Sidebar({ collapsed, session }: SidebarProps) {
         </nav>
 
         <RecentRepoList repos={recentRepos} summary={summary} collapsed={collapsed} activeRepoId={activeRepoId} />
-      </div>
-
-        <div className="shrink-0 border-t border-[var(--border-subtle)] px-3 py-3">
-        {!collapsed && (
-          <div className="flex flex-wrap gap-1.5 mb-3">
-            <Chip size="sm" variant="soft" color={aiAvailable === true ? "success" : aiAvailable === false ? "warning" : "accent"}>
-              <Chip.Label className="text-xs flex items-center gap-1">
-                {aiAvailable === false ? <BotOff size={10} /> : <Bot size={10} />}
-                {aiAvailable === true ? t("aiOnline") : aiAvailable === false ? t("aiOffline") : t("aiUnknown")}
-              </Chip.Label>
-            </Chip>
-            <Chip size="sm" variant="soft" color={summary?.hasGithubToken ? "success" : "danger"}>
-              <Chip.Label className="text-xs flex items-center gap-1">
-                <Github size={10} />
-                {summary?.hasGithubToken ? t("githubOk") : t("githubNoToken")}
-              </Chip.Label>
-            </Chip>
-          </div>
-        )}
-
-        {!collapsed ? (
-          <div className="text-xs text-[var(--text-muted)]">
-            <div className="flex items-center gap-2">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 font-semibold text-sm">
-                {session.user.name?.charAt(0)?.toUpperCase() ?? "U"}
-              </span>
-              <div className="min-w-0">
-                <div className="font-semibold text-[var(--text-primary)] truncate">{session.user.name}</div>
-                <div className="truncate text-xs">{session.user.email}</div>
-              </div>
-            </div>
-            {session.user.role === "admin" && (
-              <Chip size="sm" variant="soft" color="accent" className="mt-2">
-                <Chip.Label className="text-xs">{t("admin")}</Chip.Label>
-              </Chip>
-            )}
-          </div>
-        ) : (
-          <div
-            className="mx-auto flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 font-semibold text-sm"
-            title={session.user.name}
-          >
-            {session.user.name?.charAt(0)?.toUpperCase() ?? "U"}
-          </div>
-        )}
       </div>
     </aside>
   );

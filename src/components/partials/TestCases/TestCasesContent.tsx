@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
 import { Button, SearchField, Select, ListBox } from "@heroui/react";
 import { Plus, Bot } from "lucide-react";
+import { BackButton } from "@/components/ui/BackButton";
 import FolderTree from "./FolderTree";
 import TestCaseTable from "./TestCaseTable";
 import AiGenerateModal from "./Modal/AiGenerateModal";
@@ -58,7 +59,7 @@ export default function TestCasesContent({ repoId }: TestCasesContentProps) {
   const [modalMode, setModalMode] = useState<ModalMode>("create");
   const [editTarget, setEditTarget] = useState<TestCase | null>(null);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(10);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search);
   const [statusFilter, setStatusFilter] = useState<TestStatus | undefined>();
@@ -107,15 +108,18 @@ export default function TestCasesContent({ repoId }: TestCasesContentProps) {
 
   return (
     <div className="flex flex-col md:flex-row gap-4 md:h-[calc(100vh-200px)]">
-      <div className="w-full md:w-[200px] shrink-0 max-h-48 md:max-h-none rounded-lg border border-gray-200 dark:border-[#3e3e42] overflow-auto md:overflow-hidden">
-        <FolderTree
-          repoId={repoId}
-          selectedFolderId={selectedFolderId}
-          onSelectFolder={(id) => {
-            setSelectedFolderId(id);
-            setPage(1);
-          }}
-        />
+      <div className="w-full md:w-[200px] shrink-0 flex flex-col gap-3">
+        <div className="max-h-48 md:max-h-none md:flex-1 rounded-lg border border-[var(--border-subtle)] overflow-auto md:overflow-hidden">
+          <FolderTree
+            repoId={repoId}
+            selectedFolderId={selectedFolderId}
+            onSelectFolder={(id) => {
+              setSelectedFolderId(id);
+              setPage(1);
+            }}
+          />
+        </div>
+        <BackButton fallbackHref="/dashboard" className="w-full justify-center shrink-0" />
       </div>
 
       <div className="flex-1 flex flex-col gap-3 min-w-0">

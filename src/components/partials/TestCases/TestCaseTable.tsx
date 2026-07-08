@@ -209,8 +209,8 @@ export default function TestCaseTable({
             </Table.Content>
           </Table.ScrollContainer>
           <Table.Footer>
-            <div className="flex items-center justify-between px-4 py-2">
-              <p className="text-xs text-muted">{t("totalItems", { count: total })}</p>
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border-subtle)] px-4 py-3">
+              <p className="text-xs text-muted whitespace-nowrap">{t("totalItems", { count: total })}</p>
               <Pagination>
                 <Pagination.Content>
                   <Pagination.Item>

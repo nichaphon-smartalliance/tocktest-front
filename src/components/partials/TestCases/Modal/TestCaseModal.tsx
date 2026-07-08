@@ -42,7 +42,7 @@ function TagInput({
       {value.map((tag) => (
         <span
           key={tag}
-          className="bg-gray-100 dark:bg-[#2d2d2d] border border-gray-200 dark:border-[#3e3e42] rounded px-2 py-0.5 text-sm inline-flex items-center gap-1.5"
+          className="bg-gray-100 dark:bg-[#2d2d2d] border border-[var(--border-subtle)] rounded px-2 py-0.5 text-sm inline-flex items-center gap-1.5"
         >
           {tag}
           {!disabled && (

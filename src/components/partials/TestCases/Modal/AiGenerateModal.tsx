@@ -283,7 +283,7 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
                           className={`w-full text-left rounded-xl border p-3 transition-all ${
                             selected
                               ? "border-indigo-500 bg-indigo-500/5 shadow-sm"
-                              : "border-gray-200 dark:border-[#3e3e42] hover:border-gray-300 dark:hover:border-gray-600"
+                              : "border-[var(--border-subtle)] hover:border-[var(--border-strong)]"
                           }`}
                         >
                           <div className="flex items-start gap-3">
@@ -366,7 +366,7 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
                           className={`w-full text-left rounded-xl border p-3 transition-all ${
                             tc.selected
                               ? "border-indigo-500 bg-indigo-500/5 shadow-sm"
-                              : "border-gray-200 dark:border-[#3e3e42] hover:border-gray-300 dark:hover:border-gray-600"
+                              : "border-[var(--border-subtle)] hover:border-[var(--border-strong)]"
                           }`}
                         >
                           <div className="flex items-start gap-3">

@@ -60,7 +60,7 @@ export default function ChatWorkspace({ repoId }: ChatWorkspaceProps) {
   return (
     <div className="flex h-[calc(100vh-13rem)] min-h-[520px] gap-4">
       {/* Desktop / tablet: persistent sidebar */}
-      <aside className="hidden w-[320px] shrink-0 overflow-hidden rounded-2xl border border-gray-200 bg-[var(--bg-panel)] lg:flex dark:border-[#3e3e42]">
+      <aside className="hidden w-[320px] shrink-0 overflow-hidden rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-panel)] lg:flex">
         {sidebar()}
       </aside>
 

@@ -181,8 +181,8 @@ export default function FolderTree({ repoId, selectedFolderId, onSelectFolder }:
   };
 
   return (
-    <div className="py-2">
-      <div className="flex items-center justify-between px-2 pb-2 mb-2 border-b border-gray-100 dark:border-[#3e3e42]">
+    <div className="h-full py-2">
+      <div className="flex items-center justify-between px-2 pb-2 mb-2 border-b border-[var(--border-subtle)]">
         <span className="font-semibold text-sm">{t("title")}</span>
         <Button
           variant="ghost"

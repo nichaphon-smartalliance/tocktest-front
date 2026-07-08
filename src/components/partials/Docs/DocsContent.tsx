@@ -295,7 +295,7 @@ export default function DocsContent({ repoId }: DocsContentProps) {
             <p className="text-muted">{t("empty")}</p>
           </div>
         ) : (
-          <div className="markdown-body p-6 border border-gray-200 dark:border-[#3e3e42] rounded-lg min-h-[400px] text-sm leading-relaxed bg-white dark:bg-[#1e1e1e]">
+          <div className="markdown-body p-6 border border-[var(--border-subtle)] rounded-lg min-h-[400px] text-sm leading-relaxed bg-white dark:bg-[#1e1e1e]">
             <ReactMarkdown
               urlTransform={safeUrlTransform}
               components={{
@@ -325,7 +325,7 @@ export default function DocsContent({ repoId }: DocsContentProps) {
       {showHistory && (
         <div className="w-64 shrink-0">
           <div className="font-semibold mb-3 text-sm">{t("versionHistory")}</div>
-          <div className="flex flex-col gap-3 border-l-2 border-gray-200 dark:border-[#3e3e42] pl-4">
+          <div className="flex flex-col gap-3 border-l-2 border-[var(--border-subtle)] pl-4">
             {versions.map((entry) =>
               entry.kind === 'deleted' ? (
                 <div key={entry.id} className="relative text-red-500 dark:text-red-400">

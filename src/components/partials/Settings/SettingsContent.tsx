@@ -49,6 +49,15 @@ export default function SettingsContent({ repoId }: SettingsContentProps) {
     }
   };
 
+  const handleSave = async () => {
+    try {
+      await update({ defaultBranch, autoAnalyzeOnPush, docsAutoSync });
+      message.success(t("saved"));
+    } catch {
+      message.error(t("saveFail"));
+    }
+  };
+
 
   return (
     <div className="max-w-[760px]">
@@ -155,26 +164,21 @@ export default function SettingsContent({ repoId }: SettingsContentProps) {
                 </Switch.Content>
               </Switch>
 
-              
-                
-                  <Switch.Thumb />
-              
-                <Switch.Content>
-                 
-                </Switch.Content>
-              
-
-             
+              <Switch isSelected={docsAutoSync} onChange={setDocsAutoSync}>
                 <Switch.Control>
                   <Switch.Thumb />
                 </Switch.Control>
                 <Switch.Content>
-                 
-
+                  {t("docsAutoSync")}
+                  <span className="block text-xs text-muted mt-1">{t("docsAutoSyncDesc")}</span>
                 </Switch.Content>
-           
+              </Switch>
 
-      
+              <div className="pt-1">
+                <Button variant="primary" isDisabled={isUpdating} onPress={() => void handleSave()}>
+                  {t("save")}
+                </Button>
+              </div>
             </>
           )}
         </Card.Content>

@@ -84,7 +84,7 @@ export default function RepoCard({ repo, qaStats }: RepoCardProps) {
           </div>
         </div>
 
-        <div className="mt-3 pt-3 border-t border-gray-100 dark:border-[#3e3e42]">
+        <div className="mt-3 pt-3 border-t border-[var(--border-subtle)]">
           {qaStats && qaStats.testCaseCount > 0 ? (
             <div className="grid grid-cols-2 gap-x-3 gap-y-1">
               <div className="flex items-center gap-1.5 text-xs">

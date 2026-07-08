@@ -67,7 +67,7 @@ function ToolbarButton({
       className={`flex size-8 items-center justify-center rounded-md border text-sm transition disabled:opacity-40 disabled:cursor-not-allowed ${
         active
           ? "border-indigo-400 bg-indigo-500/15 text-indigo-600 dark:text-indigo-300"
-          : "border-gray-200 dark:border-[#3e3e42] hover:bg-gray-100 dark:hover:bg-[#2a2d2e]"
+          : "border-[var(--border-subtle)] hover:bg-gray-100 dark:hover:bg-[#2a2d2e]"
       }`}
     >
       {children}
@@ -126,7 +126,7 @@ function Toolbar({ editor }: { editor: Editor }) {
   }, [editor]);
 
   return (
-    <div className="flex flex-wrap items-center gap-1 border-b border-gray-200 dark:border-[#3e3e42] p-2">
+    <div className="flex flex-wrap items-center gap-1 border-b border-[var(--border-subtle)] p-2">
       <ToolbarButton label="Bold" active={editor.isActive("bold")} onClick={() => editor.chain().focus().toggleBold().run()}>
         <Bold size={15} />
       </ToolbarButton>
@@ -257,7 +257,7 @@ export default function TiptapEditor({ value, onChange, placeholder, editable = 
   }, [editor, editable]);
 
   return (
-    <div className="rounded-lg border border-gray-200 dark:border-[#3e3e42] overflow-hidden bg-white dark:bg-[#1e1e1e]">
+    <div className="rounded-lg border border-[var(--border-subtle)] overflow-hidden bg-white dark:bg-[#1e1e1e]">
       {editor && <Toolbar editor={editor} />}
       <EditorContent editor={editor} />
     </div>

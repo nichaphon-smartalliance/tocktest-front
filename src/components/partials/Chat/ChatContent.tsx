@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Button, Card } from "@heroui/react";
-import { Send, Bot, User, RefreshCw, PanelLeft } from "lucide-react";
+import { Send, Bot, User, Eraser, PanelLeft } from "lucide-react";
 import { chatWithRepoApi } from "@/lib/api/api-main";
 import { getApiErrorMessage } from "@/lib/api-error";
 import ReactMarkdown from "react-markdown";
@@ -159,14 +159,14 @@ export default function ChatContent({
       <Card className="flex h-full flex-col rounded-xl">
 
         {/* ── Header ── */}
-        <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-gray-200 dark:border-[#3e3e42] shrink-0">
+        <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-[var(--border-subtle)] shrink-0">
           <div className="flex items-center gap-2.5 min-w-0">
             {onOpenHistory && (
               <button
                 type="button"
                 onClick={onOpenHistory}
                 aria-label={t.openHistory}
-                className="lg:hidden h-8 w-8 shrink-0 rounded-lg border border-gray-200 dark:border-[#3e3e42] flex items-center justify-center text-[var(--text-muted)] hover:bg-gray-100 dark:hover:bg-[#2a2d2e] transition-colors"
+                className="lg:hidden h-8 w-8 shrink-0 rounded-lg border border-[var(--border-subtle)] flex items-center justify-center text-[var(--text-muted)] hover:bg-gray-100 dark:hover:bg-[#2a2d2e] transition-colors"
               >
                 <PanelLeft size={15} />
               </button>
@@ -218,9 +218,9 @@ export default function ChatContent({
                 onClick={onClear}
                 title={t.clearTitle}
                 aria-label={t.clearTitle}
-                className="h-8 w-8 rounded-lg border border-gray-200 dark:border-[#3e3e42] flex items-center justify-center text-[var(--text-muted)] hover:bg-gray-100 dark:hover:bg-[#2a2d2e] transition-colors"
+                className="h-8 w-8 rounded-lg border border-[var(--border-subtle)] flex items-center justify-center text-[var(--text-muted)] hover:bg-gray-100 dark:hover:bg-[#2a2d2e] transition-colors"
               >
-                <RefreshCw size={13} />
+                <Eraser size={13} />
               </button>
             )}
           </div>
@@ -240,7 +240,7 @@ export default function ChatContent({
                     key={s}
                     type="button"
                     onClick={() => void send(s)}
-                    className="text-left rounded-lg border border-gray-200 dark:border-[#3e3e42] px-3 py-2 text-xs text-gray-600 dark:text-[#cccccc] hover:bg-gray-50 dark:hover:bg-[#2a2d2e] transition-colors cursor-pointer"
+                    className="text-left rounded-lg border border-[var(--border-subtle)] px-3 py-2 text-xs text-gray-600 dark:text-[#cccccc] hover:bg-gray-50 dark:hover:bg-[#2a2d2e] transition-colors cursor-pointer"
                   >
                     {s}
                   </button>
@@ -294,7 +294,7 @@ export default function ChatContent({
         </div>
 
         {/* ── Input ── */}
-        <div className="border-t border-gray-200 dark:border-[#3e3e42] p-3 flex gap-2 items-end">
+        <div className="border-t border-[var(--border-subtle)] p-3 flex gap-2 items-end">
           <textarea
             ref={textareaRef}
             value={input}
@@ -302,7 +302,7 @@ export default function ChatContent({
             onKeyDown={handleKeyDown}
             placeholder={t.inputPlaceholder}
             rows={1}
-            className="flex-1 resize-none rounded-xl border border-gray-200 dark:border-[#3e3e42] bg-transparent dark:bg-[#3c3c3c] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-[#007acc] transition-shadow"
+            className="flex-1 resize-none rounded-xl border border-[var(--border-subtle)] bg-transparent dark:bg-[#3c3c3c] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-[#007acc] transition-shadow"
             style={{ minHeight: "38px", maxHeight: "120px", overflowY: "auto" }}
           />
           <Button

@@ -1,12 +1,9 @@
 "use client";
 
-import { Alert, Button, Card, Chip, InputGroup, Label, ListBox, Select, Spinner, Switch, Table, TextField } from "@heroui/react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Alert, Button, Card, Chip, InputGroup, Label, Spinner, Table, TextField } from "@heroui/react";
 import dayjs from "dayjs";
 import "dayjs/locale/th";
 import {
-  Bot,
-  BotOff,
   Camera,
   Check,
   ChevronDown,
@@ -18,23 +15,18 @@ import {
   Link2,
   Package,
   Plus,
-  RefreshCw,
-  Server,
   Shield,
-  Sliders,
   Trash2,
   User,
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
-import { type ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
+import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import { AddTokenModal } from "@/components/partials/Dashboard/Modal";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { useAiHealth } from "@/hooks/ai/useAiHealth";
 import { useGithubAppInstallationRepositories, useGithubAppSetup } from "@/hooks/dashboard";
 import { useGithubTokens } from "@/hooks/repository";
-import { useChangePassword, useUserProfile, useUserSettings } from "@/hooks/user";
-import { setUserLocale } from "@/i18n/locale";
+import { useChangePassword, useUserProfile } from "@/hooks/user";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { message } from "@/lib/toast";
 import type { GithubToken } from "@/types/app/repository";
@@ -43,9 +35,7 @@ import type { AdminSettingsTab } from "@/types/app/user";
 const TAB_CONFIG: { key: AdminSettingsTab; labelKey: string; icon: typeof User }[] = [
   { key: "profile", labelKey: "tabProfile", icon: User },
   { key: "security", labelKey: "tabSecurity", icon: Shield },
-  { key: "preferences", labelKey: "tabPreferences", icon: Sliders },
   { key: "integrations", labelKey: "tabIntegrations", icon: Github },
-  { key: "system", labelKey: "tabSystem", icon: Server },
 ];
 
 export default function AdminSettingsContent() {
@@ -59,9 +49,6 @@ export default function AdminSettingsContent() {
   const [showCurrentPw, setShowCurrentPw] = useState(false);
   const [showNewPw, setShowNewPw] = useState(false);
   const [showConfirmPw, setShowConfirmPw] = useState(false);
-  const [defaultPageSize, setDefaultPageSize] = useState("20");
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  const [preferredLanguage, setPreferredLanguage] = useState("th");
   const [avatarDataUrl, setAvatarDataUrl] = useState<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -69,14 +56,11 @@ export default function AdminSettingsContent() {
   const locale = useLocale();
   const t = useTranslations("adminSettings");
   const tCommon = useTranslations("common");
-  const tRepoTabs = useTranslations("repoTabs");
 
   const { profile, isLoading: profileLoading, updateProfile, isUpdating: profileUpdating } = useUserProfile();
   const { changePassword, isChanging } = useChangePassword();
-  const { settings, isLoading: settingsLoading, update: updateSettings, isUpdating: settingsUpdating } = useUserSettings();
   const { tokens, isLoading: tokensLoading, deleteToken, connectGithub } = useGithubTokens();
   const { setup: githubAppSetup, installations, installApp } = useGithubAppSetup();
-  const { aiAvailable } = useAiHealth();
 
 
   useEffect(() => {
@@ -136,26 +120,6 @@ export default function AdminSettingsContent() {
     e.target.value = "";
   };
 
-  useEffect(() => {
-    if (!settings) return;
-    setDefaultPageSize(String(settings.defaultPageSize));
-    setEmailNotifications(settings.emailNotifications);
-    setPreferredLanguage(settings.preferredLanguage);
-  }, [settings]);
-
-  const pageSizeOptions = useMemo(
-    () => ["10", "20", "50"].map((value) => ({ value, label: t("pageSize", { count: value }) })),
-    [t],
-  );
-
-  const languageOptions = useMemo(
-    () => [
-      { value: "th", label: "ไทย" },
-      { value: "en", label: "English" },
-    ],
-    [],
-  );
-
   const roleLabels: Record<string, string> = {
     admin: t("roleAdmin"),
     user: t("roleUser"),
@@ -200,21 +164,6 @@ export default function AdminSettingsContent() {
     }
   };
 
-  const handleSavePreferences = async () => {
-    try {
-      await updateSettings({
-        defaultPageSize: Number(defaultPageSize),
-        emailNotifications,
-        preferredLanguage: preferredLanguage as "th" | "en",
-      });
-      await setUserLocale(preferredLanguage as "th" | "en");
-      message.success(t("toastPrefSaved"));
-      if (preferredLanguage !== locale) router.refresh();
-    } catch (error) {
-      message.error(getApiErrorMessage(error, t("toastPrefFail")));
-    }
-  };
-
   const handleDeleteToken = async (id: string) => {
     try {
       await deleteToken(id);
@@ -242,7 +191,7 @@ export default function AdminSettingsContent() {
 
       {tab === "profile" && (
         <Card className="rounded-xl">
-          <Card.Header className="px-5 py-4 border-b border-gray-200 dark:border-[#3e3e42]">
+          <Card.Header className="px-5 py-4 border-b border-[var(--border-subtle)]">
             <Card.Title className="text-base font-semibold m-0">{t("profileTitle")}</Card.Title>
           </Card.Header>
           <Card.Content className="px-5 py-4 flex flex-col gap-4">
@@ -254,7 +203,7 @@ export default function AdminSettingsContent() {
                   <button
                     type="button"
                     onClick={() => avatarInputRef.current?.click()}
-                    className="group relative h-16 w-16 shrink-0 rounded-full overflow-hidden border-2 border-gray-200 dark:border-[#3e3e42] cursor-pointer"
+                    className="group relative h-16 w-16 shrink-0 rounded-full overflow-hidden border-2 border-[var(--border-subtle)] cursor-pointer"
                   >
                     {avatarDataUrl ? (
                       <img src={avatarDataUrl} alt="avatar" className="h-full w-full object-cover" />
@@ -327,7 +276,7 @@ export default function AdminSettingsContent() {
 
       {tab === "security" && (
         <Card className="rounded-xl">
-          <Card.Header className="px-5 py-4 border-b border-gray-200 dark:border-[#3e3e42]">
+          <Card.Header className="px-5 py-4 border-b border-[var(--border-subtle)]">
             <Card.Title className="text-base font-semibold m-0">{t("changePassword")}</Card.Title>
           </Card.Header>
           <Card.Content className="px-5 py-4 flex flex-col gap-4">
@@ -384,72 +333,10 @@ export default function AdminSettingsContent() {
         </Card>
       )}
 
-      {tab === "preferences" && (
-        <Card className="rounded-xl">
-          <Card.Header className="px-5 py-4 border-b border-gray-200 dark:border-[#3e3e42]">
-            <Card.Title className="text-base font-semibold m-0">{t("preferencesTitle")}</Card.Title>
-          </Card.Header>
-          <Card.Content className="px-5 py-4 flex flex-col gap-4">
-            {settingsLoading ? (
-              <Spinner />
-            ) : (
-              <>
-                <Select selectedKey={defaultPageSize} onSelectionChange={(key) => key && setDefaultPageSize(String(key))}>
-                  <Label className="mb-1.5">{t("pageSizeLabel")}</Label>
-                  <Select.Trigger className="w-full max-w-xs">
-                    <Select.Value />
-                    <Select.Indicator />
-                  </Select.Trigger>
-                  <Select.Popover>
-                    <ListBox>
-                      {pageSizeOptions.map((option) => (
-                        <ListBox.Item key={option.value} id={option.value} textValue={option.label}>
-                          {option.label}
-                          <ListBox.ItemIndicator />
-                        </ListBox.Item>
-                      ))}
-                    </ListBox>
-                  </Select.Popover>
-                </Select>
-
-                <Select selectedKey={preferredLanguage} onSelectionChange={(key) => key && setPreferredLanguage(String(key))}>
-                  <Label className="mb-1.5">{t("language")}</Label>
-                  <Select.Trigger className="w-full max-w-xs">
-                    <Select.Value />
-                    <Select.Indicator />
-                  </Select.Trigger>
-                  <Select.Popover>
-                    <ListBox>
-                      {languageOptions.map((option) => (
-                        <ListBox.Item key={option.value} id={option.value} textValue={option.label}>
-                          {option.label}
-                          <ListBox.ItemIndicator />
-                        </ListBox.Item>
-                      ))}
-                    </ListBox>
-                  </Select.Popover>
-                </Select>
-
-                <Switch isSelected={emailNotifications} onChange={setEmailNotifications}>
-                  <Switch.Control>
-                    <Switch.Thumb />
-                  </Switch.Control>
-                  <Switch.Content>{t("emailNotifications")}</Switch.Content>
-                </Switch>
-
-                <Button variant="primary" isDisabled={settingsUpdating} onPress={() => void handleSavePreferences()}>
-                  {settingsUpdating ? tCommon("saving") : t("savePreferences")}
-                </Button>
-              </>
-            )}
-          </Card.Content>
-        </Card>
-      )}
-
       {tab === "integrations" && (
         <div className="flex flex-col gap-4 mb-4">
           <Card className="rounded-xl">
-            <Card.Header className="px-5 py-4 border-b border-gray-200 dark:border-[#3e3e42]">
+            <Card.Header className="px-5 py-4 border-b border-[var(--border-subtle)]">
               <div>
                 <Card.Title className="text-base font-semibold m-0">{t("connectGithubTitle")}</Card.Title>
                 <p className="text-xs text-muted mt-0.5">{t("connectGithubDesc")}</p>
@@ -457,7 +344,7 @@ export default function AdminSettingsContent() {
             </Card.Header>
             <Card.Content className="px-5 py-4 flex flex-col gap-3">
               {tokens.some((token) => token.provider === "oauth") ? (
-                <div className="flex items-center justify-between rounded-lg border border-gray-200 dark:border-[#3e3e42] px-4 py-3">
+                <div className="flex items-center justify-between rounded-lg border border-[var(--border-subtle)] px-4 py-3">
                   <div className="flex items-center gap-2">
                     <Github size={18} className="text-emerald-500" />
                     <span className="text-sm font-medium">
@@ -478,7 +365,7 @@ export default function AdminSettingsContent() {
           </Card>
 
           <Card className="rounded-xl">
-            <Card.Header className="px-5 py-4 border-b border-gray-200 dark:border-[#3e3e42]">
+            <Card.Header className="px-5 py-4 border-b border-[var(--border-subtle)]">
               <div>
                 <Card.Title className="text-base font-semibold m-0">{t("githubAppTitle")}</Card.Title>
                 <p className="text-xs text-muted mt-0.5">{t("githubAppDesc")}</p>
@@ -503,7 +390,7 @@ export default function AdminSettingsContent() {
                     const isExpanded = expandedInstallationId === installation.installationId;
 
                     return (
-                      <div key={installation.id} className="rounded-lg border border-gray-200 dark:border-[#3e3e42]">
+                      <div key={installation.id} className="rounded-lg border border-[var(--border-subtle)]">
                         <button
                           type="button"
                           onClick={() => setExpandedInstallationId(isExpanded ? null : installation.installationId)}
@@ -538,7 +425,7 @@ export default function AdminSettingsContent() {
           </Card>
 
           <Card className="rounded-xl">
-            <Card.Header className="px-5 py-4 border-b border-gray-200 dark:border-[#3e3e42]">
+            <Card.Header className="px-5 py-4 border-b border-[var(--border-subtle)]">
               <div className="flex items-center justify-between w-full">
                 <div>
                   <Card.Title className="text-base font-semibold m-0">GitHub Tokens</Card.Title>
@@ -612,46 +499,6 @@ export default function AdminSettingsContent() {
         </div>
       )}
 
-      {tab === "system" && (
-        <div className="flex flex-col gap-4">
-          <Card className="rounded-xl">
-            <Card.Header className="px-5 py-4 border-b border-gray-200 dark:border-[#3e3e42]">
-              <Card.Title className="text-base font-semibold m-0">{t("serviceStatus")}</Card.Title>
-            </Card.Header>
-            <Card.Content className="px-5 py-4 flex flex-col gap-3">
-              <div className="flex items-center justify-between rounded-lg border border-gray-200 dark:border-[#3e3e42] px-4 py-3">
-                <div className="flex items-center gap-2">
-                  {aiAvailable === false ? (
-                    <BotOff size={18} className="text-amber-500" />
-                  ) : (
-                    <Bot size={18} className="text-indigo-500" />
-                  )}
-                  <span className="text-sm font-medium">{t("aiService")}</span>
-                </div>
-                <Chip size="sm" variant="soft" color={aiAvailable === true ? "success" : aiAvailable === false ? "warning" : "accent"}>
-                  <Chip.Label>{aiAvailable === true ? t("aiReady") : aiAvailable === false ? "offline" : t("aiChecking")}</Chip.Label>
-                </Chip>
-              </div>
-              <div className="flex items-center justify-between rounded-lg border border-gray-200 dark:border-[#3e3e42] px-4 py-3">
-                <span className="text-sm font-medium">{t("backendApi")}</span>
-                <Chip size="sm" variant="soft" color="success">
-                  <Chip.Label>{process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4004"}</Chip.Label>
-                </Chip>
-              </div>
-            </Card.Content>
-          </Card>
-
-          {aiAvailable === false && (
-            <Alert status="warning">
-              <Alert.Indicator />
-              <Alert.Content>
-                <Alert.Description>{t("aiServerOffline")}</Alert.Description>
-              </Alert.Content>
-            </Alert>
-          )}
-        </div>
-      )}
-
       <AddTokenModal open={addTokenOpen} onClose={() => setAddTokenOpen(false)} />
     </div>
   );
@@ -676,7 +523,7 @@ function InstallationRepositoryPanel({ installationId }: { installationId: strin
   };
 
   return (
-    <div className="border-t border-gray-200 dark:border-[#3e3e42] px-4 py-3">
+    <div className="border-t border-[var(--border-subtle)] px-4 py-3">
       {isLoading ? (
         <div className="flex items-center justify-center py-4">
           <Spinner size="sm" />

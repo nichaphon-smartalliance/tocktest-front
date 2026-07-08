@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 const STORAGE_KEY = "tock:recent-repos";
-const MAX = 5;
+const MAX = 20;
 const UPDATE_EVENT = "tock:recent-repos-updated";
 
 export interface RecentRepoEntry {

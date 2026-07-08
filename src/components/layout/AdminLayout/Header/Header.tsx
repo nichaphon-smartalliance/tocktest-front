@@ -1,15 +1,15 @@
 "use client";
 
 import { Button, Dropdown, Avatar, Chip } from "@heroui/react";
-import { PanelLeftClose, PanelLeftOpen, LogOut, Sun, Moon, BotOff, Settings } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen, LogOut, Sun, Moon, Bot, BotOff, Github, Settings } from "lucide-react";
 import { signOut } from "next-auth/react";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { useTheme } from "@/context/theme/ThemeProvider";
-import { BackButton } from "@/components/ui/BackButton";
 import { LocaleSwitcher } from "@/components/ui/LocaleSwitcher";
 import { useAiHealth } from "@/hooks/ai/useAiHealth";
+import { useQaSummary } from "@/hooks/dashboard";
 import type { ClientSession } from "@/types/app/session";
 
 interface HeaderProps {
@@ -19,13 +19,13 @@ interface HeaderProps {
 }
 
 export default function Header({ collapsed, onToggle, session }: HeaderProps) {
-  const pathname = usePathname();
   const router = useRouter();
   const { mode, toggle } = useTheme();
   const { aiAvailable } = useAiHealth();
+  const { summary } = useQaSummary();
   const t = useTranslations("header");
   const tNav = useTranslations("nav");
-  const showBack = pathname.startsWith("/repos/");
+  const tSidebar = useTranslations("sidebar");
 
   const [avatarSrc, setAvatarSrc] = useState<string | null>(null);
 
@@ -45,20 +45,21 @@ export default function Header({ collapsed, onToggle, session }: HeaderProps) {
         <Button variant="ghost" isIconOnly onPress={onToggle} aria-label={t("toggleSidebar")} className="text-[var(--text-primary)]">
           {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
         </Button>
-        {showBack && <BackButton fallbackHref="/dashboard" />}
       </div>
 
       <div className="flex items-center gap-2">
-        {aiAvailable === false && (
-          <span title={t("aiOfflineTooltip")}>
-            <Chip color="warning" size="sm" variant="soft">
-              <Chip.Label className="flex items-center gap-1">
-                <BotOff size={12} />
-                {t("aiOffline")}
-              </Chip.Label>
-            </Chip>
-          </span>
-        )}
+        <Chip size="sm" variant="soft" color={aiAvailable === true ? "success" : aiAvailable === false ? "warning" : "accent"}>
+          <Chip.Label className="text-xs flex items-center gap-1">
+            {aiAvailable === false ? <BotOff size={12} /> : <Bot size={12} />}
+            {aiAvailable === true ? tSidebar("aiOnline") : aiAvailable === false ? tSidebar("aiOffline") : tSidebar("aiUnknown")}
+          </Chip.Label>
+        </Chip>
+        <Chip size="sm" variant="soft" color={summary?.hasGithubToken ? "success" : "danger"}>
+          <Chip.Label className="text-xs flex items-center gap-1">
+            <Github size={12} />
+            {summary?.hasGithubToken ? tSidebar("githubOk") : tSidebar("githubNoToken")}
+          </Chip.Label>
+        </Chip>
         <LocaleSwitcher />
         <Button variant="ghost" isIconOnly onPress={toggle} aria-label={t("toggleTheme")} className="text-[var(--text-primary)]">
           {mode === "dark" ? <Sun size={18} /> : <Moon size={18} />}
@@ -68,7 +69,7 @@ export default function Header({ collapsed, onToggle, session }: HeaderProps) {
           <Dropdown.Trigger>
             <div className="flex items-center gap-2 rounded-xl px-2.5 py-1.5 cursor-pointer hover:bg-white/10 dark:hover:bg-[#2a2d2e]">
               {avatarSrc ? (
-                <div className="h-8 w-8 rounded-full overflow-hidden shrink-0 border border-gray-200 dark:border-[#3e3e42]">
+                <div className="h-8 w-8 rounded-full overflow-hidden shrink-0 border border-[var(--border-subtle)]">
                   <img src={avatarSrc} alt="avatar" className="h-full w-full object-cover" />
                 </div>
               ) : (
