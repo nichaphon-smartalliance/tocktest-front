@@ -31,7 +31,7 @@ interface TestCaseTableProps {
 
 interface TestCaseRowProps {
   record: TestCase;
-  
+
   onEdit: (tc: TestCase) => void;
   onDelete: (id: string) => void;
   onStatusChange: (id: string, status: TestStatus) => Promise<void>;
@@ -182,68 +182,78 @@ export default function TestCaseTable({
           </p>
         </div>
       ) : (
-        <Table className="flex-1">
-          <Table.ScrollContainer>
-            <Table.Content aria-label="Test cases" className="min-w-[760px] w-full table-fixed">
-              <Table.Header>
-                <Table.Column isRowHeader className="w-auto">{t("colName")}</Table.Column>
-                <Table.Column className="w-[130px]">{t("colStatus")}</Table.Column>
-                <Table.Column className="w-[120px]">{t("colPriority")}</Table.Column>
-                <Table.Column className="w-[130px]">{t("colType")}</Table.Column>
-                <Table.Column className="w-[110px]">{t("colUpdated")}</Table.Column>
-                <Table.Column className="w-[80px]" />
-              </Table.Header>
-              <Table.Body>
-                {testCases.map((record) => (
-                  <TestCaseRow
-                    key={record.id}
-                    record={record}
-                    onEdit={onEdit}
-                    onDelete={onDelete}
-                    onStatusChange={onStatusChange}
-                    onPriorityChange={onPriorityChange}
-                    onTypeChange={onTypeChange}
-                  />
-                ))}
-              </Table.Body>
-            </Table.Content>
-          </Table.ScrollContainer>
-          <Table.Footer>
-            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border-subtle)] px-4 py-3">
-              <p className="text-xs text-muted whitespace-nowrap">{t("totalItems", { count: total })}</p>
-              <Pagination>
-                <Pagination.Content>
-                  <Pagination.Item>
-                    <Pagination.Previous
-                      isDisabled={page <= 1}
-                      onPress={() => onPageChange(page - 1, pageSize)}
-                    >
-                      <Pagination.PreviousIcon />
-                    </Pagination.Previous>
-                  </Pagination.Item>
-                  {paginationItems.map((pageNumber) => (
-                    <Pagination.Item key={pageNumber}>
-                      <Pagination.Link
-                        isActive={pageNumber === page}
-                        onPress={() => onPageChange(pageNumber, pageSize)}
-                      >
-                        {pageNumber}
-                      </Pagination.Link>
-                    </Pagination.Item>
+        <>
+          {/* Main Table component container */}
+          <Table className="flex-1">
+            <Table.ScrollContainer>
+              <Table.Content aria-label="Test cases" className="min-w-[760px] w-full table-fixed">
+                <Table.Header>
+                  <Table.Column isRowHeader className="w-auto">{t("colName")}</Table.Column>
+                  <Table.Column className="w-[130px]">{t("colStatus")}</Table.Column>
+                  <Table.Column className="w-[120px]">{t("colPriority")}</Table.Column>
+                  <Table.Column className="w-[130px]">{t("colType")}</Table.Column>
+                  <Table.Column className="w-[110px]">{t("colUpdated")}</Table.Column>
+                  <Table.Column className="w-[80px]" />
+                </Table.Header>
+                <Table.Body>
+                  {testCases.map((record) => (
+                    <TestCaseRow
+                      key={record.id}
+                      record={record}
+                      onEdit={onEdit}
+                      onDelete={onDelete}
+                      onStatusChange={onStatusChange}
+                      onPriorityChange={onPriorityChange}
+                      onTypeChange={onTypeChange}
+                    />
                   ))}
-                  <Pagination.Item>
-                    <Pagination.Next
-                      isDisabled={page >= totalPages}
-                      onPress={() => onPageChange(page + 1, pageSize)}
+                </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
+
+          {/* 
+            FIX: Removed <Table.Footer> completely. 
+            Placing this div outside of the <Table> prevents the alignment from 
+            collapsing when there is only 1 test case.
+          */}
+          <div className="w-full flex flex-row items-center justify-between gap-3 border-t border-[var(--border-subtle)] px-4 py-3 mt-auto">
+            {/* Total items text always locked to the left side */}
+            <p className="text-xs text-muted whitespace-nowrap">{t("totalItems", { count: total })}</p>
+
+            {/* Pagination block */}
+            <Pagination className="w-auto">
+              <Pagination.Content>
+                <Pagination.Item>
+                  <Pagination.Previous
+                    isDisabled={page <= 1}
+                    onPress={() => onPageChange(page - 1, pageSize)}
+                  >
+                    <Pagination.PreviousIcon />
+                  </Pagination.Previous>
+                </Pagination.Item>
+                {paginationItems.map((pageNumber) => (
+                  <Pagination.Item key={pageNumber}>
+                    <Pagination.Link
+                      isActive={pageNumber === page}
+                      onPress={() => onPageChange(pageNumber, pageSize)}
                     >
-                      <Pagination.NextIcon />
-                    </Pagination.Next>
+                      {pageNumber}
+                    </Pagination.Link>
                   </Pagination.Item>
-                </Pagination.Content>
-              </Pagination>
-            </div>
-          </Table.Footer>
-        </Table>
+                ))}
+                <Pagination.Item>
+                  <Pagination.Next
+                    isDisabled={page >= totalPages}
+                    onPress={() => onPageChange(page + 1, pageSize)}
+                  >
+                    <Pagination.NextIcon />
+                  </Pagination.Next>
+                </Pagination.Item>
+              </Pagination.Content>
+            </Pagination>
+          </div>
+        </>
       )}
     </div>
   );
