@@ -24,7 +24,7 @@ export function BackButton({
       type="button"
       onClick={() => router.push(fallbackHref)}
       aria-label={resolvedLabel}
-      className={`inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-subtle)] px-3 py-1.5 text-sm font-medium text-[var(--text-primary)] cursor-pointer hover:bg-gray-100 dark:hover:bg-[#2a2d2e] transition-colors ${className}`}
+      className={`inline-flex items-center gap-1.5 rounded-lg bg-white border border-[var(--border-subtle)] px-3 py-1.5 text-sm font-medium text-[var(--text-primary)] cursor-pointer hover:bg-gray-100 dark:hover:bg-[#2a2d2e] transition-colors ${className}`}
     >
       <ArrowLeft size={16} />
       {resolvedLabel}

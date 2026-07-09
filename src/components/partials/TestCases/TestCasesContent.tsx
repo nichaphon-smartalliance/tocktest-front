@@ -109,7 +109,7 @@ export default function TestCasesContent({ repoId }: TestCasesContentProps) {
   return (
     <div className="flex flex-col md:flex-row gap-4 md:h-[calc(100vh-200px)]">
       <div className="w-full md:w-[200px] shrink-0 flex flex-col gap-3">
-        <div className="max-h-48 md:max-h-none md:flex-1 rounded-lg border border-[var(--border-subtle)] overflow-auto md:overflow-hidden">
+        <div className="max-h-48 md:max-h-none md:flex-1 rounded-lg border border-[var(--border-subtle)] bg-white overflow-auto md:overflow-hidden">
           <FolderTree
             repoId={repoId}
             selectedFolderId={selectedFolderId}
