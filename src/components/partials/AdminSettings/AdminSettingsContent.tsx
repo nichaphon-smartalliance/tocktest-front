@@ -144,7 +144,7 @@ export default function AdminSettingsContent() {
       message.warning(t("toastPasswordRequired"));
       return;
     }
-    if (newPassword.length < 6) {
+    if (newPassword.length < 12) {
       message.warning(t("toastPasswordTooShort"));
       return;
     }

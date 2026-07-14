@@ -488,7 +488,7 @@
     "toastProfileSaved": "อัปเดตโปรไฟล์สำเร็จ",
     "toastProfileFail": "อัปเดตโปรไฟล์ไม่สำเร็จ",
     "toastPasswordRequired": "กรุณากรอกรหัสผ่านให้ครบ",
-    "toastPasswordTooShort": "รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร",
+    "toastPasswordTooShort": "รหัสผ่านใหม่ต้องมีอย่างน้อย 12 ตัวอักษร",
     "toastPasswordMismatch": "รหัสผ่านใหม่ไม่ตรงกัน",
     "toastPasswordChanged": "เปลี่ยนรหัสผ่านสำเร็จ",
     "toastPasswordFail": "เปลี่ยนรหัสผ่านไม่สำเร็จ",

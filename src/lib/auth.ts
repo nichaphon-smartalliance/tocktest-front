@@ -73,7 +73,6 @@ export const authOptions: AuthOptions = {
         session.user.name = (token.name as string) ?? session.user.name ?? "";
         session.user.role = (token.role as string) ?? "";
       }
-      session.accessToken = (token.accessToken as string) ?? "";
       return session;
     },
   },

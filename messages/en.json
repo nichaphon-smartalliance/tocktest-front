@@ -488,7 +488,7 @@
     "toastProfileSaved": "Profile updated",
     "toastProfileFail": "Failed to update profile",
     "toastPasswordRequired": "Please fill in all password fields",
-    "toastPasswordTooShort": "New password must be at least 6 characters",
+    "toastPasswordTooShort": "New password must be at least 12 characters",
     "toastPasswordMismatch": "New passwords do not match",
     "toastPasswordChanged": "Password changed",
     "toastPasswordFail": "Failed to change password",
