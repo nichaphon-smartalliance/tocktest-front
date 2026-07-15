@@ -7,11 +7,6 @@ const nextConfig: NextConfig = {
   output: "standalone",
   reactStrictMode: true,
   transpilePackages: ["@heroui/react"],
-  modularizeImports: {
-    "lucide-react": {
-      transform: "lucide-react/dist/esm/icons/{{kebabCase member}}",
-    },
-  },
   allowedDevOrigins: [
     "localhost",
     "https://did.smartalliance.co.th",

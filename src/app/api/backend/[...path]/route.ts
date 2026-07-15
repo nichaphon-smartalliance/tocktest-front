@@ -18,12 +18,24 @@ const HOP_BY_HOP_HEADERS = new Set([
   "upgrade",
 ]);
 
+const MAX_PROXY_BODY_BYTES = 12 * 1024 * 1024;
+const UPSTREAM_TIMEOUT_MS = 30000;
+
 function getBackendBaseUrl() {
-  const baseUrl =
-    process.env.BACKEND_URL ??
-    process.env.NEXT_PUBLIC_API_URL ??
-    "http://localhost:4004/api/v1";
-  return baseUrl.replace(/\/$/, "");
+  const configured = process.env.BACKEND_URL;
+  if (!configured) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("BACKEND_URL must be configured");
+    }
+    return "http://localhost:4004/api/v1";
+  }
+
+  const url = new URL(configured);
+  if (!["http:", "https:"].includes(url.protocol) || url.username || url.password || url.search || url.hash) {
+    throw new Error("BACKEND_URL must be a plain http(s) origin/path");
+  }
+
+  return url.toString().replace(/\/$/, "");
 }
 
 async function proxy(request: NextRequest, context: RouteContext) {
@@ -34,6 +46,11 @@ async function proxy(request: NextRequest, context: RouteContext) {
 
   if (!token?.accessToken) {
     return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+  }
+
+  const contentLength = request.headers.get("content-length");
+  if (contentLength && Number(contentLength) > MAX_PROXY_BODY_BYTES) {
+    return NextResponse.json({ success: false, message: "Payload too large" }, { status: 413 });
   }
 
   const { path } = await context.params;
@@ -49,13 +66,23 @@ async function proxy(request: NextRequest, context: RouteContext) {
   });
   headers.set("authorization", `Bearer ${token.accessToken}`);
 
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
   const hasBody = request.method !== "GET" && request.method !== "HEAD";
-  const upstream = await fetch(upstreamUrl, {
-    method: request.method,
-    headers,
-    body: hasBody ? await request.arrayBuffer() : undefined,
-    cache: "no-store",
-  });
+  let upstream: Response;
+  try {
+    upstream = await fetch(upstreamUrl, {
+      method: request.method,
+      headers,
+      body: hasBody ? await request.arrayBuffer() : undefined,
+      cache: "no-store",
+      signal: controller.signal,
+    });
+  } catch {
+    return NextResponse.json({ success: false, message: "Backend unavailable" }, { status: 502 });
+  } finally {
+    clearTimeout(timeout);
+  }
 
   const responseHeaders = new Headers();
   upstream.headers.forEach((value, key) => {

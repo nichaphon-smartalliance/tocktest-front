@@ -14,7 +14,7 @@ function clearSessionCookies(response: NextResponse) {
   return response;
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let token: Awaited<ReturnType<typeof getToken>>;
 
   try {
