@@ -1,6 +1,6 @@
 "use client";
 
-import { Alert, Button, Chip, Spinner, Switch, TextArea } from "@heroui/react";
+import { Alert, Button, Chip, Spinner, TextArea } from "@heroui/react";
 import dayjs from "dayjs";
 import "dayjs/locale/th";
 import dynamic from "next/dynamic";
@@ -54,7 +54,7 @@ export default function DocsContent({ repoId }: DocsContentProps) {
     deleteDoc,
     isDeleting,
   } = useProjectDoc(repoId);
-  const { settings, update: updateSettings, isUpdating: isUpdatingSettings } = useRepoSettings(repoId);
+  const { settings } = useRepoSettings(repoId);
 
   useEffect(() => {
     dayjs.locale(locale);
@@ -137,24 +137,6 @@ export default function DocsContent({ repoId }: DocsContentProps) {
     }
   };
 
-  const handleToggleAutoSync = async (selected: boolean) => {
-    try {
-      await updateSettings({ docsAutoSync: selected });
-      message.success(selected ? t("toastAutoSyncOn") : t("toastAutoSyncOff"));
-    } catch (error) {
-      message.error(getApiErrorMessage(error, t("toastAutoSyncFail")));
-    }
-  };
-
-  const handleToggleOffline = async (selected: boolean) => {
-    try {
-      await updateSettings({ aiOfflineMode: selected });
-      message.success(selected ? t("toastOfflineOn") : t("toastOfflineOff"));
-    } catch (error) {
-      message.error(getApiErrorMessage(error, t("toastOfflineFail")));
-    }
-  };
-
   return (
     <div className="flex gap-4">
       <div className="flex-1 min-w-0">
@@ -231,21 +213,6 @@ export default function DocsContent({ repoId }: DocsContentProps) {
               />
             )}
           </div>
-        </div>
-
-        <div className="grid gap-3 mb-4 lg:grid-cols-3">
-
-
-
-          <Switch.Control>
-            <Switch.Thumb />
-          </Switch.Control>
-          <Switch.Content>
-
-
-          </Switch.Content>
-
-
         </div>
 
         {status && (
