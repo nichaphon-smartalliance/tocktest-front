@@ -283,7 +283,7 @@ export default function DocsContent({ repoId }: DocsContentProps) {
                 },
               }}
             >
-              {doc?.content != "" || doc?.content != null ? doc?.content : "empty"} 
+              {doc?.content || "empty"}
             </ReactMarkdown>
           </div>
         )}
