@@ -273,13 +273,16 @@
     "title": "QA Chatbot",
     "subtitle": "ถามคำถามเกี่ยวกับ {repo} — การวางแผนทดสอบ, code review และกลยุทธ์ QA",
     "thisRepo": "repo นี้",
+    "headerSub": "วางแผนการทดสอบ, code review และกลยุทธ์ QA",
     "emptyHint": "ฉันรู้จัก test case, commit ล่าสุด และ docs ของโปรเจกต์คุณ ถามอะไรก็ได้",
     "starter1": "ควรทดสอบส่วนไหนก่อนใน repo นี้?",
     "starter2": "สร้าง Cypress test สำหรับ login flow",
     "starter3": "การเปลี่ยนแปลงล่าสุดที่เสี่ยงสุดคืออะไร?",
     "starter4": "แนะนำ test case สำหรับ commit ล่าสุด",
     "clearTitle": "ล้างบทสนทนา",
+    "openHistory": "ประวัติแชท",
     "inputPlaceholder": "ถามเกี่ยวกับการทดสอบ, คุณภาพโค้ด หรือไอเดีย test case... (กด Enter เพื่อส่ง)",
+    "langLabel": "ภาษาที่ตอบ",
     "error": "ไม่ได้รับคำตอบจาก AI ตรวจสอบว่า AI service กำลังทำงานอยู่"
   },
   "chatHistory": {
@@ -497,7 +500,9 @@
     "toastTokenDeleted": "ลบ Token สำเร็จ",
     "toastTokenDeleteFail": "ลบ Token ไม่สำเร็จ",
     "toastImported": "นำเข้า {name} สำเร็จ",
-    "toastImportFail": "นำเข้า {name} ไม่สำเร็จ"
+    "toastImportFail": "นำเข้า {name} ไม่สำเร็จ",
+    "toastAvatarTooLarge": "ไฟล์รูปภาพต้องมีขนาดไม่เกิน 2MB",
+    "toastAvatarUpdated": "อัปเดตรูปโปรไฟล์แล้ว"
   },
   "errorPage": {
     "title": "เกิดข้อผิดพลาด",

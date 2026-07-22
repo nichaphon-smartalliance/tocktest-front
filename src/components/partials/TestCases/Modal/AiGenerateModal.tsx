@@ -17,7 +17,7 @@ import { Bot, Calendar, WifiOff, Check, GitCommitHorizontal, Info } from "lucide
 import dayjs from "dayjs";
 import "dayjs/locale/th";
 import { useAiGenerateTestCases } from "@/hooks/testCase";
-import { getRepositoryBranchesApi, getCommitsApi } from "@/lib/api/api-main";
+import { useBranches, useFetchCommits } from "@/hooks/analysis";
 import type { GeneratedTestCasePreview } from "@/types/app/testCase";
 import type { CommitItem } from "@/types/app/analysis";
 import { TYPE_CONFIG, PRIORITY_CONFIG } from "../TestCases.config";
@@ -53,13 +53,12 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [branch, setBranch] = useState("");
-  const [branches, setBranches] = useState<{ name: string; commitSha: string }[]>([]);
-  const [branchesLoading, setBranchesLoading] = useState(false);
   const [commitList, setCommitList] = useState<CommitItem[]>([]);
   const [selectedShas, setSelectedShas] = useState<Set<string>>(new Set());
-  const [isFetchingCommits, setIsFetchingCommits] = useState(false);
   const [previews, setPreviews] = useState<GeneratedTestCasePreview[]>([]);
   const { generate, isGenerating, save, isSaving } = useAiGenerateTestCases(repoId);
+  const { branches, branchesLoading } = useBranches(repoId, open);
+  const { fetchCommits, isFetchingCommits } = useFetchCommits(repoId);
 
   useEffect(() => {
     if (open && !fromDate && !toDate) {
@@ -68,15 +67,6 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
     }
   }, [open, fromDate, toDate]);
 
-  useEffect(() => {
-    if (!open) return;
-    setBranchesLoading(true);
-    getRepositoryBranchesApi(repoId)
-      .then((res) => setBranches(res.data?.data ?? []))
-      .catch(() => setBranches([]))
-      .finally(() => setBranchesLoading(false));
-  }, [open, repoId]);
-
   const dateRangeLabel = fromDate && toDate ? formatRange(fromDate, toDate, locale) : null;
   const selectedCount = useMemo(() => previews.filter((p) => p.selected).length, [previews]);
   const isOfflineResult = useMemo(() => previews.some(isOfflinePreview), [previews]);
@@ -84,23 +74,19 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
   const handleFetchCommits = async () => {
     if (!fromDate || !toDate) { message.warning(t("selectDates")); return; }
     if (dayjs(fromDate).isAfter(dayjs(toDate))) { message.warning(t("invalidRange")); return; }
-    setIsFetchingCommits(true);
     try {
-      const res = await getCommitsApi(repoId, {
+      const { items } = await fetchCommits({
         fromDate: dayjs(fromDate).startOf("day").toISOString(),
         toDate: dayjs(toDate).endOf("day").toISOString(),
         ...(branch ? { branch } : {}),
         pageSize: 50,
       });
-      const items: CommitItem[] = res.data?.data?.content ?? [];
       if (items.length === 0) { message.warning(t("noCommits")); return; }
       setCommitList(items);
       setSelectedShas(new Set(items.map((c) => c.commitSha)));
       setStep("commits");
     } catch (error) {
       message.error(getApiErrorMessage(error, t("genError")));
-    } finally {
-      setIsFetchingCommits(false);
     }
   };
 

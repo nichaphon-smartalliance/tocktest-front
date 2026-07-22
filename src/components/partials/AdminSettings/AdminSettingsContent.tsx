@@ -105,7 +105,7 @@ export default function AdminSettingsContent() {
     const file = e.target.files?.[0];
     if (!file || !profile) return;
     if (file.size > 2 * 1024 * 1024) {
-      message.warning("Image must be under 2MB");
+      message.warning(t("toastAvatarTooLarge"));
       return;
     }
     const reader = new FileReader();
@@ -114,7 +114,7 @@ export default function AdminSettingsContent() {
       setAvatarDataUrl(src);
       localStorage.setItem(`avatar_${profile.id}`, src);
       window.dispatchEvent(new CustomEvent("avatar-updated", { detail: { src } }));
-      message.success("Photo updated");
+      message.success(t("toastAvatarUpdated"));
     };
     reader.readAsDataURL(file);
     e.target.value = "";

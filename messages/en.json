@@ -273,13 +273,16 @@
     "title": "QA Chatbot",
     "subtitle": "Ask questions about {repo} — test planning, code review, and QA strategy.",
     "thisRepo": "this repo",
+    "headerSub": "Test planning, code review, QA strategy",
     "emptyHint": "I know your test cases, recent commits, and project docs. Ask me anything.",
     "starter1": "What areas should I test first in this repo?",
     "starter2": "Generate a Cypress test for the login flow",
     "starter3": "What are the highest-risk recent changes?",
     "starter4": "Suggest test cases for the most recent commits",
     "clearTitle": "Clear conversation",
+    "openHistory": "Chat history",
     "inputPlaceholder": "Ask about testing, code quality, or test case ideas... (Enter to send)",
+    "langLabel": "Reply language",
     "error": "Failed to get AI response. Make sure AI service is running."
   },
   "chatHistory": {
@@ -497,7 +500,9 @@
     "toastTokenDeleted": "Token deleted",
     "toastTokenDeleteFail": "Failed to delete Token",
     "toastImported": "Imported {name}",
-    "toastImportFail": "Failed to import {name}"
+    "toastImportFail": "Failed to import {name}",
+    "toastAvatarTooLarge": "Image must be under 2MB",
+    "toastAvatarUpdated": "Photo updated"
   },
   "errorPage": {
     "title": "Something went wrong",

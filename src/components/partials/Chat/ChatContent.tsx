@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { Button, Card } from "@heroui/react";
 import { Send, Bot, User, Eraser, PanelLeft } from "lucide-react";
-import { chatWithRepoApi } from "@/lib/api/api-main";
+import { useChatMutation } from "@/hooks/chat";
 import { getApiErrorMessage } from "@/lib/api-error";
 import ReactMarkdown from "react-markdown";
 import type { ChatMessage, ChatRole } from "@/types/app/chat";
@@ -26,41 +27,6 @@ interface ChatContentProps {
 }
 
 const LANG_KEY = "tocktest_chat_lang";
-
-const TEXTS = {
-  th: {
-    title: "QA Chatbot",
-    headerSub: "วางแผนการทดสอบ, code review และกลยุทธ์ QA",
-    emptyHint: "ฉันรู้จัก test case, commit ล่าสุด และ docs ของโปรเจกต์คุณ ถามอะไรก็ได้",
-    starters: [
-      "ควรทดสอบส่วนไหนก่อนใน repo นี้?",
-      "สร้าง Cypress test สำหรับ login flow",
-      "การเปลี่ยนแปลงล่าสุดที่เสี่ยงสุดคืออะไร?",
-      "แนะนำ test case สำหรับ commit ล่าสุด",
-    ],
-    clearTitle: "ล้างบทสนทนา",
-    openHistory: "ประวัติแชท",
-    inputPlaceholder: "ถามเกี่ยวกับการทดสอบ, คุณภาพโค้ด หรือไอเดีย test case... (กด Enter เพื่อส่ง)",
-    langLabel: "ภาษาที่ตอบ",
-    error: "ไม่ได้รับคำตอบจาก AI ตรวจสอบว่า AI service กำลังทำงานอยู่",
-  },
-  en: {
-    title: "QA Chatbot",
-    headerSub: "Test planning, code review, QA strategy",
-    emptyHint: "I know your test cases, recent commits, and project docs. Ask me anything.",
-    starters: [
-      "What areas should I test first in this repo?",
-      "Generate a Cypress test for the login flow",
-      "What are the highest-risk recent changes?",
-      "Suggest test cases for the most recent commits",
-    ],
-    clearTitle: "Clear conversation",
-    openHistory: "Chat history",
-    inputPlaceholder: "Ask about testing, code quality, or test case ideas... (Enter to send)",
-    langLabel: "Reply language",
-    error: "Failed to get AI response. Make sure AI service is running.",
-  },
-} as const;
 
 function getInitialLang(): ChatLang {
   if (typeof window === "undefined") return "th";
@@ -88,12 +54,13 @@ export default function ChatContent({
   focusSignal,
 }: ChatContentProps) {
   const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
   const [chatLang, setChatLang] = useState<ChatLang>(getInitialLang);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { sendMessage, isSending } = useChatMutation(repoId);
 
-  const t = TEXTS[chatLang];
+  const t = useTranslations("chat");
+  const starters = [t("starter1"), t("starter2"), t("starter3"), t("starter4")];
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -120,23 +87,20 @@ export default function ChatContent({
 
   const send = async (text?: string) => {
     const content = (text ?? input).trim();
-    if (!content || loading) return;
+    if (!content || isSending) return;
     setInput("");
 
     const targetId = conversationId ?? ensureConversation();
     const userMsg = makeMessage("user", content);
     setMessagesFor(targetId, (prev) => [...prev, userMsg]);
-    setLoading(true);
 
     try {
       const history = messages.slice(-8).map((m) => ({ role: m.role, content: m.content }));
-      const res = await chatWithRepoApi(repoId, { message: content, history, language: chatLang });
-      const reply = res.data?.data?.response ?? "";
+      const reply = await sendMessage({ message: content, history, language: chatLang });
       setMessagesFor(targetId, (prev) => [...prev, makeMessage("assistant", reply)]);
     } catch (err) {
-      setMessagesFor(targetId, (prev) => [...prev, makeMessage("assistant", getApiErrorMessage(err, t.error), true)]);
+      setMessagesFor(targetId, (prev) => [...prev, makeMessage("assistant", getApiErrorMessage(err, t("error")), true)]);
     } finally {
-      setLoading(false);
       textareaRef.current?.focus();
     }
   };
@@ -165,7 +129,7 @@ export default function ChatContent({
               <button
                 type="button"
                 onClick={onOpenHistory}
-                aria-label={t.openHistory}
+                aria-label={t("openHistory")}
                 className="lg:hidden h-8 w-8 shrink-0 rounded-lg border border-[var(--border-subtle)] flex items-center justify-center text-[var(--text-muted)] hover:bg-gray-100 dark:hover:bg-[#2a2d2e] transition-colors"
               >
                 <PanelLeft size={15} />
@@ -176,14 +140,14 @@ export default function ChatContent({
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-semibold text-sm text-[var(--text-primary)]">{t.title}</span>
+                <span className="font-semibold text-sm text-[var(--text-primary)]">{t("title")}</span>
                 {repoName && (
                   <span className="inline-flex items-center rounded-md bg-indigo-500/10 dark:bg-indigo-500/15 px-1.5 py-0.5 text-[11px] font-medium text-indigo-600 dark:text-indigo-400">
                     {repoName}
                   </span>
                 )}
               </div>
-              <p className="text-xs text-[var(--text-muted)] leading-tight mt-0.5">{t.headerSub}</p>
+              <p className="text-xs text-[var(--text-muted)] leading-tight mt-0.5">{t("headerSub")}</p>
             </div>
           </div>
 
@@ -191,7 +155,7 @@ export default function ChatContent({
             {/* TH / EN pill toggle */}
             <div
               role="group"
-              aria-label={t.langLabel}
+              aria-label={t("langLabel")}
               className="flex rounded-lg bg-gray-100 dark:bg-[#2d2d2d] p-0.5 gap-0.5"
             >
               {(["th", "en"] as ChatLang[]).map((lang) => (
@@ -216,8 +180,8 @@ export default function ChatContent({
               <button
                 type="button"
                 onClick={onClear}
-                title={t.clearTitle}
-                aria-label={t.clearTitle}
+                title={t("clearTitle")}
+                aria-label={t("clearTitle")}
                 className="h-8 w-8 rounded-lg border border-[var(--border-subtle)] flex items-center justify-center text-[var(--text-muted)] hover:bg-gray-100 dark:hover:bg-[#2a2d2e] transition-colors"
               >
                 <Eraser size={13} />
@@ -233,9 +197,9 @@ export default function ChatContent({
               <div className="flex justify-center mb-2">
                 <Bot size={40} className="text-indigo-400" />
               </div>
-              <p className="text-sm text-center text-muted">{t.emptyHint}</p>
+              <p className="text-sm text-center text-muted">{t("emptyHint")}</p>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 mt-2">
-                {t.starters.map((s) => (
+                {starters.map((s) => (
                   <button
                     key={s}
                     type="button"
@@ -278,7 +242,7 @@ export default function ChatContent({
             </div>
           ))}
 
-          {loading && (
+          {isSending && (
             <div className="flex gap-2.5">
               <div className="shrink-0 h-7 w-7 rounded-full bg-gray-600 dark:bg-[#5a5a5a] flex items-center justify-center">
                 <Bot size={14} className="text-[#ffffff]" />
@@ -300,14 +264,14 @@ export default function ChatContent({
             value={input}
             onChange={handleTextareaChange}
             onKeyDown={handleKeyDown}
-            placeholder={t.inputPlaceholder}
+            placeholder={t("inputPlaceholder")}
             rows={1}
             className="flex-1 resize-none rounded-xl border border-[var(--border-subtle)] bg-transparent dark:bg-[#3c3c3c] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-[#007acc] transition-shadow"
             style={{ minHeight: "38px", maxHeight: "120px", overflowY: "auto" }}
           />
           <Button
             variant="primary"
-            isDisabled={loading || !input.trim()}
+            isDisabled={isSending || !input.trim()}
             onPress={() => void send()}
             isIconOnly
             className="h-9 w-9 shrink-0 rounded-xl"

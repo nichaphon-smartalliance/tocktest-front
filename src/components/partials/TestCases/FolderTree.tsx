@@ -133,7 +133,7 @@ function FolderNode({
       </div>
       {expanded &&
         hasChildren &&
-        folder.children!.map((child) => (
+        (folder.children ?? []).map((child) => (
           <FolderNode
             key={child.id}
             folder={child}
