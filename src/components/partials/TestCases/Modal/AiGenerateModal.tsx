@@ -107,7 +107,8 @@ export default function AiGenerateModal({ repoId, folderId, open, onClose, onSav
   const toggleSha = (sha: string) =>
     setSelectedShas((prev) => {
       const next = new Set(prev);
-      next.has(sha) ? next.delete(sha) : next.add(sha);
+      if (next.has(sha)) next.delete(sha);
+      else next.add(sha);
       return next;
     });
 

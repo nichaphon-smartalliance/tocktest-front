@@ -82,7 +82,7 @@ function Toolbar({ editor }: { editor: Editor }) {
     (file: File) => {
       if (!file.type.startsWith("image/")) return;
       if (file.size > MAX_IMAGE_BYTES) {
-        // eslint-disable-next-line no-alert
+         
         window.alert("Image is larger than 2MB.");
         return;
       }
@@ -97,11 +97,11 @@ function Toolbar({ editor }: { editor: Editor }) {
   );
 
   const addImageByUrl = useCallback(() => {
-    // eslint-disable-next-line no-alert
+     
     const url = window.prompt("Image URL (http/https or paste a direct image link)");
     if (!url) return;
     if (!/^https?:\/\//i.test(url)) {
-      // eslint-disable-next-line no-alert
+       
       window.alert("Please enter a valid http/https URL.");
       return;
     }
@@ -110,7 +110,7 @@ function Toolbar({ editor }: { editor: Editor }) {
 
   const setLink = useCallback(() => {
     const previous = (editor.getAttributes("link").href as string) ?? "";
-    // eslint-disable-next-line no-alert
+     
     const url = window.prompt("Link URL", previous);
     if (url === null) return;
     if (url === "") {
@@ -118,7 +118,7 @@ function Toolbar({ editor }: { editor: Editor }) {
       return;
     }
     if (!/^(https?:|mailto:|\/)/i.test(url)) {
-      // eslint-disable-next-line no-alert
+       
       window.alert("Only http(s), mailto, or relative links are allowed.");
       return;
     }

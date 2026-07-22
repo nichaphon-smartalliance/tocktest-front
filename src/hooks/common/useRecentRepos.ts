@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
 const STORAGE_KEY = "tock:recent-repos";
 const MAX = 20;
@@ -23,16 +23,43 @@ function readStorage(): RecentRepoEntry[] {
   }
 }
 
+const EMPTY: RecentRepoEntry[] = [];
+
+// useSyncExternalStore requires getSnapshot to return a STABLE reference when
+// the underlying data is unchanged, or it re-renders forever. Cache the parsed
+// value keyed by the raw storage string so equal reads return the same array.
+let cachedRaw: string | null = null;
+let cachedValue: RecentRepoEntry[] = EMPTY;
+
+function getSnapshot(): RecentRepoEntry[] {
+  let raw: string | null;
+  try {
+    raw = localStorage.getItem(STORAGE_KEY);
+  } catch {
+    return EMPTY;
+  }
+  if (raw === cachedRaw) return cachedValue;
+  cachedRaw = raw;
+  cachedValue = readStorage();
+  return cachedValue;
+}
+
+function getServerSnapshot(): RecentRepoEntry[] {
+  return EMPTY;
+}
+
+function subscribe(onChange: () => void): () => void {
+  window.addEventListener(UPDATE_EVENT, onChange);
+  // Also react to writes from other tabs.
+  window.addEventListener("storage", onChange);
+  return () => {
+    window.removeEventListener(UPDATE_EVENT, onChange);
+    window.removeEventListener("storage", onChange);
+  };
+}
+
 export function useRecentRepos() {
-  const [recent, setRecent] = useState<RecentRepoEntry[]>([]);
-
-  useEffect(() => {
-    setRecent(readStorage());
-    const handler = () => setRecent(readStorage());
-    window.addEventListener(UPDATE_EVENT, handler);
-    return () => window.removeEventListener(UPDATE_EVENT, handler);
-  }, []);
-
+  const recent = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   return { recent };
 }
 

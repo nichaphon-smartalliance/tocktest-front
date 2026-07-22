@@ -11,12 +11,15 @@
     "dev:clean": "node -e \"require('fs').rmSync('.next',{recursive:true,force:true})\" && next dev -p 4003",
     "build": "next build && node scripts/copy-standalone-assets.mjs",
     "start": "next start -p 3012",
-    "lint": "next lint",
+    "lint": "eslint .",
     "type-check": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:cov": "vitest run --coverage",
-    "test:ci": "vitest run --coverage"
+    "test:ci": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:report": "playwright show-report"
   },
   "dependencies": {
     "@heroui/react": "^3.2.2",
@@ -46,6 +49,7 @@
     "tiptap-markdown": "^0.8.10"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
@@ -67,6 +71,8 @@
   "overrides": {
     "next-auth": {
       "uuid": "^11.1.1"
-    }
+    },
+    "sharp": "^0.35.3",
+    "postcss": "$postcss"
   }
 }

@@ -36,7 +36,7 @@ export const authOptions: AuthOptions = {
     }),
   ],
   callbacks: {
-    async signIn({ user, account, profile }) {
+    async signIn({ user, account }) {
       if (account?.provider === "github") {
         try {
           const res = await axios.post(`${process.env.BACKEND_URL}/auth/github`, {

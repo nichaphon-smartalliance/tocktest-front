@@ -1,7 +1,7 @@
 "use client";
 
 import { Breadcrumbs, Chip } from "@heroui/react";
-import { BookOpen, BugPlay, GitCommitHorizontal, MessageSquare, Settings, Globe, Lock } from "lucide-react";
+import { BookOpen, BugPlay, MessageSquare, Globe, Lock } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";
