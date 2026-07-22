@@ -5,6 +5,7 @@ import { RouterProvider } from "@heroui/react";
 import { NextAuthProvider } from "./auth/NextAuthProvider";
 import { QueryProvider } from "./query/QueryProvider";
 import { ThemeProvider } from "./theme/ThemeProvider";
+import { PressResponderDebug } from "./PressResponderDebug";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -13,7 +14,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <NextAuthProvider>
       <QueryProvider>
         <RouterProvider navigate={(path) => router.push(String(path))}>
-          <ThemeProvider>{children}</ThemeProvider>
+          <ThemeProvider>
+            <PressResponderDebug />
+            {children}
+          </ThemeProvider>
         </RouterProvider>
       </QueryProvider>
     </NextAuthProvider>
