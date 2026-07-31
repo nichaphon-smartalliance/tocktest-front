@@ -19,11 +19,14 @@ export const authOptions: AuthOptions = {
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
         try {
+          console.log("Authorize credentials:", credentials);
+          console.log(`${process.env.BACKEND_URL}/auth/login`);
           const res = await axios.post(
             `${process.env.BACKEND_URL}/auth/login`,
             { email: credentials.email, password: credentials.password },
             { timeout: 8000 },
           );
+          console.log("Authorize response:", res);
           const { accessToken, user } = res.data?.data ?? {};
           if (accessToken && user) {
             return { ...user, accessToken };
